@@ -9,13 +9,12 @@ cd "$ROOT_DIR"
 
 STATUS_FILE=".delivery/STATUS.md"
 AUDIT_FILE=".delivery/page-audit.md"
-SUMMARY_FILE="CONTENT_AUDIT_SUMMARY.md"
 
 tmp_counts=$(mktemp)
-tmp_summary=$(mktemp)
+tmp_snapshot=$(mktemp)
 tmp_gap_ids=$(mktemp)
 tmp_pass_ids=$(mktemp)
-trap 'rm -f "$tmp_counts" "$tmp_summary" "$tmp_gap_ids" "$tmp_pass_ids"' EXIT
+trap 'rm -f "$tmp_counts" "$tmp_snapshot" "$tmp_gap_ids" "$tmp_pass_ids"' EXIT
 
 perl -e '
 use strict;
@@ -39,15 +38,19 @@ for my $k (sort keys %mat) { print "$k\t$mat{$k}\n"; }
 ' > "$tmp_counts"
 
 perl -ne '
-if (/^- `([^`]+)`: ([0-9]+)$/) {
+BEGIN { $mode = "" }
+if (/^### By Page Type$/) { $mode = "type"; next }
+if (/^### By Maturity$/) { $mode = "mat"; next }
+if (/^### / || /^## /) { $mode = "" }
+if ($mode ne "" && /^- `([^`]+)`: ([0-9]+)$/) {
   print "$1\t$2\n";
 }
-' "$SUMMARY_FILE" > "$tmp_summary"
+' "$STATUS_FILE" > "$tmp_snapshot"
 
 while IFS="$(printf '\t')" read -r key value; do
   [ -n "$key" ] || continue
-  if ! grep -Fxq "$key	$value" "$tmp_summary"; then
-    echo "Count drift: $key expected $value in $SUMMARY_FILE" >&2
+  if ! grep -Fxq "$key	$value" "$tmp_snapshot"; then
+    echo "Count drift: $key expected $value in $STATUS_FILE audit snapshot" >&2
     exit 1
   fi
 done <<EOF

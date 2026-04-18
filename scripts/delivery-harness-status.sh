@@ -5,17 +5,17 @@ ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
 STATUS_FILE=".delivery/STATUS.md"
-SUMMARY_FILE="CONTENT_AUDIT_SUMMARY.md"
 
 fail() {
   echo "$1" >&2
   exit 1
 }
 
-last_update=$(perl -ne 'if (/^Last delivery update: `([^`]+)` on `([^`]+)`\.$/) { print "$1\t$2\n"; exit }' "$SUMMARY_FILE")
-[ -n "$last_update" ] || fail "Missing last delivery update in $SUMMARY_FILE"
-last_pass=$(printf '%s\n' "$last_update" | awk -F'\t' '{print $1}')
-last_date=$(printf '%s\n' "$last_update" | awk -F'\t' '{print $2}')
+last_pass=$(awk -F'\\|' '/^\| Last completed pass ID / { value=$3; gsub(/^ +| +$/, "", value); gsub(/`/, "", value); print value; exit }' "$STATUS_FILE")
+[ -n "$last_pass" ] || fail "Missing Last completed pass ID in $STATUS_FILE"
+
+snapshot_date=$(perl -ne 'if (/^Snapshot date: `([^`]+)`$/) { print "$1\n"; exit }' "$STATUS_FILE")
+[ -n "$snapshot_date" ] || fail "Missing Snapshot date in $STATUS_FILE"
 
 current_tranche=$(awk -F'\\|' '/^\| Current tranche / { value=$3; gsub(/^ +| +$/, "", value); print value; exit }' "$STATUS_FILE")
 [ -n "$current_tranche" ] || fail "Missing Current tranche in $STATUS_FILE"
@@ -34,11 +34,12 @@ page_types=$(awk '
     out = out parts[2] " " value
   }
   END { print out }
-' "$SUMMARY_FILE")
-[ -n "$page_types" ] || fail "Missing page-type counts in $SUMMARY_FILE"
+' "$STATUS_FILE")
+[ -n "$page_types" ] || fail "Missing page-type counts in $STATUS_FILE"
 
 maturity_counts=$(awk '
   /^### By Maturity$/ { mode="mat"; next }
+  /^### / && mode=="mat" { mode="" }
   /^## / && mode=="mat" { mode="" }
   mode=="mat" && /^- `/ {
     if (out != "") out = out ", "
@@ -48,8 +49,8 @@ maturity_counts=$(awk '
     out = out parts[2] " " value
   }
   END { print out }
-' "$SUMMARY_FILE")
-[ -n "$maturity_counts" ] || fail "Missing maturity counts in $SUMMARY_FILE"
+' "$STATUS_FILE")
+[ -n "$maturity_counts" ] || fail "Missing maturity counts in $STATUS_FILE"
 
 gap_counts=$(awk -F'\\|' '
   /^\| `G-[0-9][0-9]` / {
@@ -85,7 +86,8 @@ next_queue=$(awk '
 [ -n "$next_queue" ] || fail "Missing next queue in $STATUS_FILE"
 
 printf '%s\n' "delivery harness status"
-printf '%s\n' "last delivery update: $last_pass ($last_date)"
+printf '%s\n' "snapshot date: $snapshot_date"
+printf '%s\n' "last completed pass: $last_pass"
 printf '%s\n' "current tranche: $current_tranche"
 printf '%s\n' "recommendation: $current_recommendation"
 printf '\n'

@@ -31,8 +31,6 @@ Before substantive work, read these files in this order:
 6. `CONTRIBUTING.md` for contribution workflow and anti-patterns.
 7. `EDITORIAL_RULES.md` for canonical structure, metadata, and evidence rules.
 8. `.delivery/page-audit.md` when the task touches page-level quality work, prioritization, merge/defer choices, or maturity-driven rewrites.
-9. `CONTENT_AUDIT_SUMMARY.md` for the public quality snapshot.
-
 If the task is trivial and clearly non-substantive, use judgment. For any meaningful content, structure, or quality change, follow the full read order.
 
 ## Instruction Precedence
@@ -43,7 +41,7 @@ Use this precedence when guidance overlaps:
 2. `.delivery/MISSION.md` for immutable scope and value boundaries.
 3. `.delivery/PIP.md` for the active change objective, success criteria, and workstreams.
 4. `.delivery/STATUS.md` for mutable execution state.
-5. `README.md`, `CONTRIBUTING.md`, `EDITORIAL_RULES.md`, and `CONTENT_AUDIT_SUMMARY.md` for durable public guidance on mission, structure, evidence, page types, and maturity.
+5. `README.md`, `CONTRIBUTING.md`, and `EDITORIAL_RULES.md` for durable public guidance on mission, structure, evidence, page types, and maturity.
 6. Local file context and adjacent documents for topic-specific fit and coherence.
 
 If guidance appears to conflict, preserve the mission, follow the active PIP for change direction, and avoid creating a parallel policy layer in topical docs.
@@ -57,7 +55,7 @@ If guidance appears to conflict, preserve the mission, follow the active PIP for
 - `README.md` explains the repository publicly.
 - `CONTRIBUTING.md` defines contribution workflow and anti-patterns.
 - `EDITORIAL_RULES.md` defines canonical structure, page metadata, and evidence rules.
-- `CONTENT_AUDIT_SUMMARY.md` exposes the current public quality-pass signals.
+- `.delivery/STATUS.md` includes the repository-wide audit snapshot for current page-type, maturity, and priority signals.
 - `.delivery/page-audit.md` is the page-level state inventory linked to the current execution board.
 
 Do not create parallel copies of root or `.delivery` guidance inside topical chapter files unless that duplication is intentionally useful to readers.
@@ -69,12 +67,12 @@ For substantive tasks, use this workflow:
 1. Start from `AGENTS.md`, then read `.delivery/MISSION.md`, `.delivery/PIP.md`, and `.delivery/STATUS.md`.
 2. Identify the active PIP objective, workstream, tranche, and gap relevant to the task.
 3. Check the root guidance and adjacent documents so the change fits the repository contract.
-4. If the task touches page quality, use `.delivery/page-audit.md` to confirm page-level state and `CONTENT_AUDIT_SUMMARY.md` for the public snapshot.
+4. If the task touches page quality, use `.delivery/page-audit.md` to confirm page-level state and the audit snapshot in `.delivery/STATUS.md` for the repository-wide summary.
 5. Make a concrete improvement pass that materially advances the PIP rather than just changing wording superficially.
 6. Review the result for mission fit, taxonomy reuse, evidence posture, duplication, structure, links, numbering, and public readability.
 7. Update `.delivery/STATUS.md` so the pass, gap, and next-queue state stay current.
-8. Update `.delivery/page-audit.md`, `CONTENT_AUDIT_SUMMARY.md`, and `CHANGELOG.md` only where their role is actually affected.
-9. Run `./scripts/delivery-harness-check.sh` if the pass touched delivery tracking, page metadata, or audit-summary counts.
+8. Update `.delivery/page-audit.md` and `CHANGELOG.md` only where their role is actually affected.
+9. Run `./scripts/delivery-harness-check.sh` if the pass touched delivery tracking, page metadata, or audit-snapshot counts.
 10. Run `./scripts/delivery-harness-status.sh` when you need a quick operator snapshot before planning the next tranche or after a substantial pass.
 11. Decide whether another pass is still needed under the same PIP.
 12. Continue with further quality-improvement passes until the relevant PIP objective can honestly be considered done.
@@ -89,7 +87,7 @@ Run it from the repository root after updating files and before declaring the pa
 
 - `.delivery/STATUS.md` changed
 - `.delivery/page-audit.md` changed
-- `CONTENT_AUDIT_SUMMARY.md` changed
+- the audit snapshot in `.delivery/STATUS.md` changed
 - a pass updated maturity labels, page types, or other `docs/` metadata that should change audit counts or tracking state
 - a pass closed, reopened, renamed, or added gap IDs or pass IDs
 
@@ -104,7 +102,7 @@ How to use it:
 
 What it validates:
 
-- page-type and maturity counts against `CONTENT_AUDIT_SUMMARY.md`
+- page-type and maturity counts against the audit snapshot in `.delivery/STATUS.md`
 - gap and pass references between `.delivery/STATUS.md` and `.delivery/page-audit.md`
 - closed-gap consistency against linked page-audit rows
 
@@ -163,7 +161,7 @@ Use repeated passes to increase real quality, not to create churn.
 
 | Area | Allowed content | Not allowed |
 | --- | --- | --- |
-| Root | README, contributor guidance, editorial rules, changelog, audit summaries, and other repository-level docs | Topic deep dives and duplicate chapter content |
+| Root | README, contributor guidance, editorial rules, changelog, and other repository-level docs | Topic deep dives and duplicate chapter content |
 | `.delivery/` | Mission, Product Improvement Plans, page-audit inventories, and other delivery-control artifacts | Public topical deep dives copied from `docs/` |
 | `docs/` | Numbered chapter indexes, section overviews, subchapter files, and other topical content | Root or `.delivery` process guidance copied into topic docs |
 | `docs/02-taxonomy/` | Canonical taxonomy families, terminology anchors, comparison schema, and reuse rules | Competing taxonomy or ad hoc comparison systems elsewhere |

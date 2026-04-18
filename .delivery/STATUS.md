@@ -1,6 +1,6 @@
 # Delivery Status
 
-This file is the internal execution board for the active Product Improvement Plan. Use it to understand what the current highest-leverage tranche is, which gaps remain open, which pass changed what, and what should happen next.
+This file is the internal execution board for the active Product Improvement Plan. Use it to understand what the current highest-leverage tranche is, which gaps remain open, which pass changed what, and what should happen next. It also carries the repository-wide audit snapshot required by the active PIP.
 
 Operator note: `./scripts/delivery-harness-check.sh` validates delivery consistency. `./scripts/delivery-harness-status.sh` prints the current delivery snapshot. `./scripts/ralph-codex.sh` is a human-run external loop that launches fresh `codex exec` passes against `.delivery/PROMPT.md` by default; human usage examples live in `README.md` and `./scripts/ralph-codex.sh --help`.
 
@@ -10,8 +10,40 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
 | Current tranche | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) in progress; retrieval fronts and the adaptation operating front are stronger, but adaptation chapter/reference fronts and retrieval/adaptation pattern surfaces remain thin |
-| Last completed pass ID | `2026-04-18.u` |
+| Last completed pass ID | `2026-04-18.v` |
 | Current recommendation | `continue G-08` |
+
+## Audit Snapshot
+
+Snapshot date: `2026-04-18`
+
+### By Page Type
+
+- `Chapter Index`: 84
+- `Comparison Page`: 27
+- `Concept Explainer`: 26
+- `Decision Guide`: 23
+- `Glossary`: 1
+- `Operational Artifact`: 10
+- `Reference Sheet`: 20
+- `Worked Example`: 21
+
+### By Maturity
+
+- `Outline`: 51
+- `Draft`: 46
+- `Review-Ready`: 114
+- `Curated Reference`: 1
+
+### Highest-Priority Remaining Outline Pages
+
+- `docs/01-scope-and-principles/01-02-00-using-the-atlas.md` (Chapter Index)
+- `docs/01-scope-and-principles/01-03-00-repository-contract.md` (Chapter Index)
+- `docs/07-model-ecosystem/07-00-00-model-ecosystem.md` (Chapter Index)
+- `docs/08-model-hosting-and-inference/08-03-00-reference-points.md` (Chapter Index)
+- `docs/12-training-fine-tuning-and-adaptation/12-03-00-reference-points.md` (Chapter Index)
+- `docs/13-evaluation-testing-and-qa/13-01-00-evaluation-foundations.md` (Chapter Index)
+- `docs/21-research-open-knowledge-and-community/21-00-00-research-open-knowledge-and-community.md` (Chapter Index)
 
 ## Workstream Board
 
@@ -45,9 +77,21 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-11` | Build-vs-buy follow-through and reference cleanup (`18`) | `WS1`, `WS2`, `WS3`, `WS7`, `WS9` | `thin_content` | Closed | High | Keep chapter `18` stable as a sourcing reference pattern for later passes | `18.*` | `2026-04-18.f` |
 | `G-12` | Standards and bodies system completion (`20`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9`, `WS10` | `evidence_gap` | Closed | High | Keep chapter `20` stable as the standards-selection and standards-combination reference pattern for later passes | `20.*` | `2026-04-18.g` |
 | `G-13` | Research and open-knowledge completion (`21`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS10` | `thin_content` | Open | Medium | Deepen knowledge-source foundations and close weak reference surfaces | `21.*` |  |
-| `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
+| `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `README.md`, `CHANGELOG.md`, `scripts/*` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.v`
+
+- Date: `2026-04-18`
+- Tranche: Delivery snapshot and changelog cleanup
+- Goal: Remove the duplicate standalone audit snapshot file, fold the repository-wide audit snapshot into `.delivery/STATUS.md`, and keep `CHANGELOG.md` as a completion-only root ledger rather than a per-pass mirror of delivery tracking
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, `CHANGELOG.md`, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.u`
 
@@ -56,7 +100,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the adaptation operating section overview into a concrete operating-review surface so chapter `12` no longer relies on scaffold prose between its stronger escalation and scenario pages
 - Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `12-02-00` promoted from `Outline` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -68,7 +112,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the retrieval operating section overview into a concrete operating-review surface so chapter `11` no longer relies on scaffold prose between its stronger foundations and scenario pages
 - Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `11-02-00` promoted from `Outline` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -80,7 +124,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the retrieval foundations section overview into a concrete decision surface so chapter `11` starts from retrieval-versus-memory boundaries rather than scaffold prose
 - Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `11-01-00` promoted from `Outline` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -92,7 +136,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the adaptation decision-guide page into a concrete escalation surface so chapter `12` has usable lanes, triggers, and chapter handoffs before teams jump from prompts or retrieval into tuning or retraining
 - Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `12-01-02` promoted from `Draft` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -104,7 +148,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the adaptation worked-example page into concrete escalation scenarios so chapter `12` has usable guidance for prompt-first stabilization, retrieval-before-training, justified fine-tuning, and classical retraining under drift
 - Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `12-02-01` promoted from `Outline` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -116,7 +160,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Refactor `scripts/ralph-codex.sh` so Ralph only stops when the final assistant reply emits the completion marker, preventing prompt echo or transcript echo from ending a multi-pass PIP run early
 - Workstreams advanced: `WS10`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, changelog, and `scripts/`
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, delivery snapshot, changelog, and `scripts/`
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -128,7 +172,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the retrieval worked-example page into concrete decision-grade scenarios so chapter `11` has a usable operating reference for live retrieval, bounded memory, graph-backed retrieval, and permission-sensitive access design
 - Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `11-02-01` promoted from `Outline` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -140,7 +184,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Refactor `scripts/ralph-codex.sh` so Codex output stays on the console, replace per-iteration stdout/stderr files with a recreated root `.ralph` timing ledger, and add ignore coverage for the generated file
 - Workstreams advanced: `WS10`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, changelog, root ignore rules, and `scripts/`
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, delivery snapshot, changelog, root ignore rules, and `scripts/`
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -152,7 +196,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Add `.delivery/PROMPT.md`, make it the default Ralph prompt, document that Ralph already runs in explicit auto-allow mode, and expand help/examples for profiles and env-var options
 - Workstreams advanced: `WS10`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, delivery status tracking, changelog, and `scripts/`
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, delivery snapshot, delivery status tracking, changelog, and `scripts/`
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -164,7 +208,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Add `scripts/ralph-codex.sh` as a human-run external Codex loop, move human guidance into `README.md` and script help, tighten the README overview, and set `MAX_ITERS` default to `100` as a safety stop
 - Workstreams advanced: `WS10`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: root operator guidance, audit summary, delivery status tracking, changelog, and `scripts/`
+- Pages / chapter clusters touched: root operator guidance, delivery snapshot, delivery status tracking, changelog, and `scripts/`
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -176,7 +220,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite chapter `20` into a review-ready standards-selection and standards-combination system with stronger scenarios, clearer page-type differentiation, and a standards crosswalk grounded in official sources
 - Workstreams advanced: `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9`, `WS10`
 - Gap IDs moved: `G-12` `Open -> Closed`
-- Pages / chapter clusters touched: chapter `20`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `20`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: all `20.*` pages promoted from `Outline` / `Draft` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
@@ -188,7 +232,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Harden the remaining sourcing distinction, operational, pattern, and reference-overview surfaces so chapter `18` reads as a review-ready sourcing chapter rather than a partial scaffold
 - Workstreams advanced: `WS1`, `WS2`, `WS3`, `WS7`, `WS9`
 - Gap IDs moved: `G-11` `Open -> Closed`
-- Pages / chapter clusters touched: chapter `18`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `18`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `18-01-01`, `18-01-02`, `18-02-00`, `18-02-02`, and `18-03-00` promoted from `Outline` / `Draft` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-12`, `G-13`
@@ -200,7 +244,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Rewrite the stack-map and reference-architecture chapters into review-ready decision surfaces and resolve the weak chapter `19` standalone pattern page
 - Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`, `WS10`
 - Gap IDs moved: `G-03` `Open -> Closed`
-- Pages / chapter clusters touched: chapters `03` and `19`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapters `03` and `19`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: retained `03.*` and `19.*` front doors, foundations, and application pages promoted from `Outline` / `Draft` to `Review-Ready`; `19-02-02` removed after merge
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-11`, `G-12`, `G-13`
@@ -212,7 +256,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Harden the taxonomy chapter's distinction, decision, scenario, and pattern surfaces into a review-ready shared control surface
 - Workstreams advanced: `WS2`, `WS4`, `WS6`, `WS7`, `WS9`
 - Gap IDs moved: `G-02` `Open -> Closed`
-- Pages / chapter clusters touched: chapter `02`, plus page-audit, audit-summary, status, and changelog tracking
+- Pages / chapter clusters touched: chapter `02`, plus page-audit, audit snapshot, status, and changelog tracking
 - Maturity moves: `02-01-01`, `02-01-02`, `02-02-01`, and `02-02-02` promoted from `Outline` / `Draft` to `Review-Ready`
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-03`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-11`, `G-12`, `G-13`
@@ -224,7 +268,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Split delivery validation from delivery reporting and add explicit process policy for both scripts
 - Workstreams advanced: `WS10`
 - Gap IDs moved: none
-- Pages / chapter clusters touched: `.delivery`, root agent guidance, delivery scripts, and public audit summary surfaces
+- Pages / chapter clusters touched: `.delivery`, root agent guidance, delivery scripts, and delivery snapshot surfaces
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-02`, `G-03`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-11`, `G-12`, `G-13`
@@ -236,7 +280,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Replace the scattered mutable tracking model with one execution board, one page-state inventory, and one light consistency check
 - Workstreams advanced: `WS10`
 - Gap IDs moved: `G-14` `Open -> Closed`
-- Pages / chapter clusters touched: `.delivery`, root delivery guidance, and public audit summary surfaces
+- Pages / chapter clusters touched: `.delivery`, root delivery guidance, and delivery snapshot surfaces
 - Maturity moves: none
 - Commit(s): `pending`
 - Remaining gaps: `G-01`, `G-02`, `G-03`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-11`, `G-12`, `G-13`
@@ -248,7 +292,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 - Goal: Strengthen governance, privacy/sovereignty, and market-structure chapters into review-ready anchor chapters
 - Workstreams advanced: `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS9`
 - Gap IDs moved: `G-04` `Open -> Closed`
-- Pages / chapter clusters touched: chapters `04`, `06`, `17`, plus page-audit and audit-summary tracking
+- Pages / chapter clusters touched: chapters `04`, `06`, `17`, plus page-audit and audit snapshot tracking
 - Maturity moves: target chapter surfaces promoted from `Outline` / `Draft` to `Review-Ready`
 - Commit(s): `15573dc`
 - Remaining gaps: `G-01`, `G-02`, `G-03`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-11`, `G-12`, `G-13`, `G-14`

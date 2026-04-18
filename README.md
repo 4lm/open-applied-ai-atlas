@@ -96,8 +96,8 @@ flowchart TB
 - Read [AGENTS.md](./AGENTS.md) for durable structure and mission guardrails.
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
 - Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
-- Read [CONTENT_AUDIT_SUMMARY.md](./CONTENT_AUDIT_SUMMARY.md) for the current page-type, maturity, and quality-pass conventions.
-- Operator scripts: use `./scripts/delivery-harness-check.sh` for delivery validation, `./scripts/delivery-harness-status.sh` for the concise delivery snapshot, and `./scripts/ralph-codex.sh` as a human-run external loop for repeated `codex exec` runs. Run `./scripts/ralph-codex.sh --help` for the script's built-in help text.
+- Read [.delivery/STATUS.md](./.delivery/STATUS.md) for the current delivery board and repository-wide audit snapshot.
+- Operator scripts: use `./scripts/delivery-harness-check.sh` for delivery validation, `./scripts/delivery-harness-status.sh` for the concise delivery snapshot from `.delivery/STATUS.md`, and `./scripts/ralph-codex.sh` as a human-run external loop for repeated `codex exec` runs. Run `./scripts/ralph-codex.sh --help` for the script's built-in help text.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
 
 ## Human-Run Ralph Loop
