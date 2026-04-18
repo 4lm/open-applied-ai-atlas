@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-04-18 | Closed `G-12` by rewriting chapter `20` into a review-ready standards-selection and standards-combination system with stronger scenarios, pattern guidance, and an official-source-backed standards crosswalk (`2026-04-18.g`). |
 | 2026-04-18 | Closed `G-11` by rewriting the remaining chapter `18` sourcing distinction, application, pattern, and reference-overview pages into review-ready decision surfaces (`2026-04-18.f`). |
 | 2026-04-18 | Rewrote the stack-map and reference-architecture chapters into review-ready decision surfaces, merged the weak standalone chapter `19` pattern page, and closed `G-03` (`2026-04-18.e`). |
 | 2026-04-18 | Hardened the taxonomy chapter's distinction, decision, scenario, and pattern surfaces into review-ready shared guidance and closed the taxonomy deepening gap (`2026-04-18.d`). |

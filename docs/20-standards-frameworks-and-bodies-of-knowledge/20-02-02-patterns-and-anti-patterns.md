@@ -1,55 +1,43 @@
 # 20.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use this page during design and renewal review to tell the difference between a real standards operating model and standards theater.
 
-Patterns matter here because standards frameworks and bodies of knowledge is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
+## Reusable Standards Patterns
 
-## Why Pattern Language Helps
+| Pattern | What good looks like | Fit signal | Review warning |
+| --- | --- | --- | --- |
+| Law first, then standards crosswalk | The team names the governing obligations first and only then adds standards that help operationalize them | regulation or rights exposure is clearly part of the decision | standards are chosen before anyone can explain the legal question |
+| Management system plus local evidence pack | A governance standard is mapped to approval lanes, control owners, and reusable evidence artifacts | the organization needs durable oversight across more than one system | the standard is cited, but no release evidence or control map exists |
+| Public framework for accessibility, local controls for rigor | A public framework accelerates shared vocabulary, while local controls, templates, and review criteria do the real work | the team needs broad adoption across mixed technical maturity | the public framework is treated as the finished operating model |
+| Technical practice anchored to named owner | Security, provenance, or telemetry guidance is tied to a concrete service owner and operating process | the system depends on runtime, workflow, or data-plane controls that must actually be run | the technical guide is admired but nobody owns implementation or drift review |
+| Standards tracking separated from compliance claims | Bodies, committees, and programs inform horizon-scanning without being presented as conformance proof | the landscape is evolving quickly or EU harmonization matters | tracking participation is described as evidence that controls already exist |
 
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
+## Standards Anti-Patterns
 
-## Decision Flow
+| Anti-pattern | Why it fails | Early signal | Review action |
+| --- | --- | --- | --- |
+| Certification theater | The team borrows confidence from standard names without showing what changed locally | slides mention conformance before any control pack or evidence bundle exists | require concrete outputs: owner, control map, evidence set, re-review trigger |
+| One-framework-for-everything thinking | No single artifact settles law, governance, security, privacy, portability, and oversight together | the same named framework appears in every answer regardless of context | force the team to name the dominant question and missing chapter handoffs |
+| Committee or principle citation as implementation proof | Bodies and principle sets help orientation, but they do not implement controls | a coordination body is listed where a control standard or local procedure should be | replace the citation with the actual normative or operational anchor |
+| Standards shopping without control mapping | The team collects impressive references but none change review depth or delivery behavior | long reference list, no mapped controls, no owner, no lifecycle trigger | reduce to a starting set and require explicit outputs |
+| Portability or privacy by implication | The team assumes a standards label settles exit posture, data boundary, or supplier dependence | portability is discussed only in principle language, not in evidence, formats, or contracts | pull in chapters `06`, `18`, and the relevant operational artifacts |
 
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
+## Review Prompts
 
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
-
-## Patterns To Reuse
-
-- Frameworks are useful only when translated into real decisions and controls
-- Different frameworks solve different jobs across the lifecycle
-- One framework is rarely enough
-
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
-
-## Review Prompt
-
-| During review ask... | Why |
+| Ask during review... | Why it matters |
 | --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
+| Which standard or framework changed a concrete control decision here? | Distinguishes implementation from citation |
+| What local artifact would prove this standards set is operating? | Forces the team to name evidence, not only intent |
+| Which chapter still needs to be pulled in before this standards set is credible? | Prevents chapter `20` from swallowing security, privacy, or sourcing issues |
+| What change would trigger a fresh standards crosswalk? | Keeps the standards set alive as the system changes |
 
-## Review Signals
+## Drift Signals
 
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
-
-## Practical Reading Rule
-
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+- standards language appears in approval material, but not in release artifacts
+- the team can name committees and frameworks but not owners and evidence
+- portability, privacy, or oversight claims remain abstract after the standards review
+- the standards set grows each quarter, but delivery review gets no clearer
 
 Back to [20.2 Applying Standards And Frameworks](20-02-00-applying-standards-and-frameworks.md).

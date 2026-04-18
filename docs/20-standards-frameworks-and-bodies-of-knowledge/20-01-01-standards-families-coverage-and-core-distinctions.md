@@ -1,39 +1,45 @@
 # 20.1.1 Standards Families, Coverage, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Draft_
+_Page Type: Concept Explainer | Maturity: Review-Ready_
 
-This subsection isolates the most reusable distinctions in the chapter so later implementation and comparison material stays anchored to the right concepts.
+The main distinction in this chapter is simple: not every respected external artifact does the same job. Teams make avoidable mistakes when they treat laws, management-system standards, risk frameworks, technical specifications, and standards bodies as interchangeable.
 
-This distinction layer matters because the chapter on standards frameworks and bodies of knowledge is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.
+## Standards Families At A Glance
 
-## Why These Distinctions Matter
+| Family | What it is for | What it does not do by itself | Typical owner or primary user | Common misuse shape |
+| --- | --- | --- | --- | --- |
+| Laws and regulations | Create legal obligations, rights, prohibitions, and enforcement exposure | They do not design the operating model, control library, or day-to-day review workflow | Legal, compliance, privacy, regulated product owners | Cited as if legal text already defines the full management system |
+| Management-system standards | Define governance structure, accountability, continual improvement, and auditable management practices | They do not automatically provide system-specific threat models, eval packs, or release gates | Governance leads, audit, enterprise risk, platform leadership | Treated as a certification shortcut instead of an operating discipline |
+| Risk and governance frameworks | Provide structured ways to identify, assess, prioritize, and communicate risk | They do not by themselves prove compliance or implement technical controls | Risk, governance, assurance, product leadership | Used as abstract vocabulary with no mapping to local decisions |
+| Technical specifications and practice guides | Describe concrete methods, control patterns, or interoperable technical mechanisms | They do not settle whether the organization should adopt them or how they fit the wider governance model | Security, platform, engineering, architecture, data teams | Elevated into a whole governance answer because they feel concrete |
+| Bodies, committees, and coordination programs | Help teams track evolving standards, harmonization, benchmarks, and implementation context | They do not themselves create direct conformance for the organization | Standards watchers, policy teams, architects, ecosystem leads | Named as authority proof even though they are really tracking and coordination anchors |
 
-The practical question is not whether the labels are elegant. The practical question is whether the distinctions change how a team designs, reviews, buys, operates, or audits a system. In this chapter, that means checking whether the topic is being reasoned about in the right layer and with the right cross-cutting lenses still visible.
+## Core Distinctions That Change Decisions
 
-## Key Lenses
-
-| Framework lens | What it clarifies |
+| Distinction | Why it matters in practice |
 | --- | --- |
-| Problem fit | Helps teams choose frameworks because of the problem they have, not because of brand familiarity |
-| Lifecycle coverage | Shows where one framework stops and another needs to complement it |
-| Governance versus technical depth | Separates management guidance from implementation guidance |
-| Combination logic | Keeps teams from overloading one body of knowledge with every job |
+| Obligation versus guidance | Tells the team whether it is interpreting requirements or choosing implementation help |
+| Management system versus control method | Separates organization-wide governance design from specific technical or process safeguards |
+| Public framework versus paywalled standard | Changes how easy it is to socialize, operationalize, and cross-reference the material internally |
+| Named body versus normative text | Prevents committees and programs from being confused with the standards or laws they help coordinate |
+| Tracking anchor versus implementation anchor | Keeps horizon-scanning work distinct from release, review, or certification work |
 
-## What Matters Most
+## What Usually Needs To Exist Locally
 
-- Frameworks are useful only when translated into real decisions and controls
-- Different frameworks solve different jobs across the lifecycle
-- One framework is rarely enough
-- Public and community guidance should be paired with the operational chapters of the atlas
+- a named owner for the standards set or crosswalk
+- a control mapping into the relevant operating chapters
+- an evidence package that shows what the team actually implemented
+- a re-review trigger for model, data, supplier, workflow, or risk-profile changes
 
-## What Reviewers Should Check
+## Review Questions
 
-- Are the distinctions here still connected to the chapter's real decision surface rather than being treated as abstract categories?
-- Is the proposal using these distinctions to expose trade-offs in control, evidence, ownership, or lock-in?
-- Does the chapter language stay consistent with the atlas taxonomy instead of introducing new local categories without need?
+- Which artifact family is the team citing, and what job is it expecting that family to do?
+- Does the proposal separate legal applicability from management-system design and technical practice?
+- Is the cited anchor being used to justify real controls, or only to improve rhetorical credibility?
+- Are openness, portability, privacy, sovereignty, and supplier dependence still visible where they materially change the selection?
 
 ## Practical Reading Rule
 
-Use this file to sharpen the chapter, not to replace it. If a proposal still sounds plausible after the distinctions here are applied, it is usually ready to move into heuristics, scenarios, or reference material. If it falls apart, the distinction work has already paid for itself.
+If a proposal still looks sound after these families are separated, move to the heuristics page. If the logic collapses once the artifact class is named, the standards set is being overloaded.
 
 Back to [20.1 Standards Foundations](20-01-00-standards-foundations.md).

@@ -1,23 +1,25 @@
 # 20.2 Applying Standards And Frameworks
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Standards Frameworks And Bodies Of Knowledge. Within the chapter, it distinguishes laws, standards, frameworks, and bodies of knowledge so teams combine them correctly instead of treating one artifact as a universal answer, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns the standards system into delivery work. Use it to test whether a chosen set produces owners, controls, evidence, and re-review triggers rather than a polished citation list.
 
 ## Section Map
 
 - 20.2.1 [Worked Standards Scenarios](20-02-01-worked-standards-scenarios.md)
 - 20.2.2 [Patterns And Anti-Patterns](20-02-02-patterns-and-anti-patterns.md)
 
-This guide turns the chapter into a delivery and operating sequence. It is intentionally practical: what to check first, what to defer, and what should trigger review before wider rollout.
+## What This Section Helps Decide
 
+- what a proportionate standards combination looks like in real organizations
+- which outputs should exist after standards selection is complete
+- which failure modes show that the standards set is being used theatrically rather than operationally
+- when standards reasoning should trigger renewed governance, security, oversight, or sourcing review
 
-## What To Look For Here
+## Reading Boundaries
 
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
-
+- Use [20.2.1 Worked Standards Scenarios](20-02-01-worked-standards-scenarios.md) for scenario-led combinations and expected outputs.
+- Use [20.2.2 Patterns And Anti-Patterns](20-02-02-patterns-and-anti-patterns.md) as a design-review and renewal-review sheet.
+- Revisit the foundations pages if the team still cannot name the dominant question or artifact family.
 
 Back to [20. Standards Frameworks And Bodies Of Knowledge](20-00-00-standards-frameworks-and-bodies-of-knowledge.md).

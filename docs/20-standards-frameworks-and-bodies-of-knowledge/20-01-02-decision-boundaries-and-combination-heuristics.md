@@ -1,36 +1,52 @@
 # 20.1.2 Decision Boundaries And Combination Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to combine legal texts, standards, frameworks, and practice guides without forcing one category to answer the job of another.
+Use this page to choose a starting set. The right combination depends on the dominant question, not on which standard is most fashionable.
 
-## Decision Boundaries
+## Decision Lanes
 
-- Route the issue to **legal interpretation** when the question is whether the organization has obligations, prohibitions, rights impacts, or statutory duties under instruments such as the EU AI Act, GDPR, or the EU Data Act.
-- Route the issue to **management-system design** when the question is how to organize accountability, continual improvement, policy structure, auditability, and governance ownership across the organization.
-- Route the issue to **risk-program design** when the question is how to structure risk identification, treatment, evidence, and review priorities across use cases.
-- Route the issue to **technical or operational practice** when the question is how to secure, monitor, test, document, or operate the system in day-to-day reality.
+| Lane | Use it when the main question is... |
+| --- | --- |
+| Legal applicability | which obligations, rights, prohibitions, or enforcement exposures apply |
+| Governance system design | how accountability, policy structure, auditability, and continual improvement should work |
+| Risk-program design | how to prioritize risks, control depth, and review intensity across use cases |
+| Technical control selection | how to secure, monitor, document, or instrument the system in practice |
+| Standards tracking and harmonization | which bodies, committees, or public programs should be watched as the landscape changes |
 
-## Combination Heuristics
+## Starting Combinations
 
-- Combine laws with standards rather than substituting one for the other: the law defines obligations, while the standard helps structure a repeatable governance response.
-- Combine management-system standards with risk frameworks when the team needs both durable governance and practical prioritization of controls.
-- Combine technical practice frameworks with governance material when the issue is not just “what should we do?” but “how will this be implemented and evidenced?”
-- Use EU AI Act plus GDPR when the system touches both AI-system obligations and personal-data obligations.
-- Use ISO/IEC 42001 plus ISO/IEC 23894 or NIST AI RMF when the organization needs both governance discipline and a working risk method.
-- Use EU Data Act plus sourcing and portability review when access, sharing, switching, or ecosystem control are part of the decision.
+| Situation | Starting set | Why this is the right starting set |
+| --- | --- | --- |
+| EU-facing service with meaningful consequence | EU AI Act + GDPR + ISO/IEC 42001 | obligations, privacy duties, and management-system structure all matter together |
+| Organization needs a durable AI governance model | ISO/IEC 42001 + ISO/IEC 23894 or NIST AI RMF | combines governance discipline with a usable risk language |
+| Team needs impact review beyond pure risk scoring | ISO/IEC 42001 + ISO/IEC 42005 + chapter `16` | adds stakeholder and oversight implications to the governance model |
+| Security review for an AI-enabled application or agentic workflow | NIST AI RMF or ISO/IEC 23894 + OWASP GenAI + MITRE ATLAS + chapters `14` and `15` | combines governance framing with concrete security failure modes and operational controls |
+| Portability, access, or ecosystem-control dispute | EU Data Act + chapter `06` + chapter `18` | the core question is switching and control posture, not only privacy or model quality |
+| Standards-landscape monitoring for EU implementation | CEN-CENELEC AI work + ETSI AI + NIST AI Standards + chapter `21` | keeps tracking work separate from direct conformance claims |
 
-## Common Failure Modes
+## Practical Heuristics
 
-- Treating a framework as if it removed the need for legal review.
-- Treating a regulation as if it explained how to run a management system.
-- Adopting many reference frameworks without mapping any of them to actual controls, owners, or evidence.
-- Confusing community practice guidance with authoritative legal or standards text.
+- Start with the governing obligation, then add the management-system or technical anchor that makes it operational.
+- Do not use a management-system standard as a substitute for system-specific evaluation, security, or oversight work.
+- Do not treat public bodies or committees as if membership or awareness produces conformance.
+- If the system crosses privacy, sourcing, or oversight boundaries, pull those chapters in explicitly instead of stretching chapter `20`.
+- Prefer a small, named standards set with mapped outputs over a long list of respected references with no operational owner.
 
 ## Escalate When
 
-- The team cannot explain whether its current problem is legal, governance, risk, or technical practice.
-- A chapter citation is being used as a badge of compliance rather than as part of an implementation method.
-- Multiple standards are being named, but nobody owns the crosswalk into controls, sourcing review, or release gates.
+- the team cannot say whether it is solving a legal, governance, risk, technical, or tracking problem
+- certification or conformance language appears before a control mapping exists
+- multiple standards are named, but nobody owns the crosswalk into release evidence, supplier review, or operating controls
+- the standards dispute is really about data boundary, human oversight, evaluation coverage, or exit posture
+
+## Chapter Handoffs
+
+- [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md)
+- [15. Security And Abuse Resistance](../15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md)
+- [16. Human Oversight And Operating Model](../16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
 
 Back to [20.1 Standards Foundations](20-01-00-standards-foundations.md).

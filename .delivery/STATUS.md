@@ -9,24 +9,24 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | Field | Value |
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
-| Current tranche | Build-vs-buy follow-through and reference cleanup complete; next recommended content tranche is standards and bodies system completion (`20`) |
-| Last completed pass ID | `2026-04-18.f` |
-| Current recommendation | `advance to G-12` |
+| Current tranche | Standards and bodies system completion (`20`) complete; next recommended content tranche is knowledge retrieval and adaptation decision surfaces (`11`, `12`) |
+| Last completed pass ID | `2026-04-18.g` |
+| Current recommendation | `advance to G-08` |
 
 ## Workstream Board
 
 | Workstream | Status | Active gap IDs | Done when |
 | --- | --- | --- | --- |
-| `WS1` Reduce Boilerplate And Repetition | Active | `G-01`, `G-05`, `G-06`, `G-08`, `G-09`, `G-10`, `G-12`, `G-13` | chapter and section front doors are concise across the remaining weak clusters |
-| `WS2` Increase Information Density And Asymmetry | Active | `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-12`, `G-13` | remaining thin pages are strengthened, merged, or explicitly deferred |
-| `WS3` Add Decision-Grade Artifacts | Active | `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-12`, `G-13` | major open chapters each include usable decision aids, scenarios, or operational artifacts |
-| `WS4` Separate Concept, Evidence, And Action | Active | `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-12`, `G-13` | page-type structure is obvious in the remaining weak chapters |
+| `WS1` Reduce Boilerplate And Repetition | Active | `G-01`, `G-05`, `G-06`, `G-08`, `G-09`, `G-10`, `G-13` | chapter and section front doors are concise across the remaining weak clusters |
+| `WS2` Increase Information Density And Asymmetry | Active | `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13` | remaining thin pages are strengthened, merged, or explicitly deferred |
+| `WS3` Add Decision-Grade Artifacts | Active | `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13` | major open chapters each include usable decision aids, scenarios, or operational artifacts |
+| `WS4` Separate Concept, Evidence, And Action | Active | `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13` | page-type structure is obvious in the remaining weak chapters |
 | `WS5` Visible Page Maturity Model | Done |  | all pages carry visible maturity labels and current tracking is aligned |
-| `WS6` Citation And Evidence Discipline | Active | `G-06`, `G-09`, `G-12`, `G-13` | trust-critical comparison and standards pages show stronger primary-source grounding |
-| `WS7` Comparison Schema Consistency | Active | `G-06`, `G-09`, `G-12`, `G-13` | comparison-heavy pages use stable reusable fields and evidence notes where needed |
+| `WS6` Citation And Evidence Discipline | Active | `G-06`, `G-09`, `G-13` | trust-critical comparison and standards pages show stronger primary-source grounding |
+| `WS7` Comparison Schema Consistency | Active | `G-06`, `G-09`, `G-13` | comparison-heavy pages use stable reusable fields and evidence notes where needed |
 | `WS8` Glossary / Terminology Ledger | Done |  | the terminology ledger remains the shared fast-reference anchor |
-| `WS9` Strengthen High-Leverage Chapters First | Active | `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-12` | the highest-judgment chapters no longer read like scaffold material |
-| `WS10` Prune, Merge, Or Defer Weak Pages | Active | `G-05`, `G-12`, `G-13` | weak standalone pages are resolved instead of lingering as symmetry placeholders |
+| `WS9` Strengthen High-Leverage Chapters First | Active | `G-05`, `G-06`, `G-07`, `G-08`, `G-09` | the highest-judgment chapters no longer read like scaffold material |
+| `WS10` Prune, Merge, Or Defer Weak Pages | Active | `G-05`, `G-13` | weak standalone pages are resolved instead of lingering as symmetry placeholders |
 
 ## Gap Ledger
 
@@ -43,11 +43,23 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-09` | Assurance, observability, and security hardening (`13`, `14`, `15`) | `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9` | `evidence_gap` | Open | High | Finish evaluation foundations and strengthen observability and security artifact/reference pages | `13.*`, `14.*`, `15.*` |  |
 | `G-10` | Human oversight operating model completion (`16`) | `WS2`, `WS3`, `WS4`, `WS9` | `thin_content` | Open | Medium | Deepen oversight foundations, scenarios, and operational artifacts | `16.*` |  |
 | `G-11` | Build-vs-buy follow-through and reference cleanup (`18`) | `WS1`, `WS2`, `WS3`, `WS7`, `WS9` | `thin_content` | Closed | High | Keep chapter `18` stable as a sourcing reference pattern for later passes | `18.*` | `2026-04-18.f` |
-| `G-12` | Standards and bodies system completion (`20`) | `WS1`, `WS2`, `WS4`, `WS6`, `WS7`, `WS9`, `WS10` | `evidence_gap` | Open | High | Deepen foundations, worked scenarios, and standards reference crosswalks | `20.*` |  |
+| `G-12` | Standards and bodies system completion (`20`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9`, `WS10` | `evidence_gap` | Closed | High | Keep chapter `20` stable as the standards-selection and standards-combination reference pattern for later passes | `20.*` | `2026-04-18.g` |
 | `G-13` | Research and open-knowledge completion (`21`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS10` | `thin_content` | Open | Medium | Deepen knowledge-source foundations and close weak reference surfaces | `21.*` |  |
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.g`
+
+- Date: `2026-04-18`
+- Tranche: Standards and bodies system completion (`20`)
+- Goal: Rewrite chapter `20` into a review-ready standards-selection and standards-combination system with stronger scenarios, clearer page-type differentiation, and a standards crosswalk grounded in official sources
+- Workstreams advanced: `WS1`, `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9`, `WS10`
+- Gap IDs moved: `G-12` `Open -> Closed`
+- Pages / chapter clusters touched: chapter `20`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: all `20.*` pages promoted from `Outline` / `Draft` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.f`
 
@@ -123,11 +135,10 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 
 ## Next Queue
 
-1. `G-12` Standards and bodies system completion
-2. `G-08` Knowledge retrieval and adaptation decision surfaces
-3. `G-09` Assurance, observability, and security hardening
-4. `G-05` Use-case portfolio density and asymmetry cleanup
-5. `G-06` Model, hosting, and gateway stack refinement
-6. `G-10` Human oversight operating model completion
-7. `G-01` Scope and principles orientation surfaces
-8. `G-13` Research and open-knowledge completion
+1. `G-08` Knowledge retrieval and adaptation decision surfaces
+2. `G-09` Assurance, observability, and security hardening
+3. `G-05` Use-case portfolio density and asymmetry cleanup
+4. `G-06` Model, hosting, and gateway stack refinement
+5. `G-10` Human oversight operating model completion
+6. `G-01` Scope and principles orientation surfaces
+7. `G-13` Research and open-knowledge completion
