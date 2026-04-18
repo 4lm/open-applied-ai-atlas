@@ -163,6 +163,7 @@ When committing code, follow the Lore commit protocol:
   - `Scope-risk:` — narrow/moderate/broad
   - `Tested:` / `Not-tested:` — verification coverage and gaps
 - Use only the trailers that add value; all are optional.
+- Do not add co-authorship, `Co-authored-by` or OMX authorship trailers.
 - Keep the body concise but include enough context for a future agent to understand the decision without reading the diff.
 </lore_commits>
 
