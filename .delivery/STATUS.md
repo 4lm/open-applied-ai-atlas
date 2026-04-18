@@ -9,9 +9,9 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | Field | Value |
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
-| Current tranche | Standards and bodies system completion (`20`) complete; next recommended content tranche is knowledge retrieval and adaptation decision surfaces (`11`, `12`) |
-| Last completed pass ID | `2026-04-18.n` |
-| Current recommendation | `advance to G-08` |
+| Current tranche | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) in progress; retrieval scenario layer strengthened in chapter `11` |
+| Last completed pass ID | `2026-04-18.p` |
+| Current recommendation | `continue G-08` |
 
 ## Workstream Board
 
@@ -48,6 +48,30 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.p`
+
+- Date: `2026-04-18`
+- Tranche: Ralph completion detection hardening
+- Goal: Refactor `scripts/ralph-codex.sh` so Ralph only stops when the final assistant reply emits the completion marker, preventing prompt echo or transcript echo from ending a multi-pass PIP run early
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, changelog, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.o`
+
+- Date: `2026-04-18`
+- Tranche: Knowledge retrieval worked scenarios (`11`)
+- Goal: Rewrite the retrieval worked-example page into concrete decision-grade scenarios so chapter `11` has a usable operating reference for live retrieval, bounded memory, graph-backed retrieval, and permission-sensitive access design
+- Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `11-02-01` promoted from `Outline` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.n`
 

@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-04-18 | Hardened `scripts/ralph-codex.sh` so Ralph only stops when the final assistant reply contains the completion marker, preventing prompt echo or transcript echo from ending multi-pass runs early (`2026-04-18.p`). |
+| 2026-04-18 | Rewrote `docs/11-knowledge-retrieval-and-memory/11-02-01-worked-retrieval-scenarios.md` into review-ready scenario tables covering live retrieval, bounded memory, graph-backed retrieval, and permission-sensitive access design (`2026-04-18.o`). |
 | 2026-04-18 | Refactored `scripts/ralph-codex.sh` to stream Codex output directly to the console, replace per-iteration `iter-*.out` / `iter-*.err` artifacts with a recreated root `.ralph` timing ledger, and add ignore coverage for that generated file (`2026-04-18.n`). |
 | 2026-04-18 | Added `.delivery/PROMPT.md` as the default Ralph prompt, clarified that Ralph already runs in explicit auto-allow mode, and expanded script help with profile and env-var examples (`2026-04-18.m`). |
 | 2026-04-18 | Added `scripts/ralph-codex.sh` as a human-run external Codex loop, moved human guidance into `README.md` and script help, tightened the README overview, and set `MAX_ITERS` default to `100` as a safety stop (`2026-04-18.l`). |

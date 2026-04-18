@@ -24,7 +24,7 @@ Environment:
   RALPH_LOG_FILE   Single-run Ralph ledger. Default: repo-root .ralph
   MAX_ITERS        Stop after N iterations. Default: 100. Set 0 for unlimited
   SLEEP_SECS       Sleep between iterations. Default: 1
-  COMPLETE_MARKER  Output marker that ends the loop. Default: <promise>COMPLETE</promise>
+  COMPLETE_MARKER  Final assistant-message marker that ends the loop. Default: <promise>ralph-codex/__COMPLETE__</promise>
   USE_SEARCH       Default: 1, enables codex --search
   MODEL            Optional codex model override, e.g. gpt-5.4
   PROFILE          Optional user-level Codex profile override
@@ -78,8 +78,8 @@ Worked examples for the default repo flow
 1. Implement the current .delivery/PIP.md
    The tracked default prompt lives at .delivery/PROMPT.md. It reads AGENTS.md,
    .delivery/PIP.md, and .delivery/STATUS.md, chooses one correct increment
-   per run, runs relevant checks, and prints <promise>COMPLETE</promise> only
-   when the overall job is done.
+   per run, runs relevant checks, and prints <promise>ralph-codex/__COMPLETE__</promise> in
+   the final assistant reply only when the overall job is done.
 
    Run:
      ./scripts/ralph-codex.sh
@@ -132,7 +132,7 @@ PROMPT_FILE="${PROMPT_FILE:-$ROOT_DIR/.delivery/PROMPT.md}"
 RALPH_LOG_FILE="${RALPH_LOG_FILE:-$DEFAULT_RALPH_LOG_FILE}"
 MAX_ITERS="${MAX_ITERS:-100}"
 SLEEP_SECS="${SLEEP_SECS:-1}"
-COMPLETE_MARKER="${COMPLETE_MARKER:-<promise>COMPLETE</promise>}"
+COMPLETE_MARKER="${COMPLETE_MARKER:-<promise>ralph-codex/__COMPLETE__</promise>}"
 USE_SEARCH="${USE_SEARCH:-1}"
 MODEL="${MODEL:-}"
 PROFILE="${PROFILE:-}"
@@ -174,6 +174,7 @@ append_log "search enabled: $USE_SEARCH"
 append_log "bypass enabled: $USE_BYPASS"
 append_log "max iterations: $MAX_ITERS"
 append_log "sleep seconds: $SLEEP_SECS"
+append_log "completion detection: final assistant message only"
 append_log ""
 
 iter=0
@@ -182,7 +183,7 @@ while :; do
   iter=$((iter + 1))
   iter_start_ts=$(timestamp_now)
   iter_start_epoch=$(epoch_now)
-  iter_output=$(mktemp "${TMPDIR:-/tmp}/ralph-codex-output.XXXXXX")
+  iter_last_message=$(mktemp "${TMPDIR:-/tmp}/ralph-codex-last-message.XXXXXX")
   iter_fifo=$(mktemp -u "${TMPDIR:-/tmp}/ralph-codex-fifo.XXXXXX")
 
   echo "== Ralph iteration $iter =="
@@ -217,10 +218,10 @@ while :; do
     set -- "$@" $EXTRA_ARGS
   fi
 
-  set -- "$@" exec -
+  set -- "$@" exec -o "$iter_last_message" -
 
   mkfifo "$iter_fifo"
-  tee "$iter_output" <"$iter_fifo" &
+  tee <"$iter_fifo" &
   tee_pid=$!
 
   if "$@" <"$PROMPT_FILE" >"$iter_fifo" 2>&1; then
@@ -239,14 +240,15 @@ while :; do
   append_log "  end: $iter_end_ts"
   append_log "  duration_seconds: $iter_duration"
   append_log "  exit_status: $codex_status"
+  append_log "  completion_check_source: final assistant message"
 
-  if grep -F "$COMPLETE_MARKER" "$iter_output" >/dev/null 2>&1; then
+  if [ -s "$iter_last_message" ] && grep -F "$COMPLETE_MARKER" "$iter_last_message" >/dev/null 2>&1; then
     append_log "  completion_marker_seen: yes"
     append_log "  stop_reason: completion marker"
     append_log ""
     echo "Ralph finished on iteration $iter"
     finish_run
-    rm -f "$iter_output"
+    rm -f "$iter_last_message"
     exit 0
   fi
 
@@ -256,13 +258,13 @@ while :; do
     append_log "  stop_reason: reached MAX_ITERS=$MAX_ITERS"
     append_log ""
     finish_run
-    rm -f "$iter_output"
+    rm -f "$iter_last_message"
     echo "Reached MAX_ITERS=$MAX_ITERS without completion marker" >&2
     exit 2
   fi
 
   append_log "  stop_reason: continue"
   append_log ""
-  rm -f "$iter_output"
+  rm -f "$iter_last_message"
   sleep "$SLEEP_SECS"
 done
