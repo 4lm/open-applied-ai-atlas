@@ -10,7 +10,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
 | Current tranche | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) in progress; retrieval fronts and the adaptation operating front are stronger, but adaptation chapter/reference fronts and retrieval/adaptation pattern surfaces remain thin |
-| Last completed pass ID | `2026-04-18.v` |
+| Last completed pass ID | `2026-04-18.w` |
 | Current recommendation | `continue G-08` |
 
 ## Audit Snapshot
@@ -80,6 +80,18 @@ Snapshot date: `2026-04-18`
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `README.md`, `CHANGELOG.md`, `scripts/*` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.w`
+
+- Date: `2026-04-18`
+- Tranche: Ralph hard-gated completion loop
+- Goal: Refactor `scripts/ralph-codex.sh` so the shell runner overrides prompt completion policy, requires schema-shaped final JSON, and blocks premature completion unless hard shell gates pass
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, `CHANGELOG.md`, root ignore rules, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.v`
 
