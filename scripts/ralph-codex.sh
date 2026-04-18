@@ -25,7 +25,7 @@ Environment:
   MAX_ITERS        Stop after N iterations. Default: 100. Set 0 for unlimited
   SLEEP_SECS       Sleep between iterations. Default: 1
   COMPLETE_MARKER  Output marker that ends the loop. Default: <promise>COMPLETE</promise>
-  USE_SEARCH       1 enables codex --search
+  USE_SEARCH       Default: 1, enables codex --search
   MODEL            Optional codex model override, e.g. gpt-5.4
   PROFILE          Optional user-level Codex profile override
   EXTRA_ARGS       Extra raw args appended before `exec -` as shell-split tokens
@@ -133,7 +133,7 @@ RALPH_LOG_FILE="${RALPH_LOG_FILE:-$DEFAULT_RALPH_LOG_FILE}"
 MAX_ITERS="${MAX_ITERS:-100}"
 SLEEP_SECS="${SLEEP_SECS:-1}"
 COMPLETE_MARKER="${COMPLETE_MARKER:-<promise>COMPLETE</promise>}"
-USE_SEARCH="${USE_SEARCH:-0}"
+USE_SEARCH="${USE_SEARCH:-1}"
 MODEL="${MODEL:-}"
 PROFILE="${PROFILE:-}"
 EXTRA_ARGS="${EXTRA_ARGS:-}"
