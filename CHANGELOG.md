@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-04-18 | Refactored `scripts/ralph-codex.sh` to stream Codex output directly to the console, replace per-iteration `iter-*.out` / `iter-*.err` artifacts with a recreated root `.ralph` timing ledger, and add ignore coverage for that generated file (`2026-04-18.n`). |
 | 2026-04-18 | Added `.delivery/PROMPT.md` as the default Ralph prompt, clarified that Ralph already runs in explicit auto-allow mode, and expanded script help with profile and env-var examples (`2026-04-18.m`). |
 | 2026-04-18 | Added `scripts/ralph-codex.sh` as a human-run external Codex loop, moved human guidance into `README.md` and script help, tightened the README overview, and set `MAX_ITERS` default to `100` as a safety stop (`2026-04-18.l`). |
 | 2026-04-18 | Closed `G-12` by rewriting chapter `20` into a review-ready standards-selection and standards-combination system with stronger scenarios, pattern guidance, and an official-source-backed standards crosswalk (`2026-04-18.g`). |

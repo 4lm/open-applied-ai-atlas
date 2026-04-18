@@ -4,7 +4,7 @@ This summary records the current public quality signals under the Product Improv
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
-Last delivery update: `2026-04-18.m` on `2026-04-18`.
+Last delivery update: `2026-04-18.n` on `2026-04-18`.
 
 ## Current Counts
 
@@ -28,6 +28,7 @@ Last delivery update: `2026-04-18.m` on `2026-04-18`.
 
 ## What Changed
 
+- Refactored `scripts/ralph-codex.sh` so Codex output stays on the console, `.ralph` is recreated as a single per-run timing ledger, and the generated root `.ralph` file is ignored.
 - Added `.delivery/PROMPT.md` as the default Ralph prompt, clarified that Ralph already runs in explicit auto-allow mode, and expanded script help with profile and env-var examples.
 - Added `scripts/ralph-codex.sh` as a human-run external Codex loop, moved human guidance into `README.md` and script help, tightened the README overview, and set `MAX_ITERS` default to `100` as a safety stop.
 - Added a visible page-type and maturity system to `docs/`.

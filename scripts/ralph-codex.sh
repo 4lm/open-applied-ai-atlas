@@ -21,10 +21,10 @@ Environment:
   CODEX_BIN        Codex CLI binary to run. Default: codex
   WORKDIR          Repo or task working directory. Default: repo root
   PROMPT_FILE      Prompt file to feed to each run. Default: .delivery/PROMPT.md
-  LOG_DIR          Iteration stdout/stderr directory. Default: repo-root .ralph
+  RALPH_LOG_FILE   Single-run Ralph ledger. Default: repo-root .ralph
   MAX_ITERS        Stop after N iterations. Default: 100. Set 0 for unlimited
   SLEEP_SECS       Sleep between iterations. Default: 1
-  COMPLETE_MARKER  Stdout marker that ends the loop. Default: <promise>COMPLETE</promise>
+  COMPLETE_MARKER  Output marker that ends the loop. Default: <promise>COMPLETE</promise>
   USE_SEARCH       1 enables codex --search
   MODEL            Optional codex model override, e.g. gpt-5.4
   PROFILE          Optional user-level Codex profile override
@@ -49,8 +49,8 @@ Common examples:
   Different working directory:
     WORKDIR=/path/to/repo ./scripts/ralph-codex.sh
 
-  Different log directory:
-    LOG_DIR=.ralph-review ./scripts/ralph-codex.sh
+  Different Ralph ledger file:
+    RALPH_LOG_FILE=.ralph-review ./scripts/ralph-codex.sh
 
   Limit the run:
     MAX_ITERS=25 ./scripts/ralph-codex.sh
@@ -95,6 +95,27 @@ EOF
 }
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+DEFAULT_RALPH_LOG_FILE="$ROOT_DIR/.ralph"
+
+timestamp_now() {
+  date '+%Y-%m-%d %H:%M:%S %Z'
+}
+
+epoch_now() {
+  date '+%s'
+}
+
+append_log() {
+  printf '%s\n' "$1" >>"$RALPH_LOG_FILE"
+}
+
+finish_run() {
+  run_end_ts=$(timestamp_now)
+  run_end_epoch=$(epoch_now)
+  run_duration=$((run_end_epoch - run_start_epoch))
+  append_log "Ralph run ended: $run_end_ts"
+  append_log "Ralph run duration_seconds: $run_duration"
+}
 
 for arg in "$@"; do
   case "$arg" in
@@ -108,7 +129,7 @@ done
 CODEX_BIN="${CODEX_BIN:-codex}"
 WORKDIR="${WORKDIR:-$ROOT_DIR}"
 PROMPT_FILE="${PROMPT_FILE:-$ROOT_DIR/.delivery/PROMPT.md}"
-LOG_DIR="${LOG_DIR:-$ROOT_DIR/.ralph}"
+RALPH_LOG_FILE="${RALPH_LOG_FILE:-$DEFAULT_RALPH_LOG_FILE}"
 MAX_ITERS="${MAX_ITERS:-100}"
 SLEEP_SECS="${SLEEP_SECS:-1}"
 COMPLETE_MARKER="${COMPLETE_MARKER:-<promise>COMPLETE</promise>}"
@@ -128,17 +149,45 @@ if [ ! -f "$PROMPT_FILE" ]; then
   exit 1
 fi
 
-mkdir -p "$LOG_DIR"
+RALPH_LOG_DIR=$(dirname -- "$RALPH_LOG_FILE")
+mkdir -p "$RALPH_LOG_DIR"
+
+if [ -d "$RALPH_LOG_FILE" ]; then
+  if [ "$RALPH_LOG_FILE" = "$DEFAULT_RALPH_LOG_FILE" ]; then
+    rm -rf "$RALPH_LOG_FILE"
+  else
+    echo "error: RALPH_LOG_FILE points to a directory: $RALPH_LOG_FILE" >&2
+    exit 1
+  fi
+fi
+
+: >"$RALPH_LOG_FILE"
+run_start_ts=$(timestamp_now)
+run_start_epoch=$(epoch_now)
+append_log "Ralph run started: $run_start_ts"
+append_log "workdir: $WORKDIR"
+append_log "prompt file: $PROMPT_FILE"
+append_log "completion marker: $COMPLETE_MARKER"
+append_log "model: ${MODEL:-default}"
+append_log "profile: ${PROFILE:-default}"
+append_log "search enabled: $USE_SEARCH"
+append_log "bypass enabled: $USE_BYPASS"
+append_log "max iterations: $MAX_ITERS"
+append_log "sleep seconds: $SLEEP_SECS"
+append_log ""
 
 iter=0
 
 while :; do
   iter=$((iter + 1))
-
-  out_file="$LOG_DIR/iter-$iter.out"
-  err_file="$LOG_DIR/iter-$iter.err"
+  iter_start_ts=$(timestamp_now)
+  iter_start_epoch=$(epoch_now)
+  iter_output=$(mktemp "${TMPDIR:-/tmp}/ralph-codex-output.XXXXXX")
+  iter_fifo=$(mktemp -u "${TMPDIR:-/tmp}/ralph-codex-fifo.XXXXXX")
 
   echo "== Ralph iteration $iter =="
+  append_log "Iteration $iter"
+  append_log "  start: $iter_start_ts"
 
   set -- "$CODEX_BIN"
 
@@ -170,23 +219,50 @@ while :; do
 
   set -- "$@" exec -
 
-  if "$@" <"$PROMPT_FILE" >"$out_file" 2>"$err_file"; then
-    :
+  mkfifo "$iter_fifo"
+  tee "$iter_output" <"$iter_fifo" &
+  tee_pid=$!
+
+  if "$@" <"$PROMPT_FILE" >"$iter_fifo" 2>&1; then
+    codex_status=0
   else
+    codex_status=$?
     echo "warning: codex exited non-zero on iteration $iter" >&2
   fi
 
-  cat "$out_file"
+  wait "$tee_pid"
+  rm -f "$iter_fifo"
 
-  if grep -F "$COMPLETE_MARKER" "$out_file" >/dev/null 2>&1; then
+  iter_end_ts=$(timestamp_now)
+  iter_end_epoch=$(epoch_now)
+  iter_duration=$((iter_end_epoch - iter_start_epoch))
+  append_log "  end: $iter_end_ts"
+  append_log "  duration_seconds: $iter_duration"
+  append_log "  exit_status: $codex_status"
+
+  if grep -F "$COMPLETE_MARKER" "$iter_output" >/dev/null 2>&1; then
+    append_log "  completion_marker_seen: yes"
+    append_log "  stop_reason: completion marker"
+    append_log ""
     echo "Ralph finished on iteration $iter"
+    finish_run
+    rm -f "$iter_output"
     exit 0
   fi
 
+  append_log "  completion_marker_seen: no"
+
   if [ "$MAX_ITERS" -gt 0 ] && [ "$iter" -ge "$MAX_ITERS" ]; then
+    append_log "  stop_reason: reached MAX_ITERS=$MAX_ITERS"
+    append_log ""
+    finish_run
+    rm -f "$iter_output"
     echo "Reached MAX_ITERS=$MAX_ITERS without completion marker" >&2
     exit 2
   fi
 
+  append_log "  stop_reason: continue"
+  append_log ""
+  rm -f "$iter_output"
   sleep "$SLEEP_SECS"
 done

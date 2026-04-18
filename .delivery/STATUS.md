@@ -10,7 +10,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
 | Current tranche | Standards and bodies system completion (`20`) complete; next recommended content tranche is knowledge retrieval and adaptation decision surfaces (`11`, `12`) |
-| Last completed pass ID | `2026-04-18.m` |
+| Last completed pass ID | `2026-04-18.n` |
 | Current recommendation | `advance to G-08` |
 
 ## Workstream Board
@@ -48,6 +48,18 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.n`
+
+- Date: `2026-04-18`
+- Tranche: Ralph console logging refactor
+- Goal: Refactor `scripts/ralph-codex.sh` so Codex output stays on the console, replace per-iteration stdout/stderr files with a recreated root `.ralph` timing ledger, and add ignore coverage for the generated file
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, changelog, root ignore rules, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.m`
 

@@ -102,7 +102,7 @@ flowchart TB
 
 ## Human-Run Ralph Loop
 
-`./scripts/ralph-codex.sh` is a human-run outer loop for repeated fresh `codex exec -` runs. The default prompt lives at `.delivery/PROMPT.md`, and the script already runs in unattended auto-allow mode via `-a never -s danger-full-access`.
+`./scripts/ralph-codex.sh` is a human-run outer loop for repeated fresh `codex exec -` runs. The default prompt lives at `.delivery/PROMPT.md`, the script already runs in unattended auto-allow mode via `-a never -s danger-full-access`, and each top-level run recreates a root `.ralph` ledger with iteration start times, end times, durations, exit status, and completion-marker hits.
 
 Examples:
 
@@ -118,7 +118,7 @@ Examples:
 PROMPT_FILE=prompts/fix-tests.md ./scripts/ralph-codex.sh
 ```
 
-`PROFILE` is optional and only useful for user-level defaults such as model selection; it does not replace the script's explicit auto-allow flags. Run `./scripts/ralph-codex.sh --help` for the full env-var matrix, profile example, and longer prompt examples.
+The Codex output stays on the console during the run; `.ralph` is the lightweight per-run ledger rather than a captured stdout/stderr archive. `PROFILE` is optional and only useful for user-level defaults such as model selection; it does not replace the script's explicit auto-allow flags. Run `./scripts/ralph-codex.sh --help` for the full env-var matrix, profile example, and longer prompt examples.
 
 ## Page Signals
 
