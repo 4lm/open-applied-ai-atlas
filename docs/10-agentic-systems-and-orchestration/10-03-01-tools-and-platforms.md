@@ -1,6 +1,6 @@
 # 10.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the frameworks and runtimes used to build agentic systems, but it keeps the chapter's core bias intact: explicit workflows, constrained tool use, and durable state usually matter more than novelty.
 

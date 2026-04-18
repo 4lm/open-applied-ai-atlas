@@ -1,6 +1,6 @@
 # 11.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the main retrieval and memory building blocks, from composition frameworks through vector, search, graph, and memory layers. The goal is not to crown one store, but to make permissioning, provenance, refresh, and exit posture visible beside raw retrieval capability.
 
@@ -49,6 +49,12 @@ These services matter when the organization wants faster deployment and accepts 
 | [Azure AI Search](https://learn.microsoft.com/azure/search/) | Managed platform capability | Search and retrieval foundation | Controlled Exception | Proprietary service | Azure-managed | Retrieval-backed applications inside Azure estates | Best fit improves inside broader Azure identity and data assumptions | [Docs](https://learn.microsoft.com/azure/search/) |
 | [Vertex AI Search](https://cloud.google.com/generative-ai-app-builder/docs/enterprise-search-introduction) | Managed platform capability | Search and retrieval service in GCP | Controlled Exception | Proprietary service | GCP-managed | Google-cloud search and grounding use cases | Strong cloud-estate coupling remains material | [Docs](https://cloud.google.com/generative-ai-app-builder/docs/enterprise-search-introduction) |
 | [Amazon Kendra](https://aws.amazon.com/kendra/) | Managed platform | Enterprise search and retrieval | Controlled Exception | Proprietary service | AWS-managed | AWS-centered enterprise search and knowledge retrieval | Managed dependence and AWS-estate gravity remain strong | [AWS](https://aws.amazon.com/kendra/) |
+
+## Evidence Notes
+
+- The factual rows are anchored in official product, project, or documentation pages linked in the `Primary source` column.
+- The portability, lock-in, and fit commentary is atlas synthesis based on deployment posture, surrounding ecosystem coupling, and the surrounding control surfaces described in chapters `06`, `09`, `13`, `14`, and `18`.
+- The page does not rank one retrieval stack globally. The intended use is comparative narrowing, not one final winner table.
 
 ## Reading Notes
 

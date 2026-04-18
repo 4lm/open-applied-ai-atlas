@@ -1,5 +1,7 @@
 # 20.1.2 Decision Boundaries And Combination Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains how to combine legal texts, standards, frameworks, and practice guides without forcing one category to answer the job of another.
 
 ## Decision Boundaries

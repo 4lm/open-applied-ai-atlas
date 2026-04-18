@@ -1,5 +1,7 @@
 # 4.1.2 Decision Boundaries And Review Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains how to separate governance questions that look similar in meetings but belong to different review lanes in practice.
 
 ## Decision Boundaries

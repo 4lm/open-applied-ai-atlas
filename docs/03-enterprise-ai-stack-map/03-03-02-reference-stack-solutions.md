@@ -1,6 +1,6 @@
 # 3.3.2 Reference Stack Solutions
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file groups reusable solution shapes so readers can move from individual layers to coherent stack combinations. It now separates comparable anchors into individual rows rather than hiding multiple tools inside one cell.
 

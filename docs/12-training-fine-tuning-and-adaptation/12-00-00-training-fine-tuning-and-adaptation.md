@@ -1,5 +1,7 @@
 # 12. Training Fine-Tuning And Adaptation
 
+_Page Type: Chapter Index | Maturity: Outline_
+
 This chapter is the front door for Training Fine-Tuning And Adaptation. It orders the adaptation ladder from prompting and retrieval through fine-tuning and training so escalation is justified by evidence instead of intuition. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
 
 Organizations frequently escalate to heavier adaptation paths before they have exhausted cheaper, more reversible options.
@@ -15,22 +17,6 @@ Organizations frequently escalate to heavier adaptation paths before they have e
 - 12.3 [Reference Points](12-03-00-reference-points.md)
 - 12.3.1 [Tools And Platforms](12-03-01-tools-and-platforms.md)
 
-## Why This Chapter Exists
-
-The atlas uses chapter front doors as real chapter maps, not as thin navigation stubs. This chapter therefore has to do more than list files. It should explain why the topic matters, show how the chapter is segmented, and help a reader choose the right depth before they disappear into detailed tables or worked examples.
-
-That matters here because training fine-tuning and adaptation is rarely a self-contained question. Decisions in this chapter usually spill into adjacent chapters about governance, data boundaries, evidence, security, operations, or sourcing. The front door keeps those relationships visible before local optimization starts.
-
-## Chapter Shape
-
-```mermaid
-flowchart LR
-    C0["12.1 Adaptation Foundations"]
-    C1["12.2 Operating Adaptation Work"]
-    C2["12.3 Reference Points"]
-    C0 --> C1
-    C1 --> C2
-```
 
 ## What This Chapter Helps Decide
 
@@ -38,12 +24,6 @@ flowchart LR
 - when to escalate from prompting to RAG, tuning, or training
 - how to balance improvement claims against cost, data, and lifecycle burden
 - which adjacent chapters should be read next because the issue is no longer only about training fine-tuning and adaptation
-
-## How To Use This Chapter
-
-Start with the first section when the language, scope, or boundary of the topic is still unstable. Move to the second section when the question becomes operational and the team needs practical sequencing, scenarios, or review logic. Use the third section after the conceptual and operating frame is clear enough that named tools, standards, controls, or reference artifacts will sharpen the decision rather than replace it.
-
-If you are reviewing a proposal rather than designing one, use the chapter map to confirm which section the proposal really belongs in. That small check prevents detailed reference material from being mistaken for the whole argument.
 
 ## Adjacent Chapters
 

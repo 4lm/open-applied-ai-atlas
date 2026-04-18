@@ -1,6 +1,6 @@
 # 15.3.2 Standards And Bodies
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file keeps formal standards, public bodies, and reference frameworks in one place so they can be compared without overwhelming the chapter front door.
 
@@ -32,6 +32,12 @@ This file keeps formal standards, public bodies, and reference frameworks in one
 | [NIST AI Standards](https://www.nist.gov/artificial-intelligence/ai-standards) | Public standards coordination program | U.S. and international AI standards landscape | Official NIST page |
 | [OpenSSF model signing v1.0](https://openssf.org/blog/2025/04/04/launch-of-model-signing-v1-0-openssf-ai-ml-working-group-secures-the-machine-learning-supply-chain/) | Open-source security initiative | Model signing and ML supply-chain integrity | Official OpenSSF page |
 | [MLCommons Benchmarks](https://mlcommons.org/benchmarks/) | Benchmark consortium | Reproducible performance and safety benchmark governance | Official MLCommons page |
+
+## Evidence Notes
+
+- The rows above are anchored in official standards, specification, and organization pages.
+- The grouping into frameworks, standards, and programs is atlas synthesis intended to help security teams combine them correctly rather than treat them as one interchangeable checklist.
+- Applicability still depends on architecture and threat model. This page is a control-planning aid, not a substitute for system-specific threat analysis.
 
 ## Reading Notes
 

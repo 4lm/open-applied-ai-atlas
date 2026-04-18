@@ -1,6 +1,6 @@
 # 15.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares practical security and abuse-resistance tooling for AI systems. It spans runtime guardrails, policy enforcement, redaction, red teaming, and supply-chain integrity because no single control family covers prompt attacks, data leakage, unsafe tool use, and artifact tampering together.
 

@@ -1,6 +1,6 @@
 # 5.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Curated Reference_
 
 This file expands the use-case layer into concrete delivery surfaces. It focuses on products and platforms that shape how organizations actually deploy assistance, automation, search, document intelligence, and workflow execution.
 
@@ -85,6 +85,12 @@ Document AI tools are relevant when the organization needs extraction, classific
 | Managed coding assistance | Productized coding tools with explicit enterprise controls |
 | Document extraction with review and routing | Document intelligence platforms before chat-first assistants |
 | Reusable internal AI app delivery | Self-hostable platforms if portability and operating control matter materially |
+
+## Evidence Notes
+
+- The product and platform rows are anchored in official vendor or project documentation linked in the `Primary source` column.
+- The fit, lock-in, and governance commentary is atlas synthesis based on control posture, surrounding suite gravity, and the use-case distinctions defined earlier in this chapter.
+- This page is intentionally not a ranking table. The recommended bias depends on the use-case family, control burden, and sourcing posture, not only on feature breadth.
 
 ## Reading Notes
 

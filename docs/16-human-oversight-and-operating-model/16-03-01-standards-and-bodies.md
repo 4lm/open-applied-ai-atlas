@@ -1,6 +1,6 @@
 # 16.3.1 Standards And Bodies
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file keeps formal standards, public bodies, and reference frameworks in one place so they can be compared without overwhelming the chapter front door.
 

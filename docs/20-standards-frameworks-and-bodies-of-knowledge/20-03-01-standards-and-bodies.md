@@ -1,5 +1,7 @@
 # 20.3.1 Standards And Bodies
 
+_Page Type: Comparison Page | Maturity: Draft_
+
 This subsection compares the main reference anchors used across the atlas. It distinguishes laws and regulations from standards and frameworks so readers can combine them correctly.
 
 ## Laws And Regulations
@@ -56,6 +58,12 @@ This subsection compares the main reference anchors used across the atlas. It di
 | Data access, quality, and exit posture review | EU Data Act + Data Governance Act + ISO/IEC 5259 family + chapters `6` and `18` |
 | AI application security and abuse resistance | OWASP GenAI + MITRE ATLAS + SSDF + chapters `14` and `15` |
 | Provenance and AI supply-chain visibility | C2PA + SPDX AI + chapter `21` |
+
+## Evidence Notes
+
+- The laws, regulations, standards, and bodies listed above are anchored in primary legal texts or official standards and organization pages.
+- The `Strong combination` column is atlas synthesis. It reflects how these anchors complement one another in organizational implementation work; it is not itself a legal determination or certification rule.
+- Readers should treat regulatory applicability as a legal question and standards selection as a governance and operating-model design question, even when the same row links them together.
 
 ## Reading Note
 

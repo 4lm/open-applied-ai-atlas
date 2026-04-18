@@ -1,5 +1,7 @@
 # 6.3.1 Standards And Bodies
 
+_Page Type: Comparison Page | Maturity: Draft_
+
 This subsection gathers the main privacy and sovereignty reference points. The goal is to show which items answer legal questions, which support privacy engineering, and which clarify operational control posture.
 
 ## Laws And Regulatory Anchors

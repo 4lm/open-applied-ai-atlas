@@ -1,5 +1,7 @@
 # 7. Model Ecosystem
 
+_Page Type: Chapter Index | Maturity: Outline_
+
 This chapter is the front door for Model Ecosystem. It frames the model ecosystem as a landscape of classes, openness postures, lifecycle choices, and vendor dependence rather than a winner-take-all leaderboard. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
 
 Model selection becomes brittle when capability headlines replace lifecycle, hosting, and governance fit.
@@ -16,22 +18,6 @@ Model selection becomes brittle when capability headlines replace lifecycle, hos
 - 7.3.1 [Tools And Platforms](07-03-01-tools-and-platforms.md)
 - 7.3.2 [Vendors And Projects](07-03-02-vendors-and-projects.md)
 
-## Why This Chapter Exists
-
-The atlas uses chapter front doors as real chapter maps, not as thin navigation stubs. This chapter therefore has to do more than list files. It should explain why the topic matters, show how the chapter is segmented, and help a reader choose the right depth before they disappear into detailed tables or worked examples.
-
-That matters here because model ecosystem is rarely a self-contained question. Decisions in this chapter usually spill into adjacent chapters about governance, data boundaries, evidence, security, operations, or sourcing. The front door keeps those relationships visible before local optimization starts.
-
-## Chapter Shape
-
-```mermaid
-flowchart LR
-    C0["7.1 Model Ecosystem Foundations"]
-    C1["7.2 Applying The Model Landscape"]
-    C2["7.3 Reference Points"]
-    C0 --> C1
-    C1 --> C2
-```
 
 ## What This Chapter Helps Decide
 
@@ -39,12 +25,6 @@ flowchart LR
 - how openness and control affect model choice
 - when to prefer model optionality over platform coupling
 - which adjacent chapters should be read next because the issue is no longer only about model ecosystem
-
-## How To Use This Chapter
-
-Start with the first section when the language, scope, or boundary of the topic is still unstable. Move to the second section when the question becomes operational and the team needs practical sequencing, scenarios, or review logic. Use the third section after the conceptual and operating frame is clear enough that named tools, standards, controls, or reference artifacts will sharpen the decision rather than replace it.
-
-If you are reviewing a proposal rather than designing one, use the chapter map to confirm which section the proposal really belongs in. That small check prevents detailed reference material from being mistaken for the whole argument.
 
 ## Adjacent Chapters
 

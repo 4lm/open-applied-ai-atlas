@@ -1,5 +1,7 @@
 # 1.1.1 Organizational Scope And Boundaries
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 The atlas is written for organizations of different sizes and sectors that need to apply AI and ML under real delivery, legal, operational, and sourcing constraints.
 
 This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.

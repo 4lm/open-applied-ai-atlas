@@ -1,6 +1,6 @@
 # 19.3.1 Tooling By Layer
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file maps named tooling to the architecture positions that most often decide whether a reference architecture stays portable, governable, and supportable. It is intentionally architecture-oriented rather than exhaustive.
 

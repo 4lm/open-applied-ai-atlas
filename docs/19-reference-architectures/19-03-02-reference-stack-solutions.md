@@ -1,6 +1,6 @@
 # 19.3.2 Reference Stack Solutions
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file groups reusable architecture shapes so readers can move from individual layers to coherent compositions. It separates summary pattern comparison from component anchors so the reference architectures are easier to compare tool by tool.
 

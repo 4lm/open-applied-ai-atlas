@@ -1,5 +1,7 @@
 # 5.2.2 Patterns And Anti-Patterns
 
+_Page Type: Reference Sheet | Maturity: Outline_
+
 This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
 
 ## Better Patterns

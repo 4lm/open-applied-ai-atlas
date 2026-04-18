@@ -1,8 +1,8 @@
 # 11.2.1 Worked Retrieval Scenarios
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+_Page Type: Worked Example | Maturity: Outline_
 
-These examples turn the chapter into concrete organizational situations. They are deliberately short and comparative so the reader can see where the chapter changes a real decision.
+This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
 
 ## Internal search assistant
 

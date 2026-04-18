@@ -1,6 +1,6 @@
 # 3.3.1 Tooling By Layer
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file maps named tools, platforms, and standards anchors to the enterprise AI stack. It replaces the older bundled-list pattern with one-row-per-anchor comparisons so readers can compare the actual control points more directly.
 

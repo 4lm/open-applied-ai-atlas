@@ -1,35 +1,47 @@
 # 10.2.1 Worked Agentic Scenarios
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-These examples turn the chapter into concrete organizational situations. They are deliberately short and comparative so the reader can see where the chapter changes a real decision.
+These scenarios focus on the operating choice, not the marketing label. In each case the question is whether the extra autonomy creates real value after controls are accounted for.
 
-## Knowledge assistant with tools disabled
+## Knowledge Assistant With Tools Disabled
 
-A team chooses an assistant pattern because the task is interpretive, not action-taking.
+| Field | Decision |
+| --- | --- |
+| Context | Analysts need synthesis and drafting help, but no side effects |
+| Recommended pattern | Assistant, not agent |
+| Why | The task is interpretive and reviewable without delegated action |
+| Rejected alternative | Tool-using agent for “future flexibility” |
+| Control implication | Retrieval, citations, and reviewer accountability matter more than execution controls |
 
-- What this example makes visible: covers agentic execution models, how they differ from assistants and workflows, and what control patterns make delegated action safer and more reviewable.
-- What to watch for: The failure mode is adding agents because they look more capable.
+## Durable Business Workflow
 
-## Durable business workflow
+| Field | Decision |
+| --- | --- |
+| Context | A service process already has known steps, approvals, and owners |
+| Recommended pattern | Workflow engine with bounded model steps |
+| Why | The value comes from durable state and clear handoffs, not free-form planning |
+| Rejected alternative | Planner-style agent deciding the process at run time |
+| Control implication | Explicit retries, audit trails, and exception routing are easier to govern |
 
-A workflow engine handles known multi-step work with deterministic state and approvals.
+## Action-Capable Ticket Agent
 
-- What this example makes visible: covers agentic execution models, how they differ from assistants and workflows, and what control patterns make delegated action safer and more reviewable.
-- What to watch for: The failure mode is replacing a stable workflow with an opaque planner.
+| Field | Decision |
+| --- | --- |
+| Context | A team wants an agent to triage and resolve low-risk tickets |
+| Recommended pattern | Bounded agent with approval matrix and rollback |
+| Why | Some dynamic action choice creates value, but only inside a tightly defined surface |
+| Rejected alternative | Broad tool access with no action classes |
+| Control implication | Tool inventory, approval checkpoints, traces, and failure playbooks are mandatory |
 
-## Action-capable ticket agent
+## Browser Automation Pilot
 
-A team allows bounded tool execution only after defining approvals, traces, and rollback paths.
-
-- What this example makes visible: covers agentic execution models, how they differ from assistants and workflows, and what control patterns make delegated action safer and more reviewable.
-- What to watch for: The failure mode is broad tool access without operational controls.
-
-## Browser automation pilot
-
-A browser-capable system stays heavily sandboxed and review-gated because the side effects are hard to contain.
-
-- What this example makes visible: covers agentic execution models, how they differ from assistants and workflows, and what control patterns make delegated action safer and more reviewable.
-- What to watch for: The failure mode is underestimating how fast action scope raises risk.
+| Field | Decision |
+| --- | --- |
+| Context | The team wants browser-capable execution across external systems |
+| Recommended pattern | Pilot only, with sandboxing and narrow task scope |
+| Why | Side effects expand quickly and failure investigation becomes harder |
+| Rejected alternative | General browser autonomy in production-like environments |
+| Control implication | Session isolation, action review, and incident rollback must exist before scale |
 
 Back to [10.2 Operating Agentic Systems](10-02-00-operating-agentic-systems.md).

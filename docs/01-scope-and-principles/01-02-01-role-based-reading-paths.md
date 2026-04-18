@@ -1,5 +1,7 @@
 # 1.2.1 Role-Based Reading Paths
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 Different roles need different entry paths, but they should still converge on the same architecture and control decisions.
 
 This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.

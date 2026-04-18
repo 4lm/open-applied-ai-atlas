@@ -96,4 +96,32 @@ flowchart TB
 - Read [AGENTS.md](./AGENTS.md) for durable structure and mission guardrails.
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
 - Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
+- Read [CONTENT_AUDIT_SUMMARY.md](./CONTENT_AUDIT_SUMMARY.md) for the current page-type, maturity, and quality-pass conventions.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
+
+## Page Signals
+
+Every page under `docs/` carries a visible metadata line directly under the numbered H1:
+
+- `Page Type`: the page's primary job in the atlas
+- `Maturity`: the page's current completeness and trust level
+
+The atlas uses these page types:
+
+- `Chapter Index`
+- `Concept Explainer`
+- `Comparison Page`
+- `Decision Guide`
+- `Worked Example`
+- `Operational Artifact`
+- `Reference Sheet`
+- `Glossary`
+
+The atlas uses these maturity levels:
+
+- `Outline`
+- `Draft`
+- `Review-Ready`
+- `Curated Reference`
+
+Use them as navigation aids. Higher maturity pages should anchor stronger decisions, while lower maturity pages should be treated as developing material rather than hidden scaffolding.

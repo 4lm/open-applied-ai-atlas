@@ -1,6 +1,6 @@
 # 17.3.1 Vendors And Projects
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the organizations that concentrate power, shape standards, or broaden optionality across the applied AI stack. The goal is not to list every brand in the market, but to make visible where capability concentration, hardware dependence, platform gravity, and open-ecosystem counterweights actually sit.
 
@@ -53,6 +53,12 @@ These actors matter because they broaden deployment options or create shared mea
 | [MLCommons](https://mlcommons.org/benchmarks/) | Benchmark consortium | Benchmark and measurement governance | Consortium | Open benchmark ecosystem | Critical counterweight to vendor-authored benchmark narratives | [MLCommons](https://mlcommons.org/benchmarks/) |
 | [OpenSSF AI/ML Working Group](https://openssf.org/blog/2025/04/04/launch-of-model-signing-v1-0-openssf-ai-ml-working-group-secures-the-machine-learning-supply-chain/) | Community initiative | Model supply-chain security stewardship | Open security foundation working group | Open community effort | Important for shared assurance layers beyond any one vendor | [OpenSSF](https://openssf.org/blog/2025/04/04/launch-of-model-signing-v1-0-openssf-ai-ml-working-group-secures-the-machine-learning-supply-chain/) |
 | [C2PA](https://c2pa.org/) | Specification community | Provenance and authenticity standards | Multi-stakeholder technical community | Open specification | Important for public-facing content systems and content-trust ecosystems | [C2PA](https://c2pa.org/) |
+
+## Evidence Notes
+
+- The rows are anchored in official organization, project, and product pages.
+- The dependence and concentration commentary is atlas synthesis. It reflects ecosystem leverage, hardware position, control-plane gravity, and governance influence rather than only financial scale or benchmark headlines.
+- This page should be read with the sourcing and hosting chapters before turning concentration concerns into a concrete architecture decision.
 
 ## Reading Notes
 

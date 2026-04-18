@@ -1,5 +1,7 @@
 # 2.1.2 Cross-Cutting Dimensions And Heuristics
 
+_Page Type: Decision Guide | Maturity: Outline_
+
 This subsection defines the recurring dimensions that the atlas uses to compare unlike systems without flattening them into one generic score.
 
 ## Canonical Cross-Cutting Dimensions

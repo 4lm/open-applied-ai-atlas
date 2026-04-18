@@ -1,5 +1,7 @@
 # 15. Security And Abuse Resistance
 
+_Page Type: Chapter Index | Maturity: Outline_
+
 This chapter is the front door for Security And Abuse Resistance. It maps threat surfaces, trust boundaries, and abuse resistance so AI-specific and conventional security controls can be combined coherently. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
 
 Security programs underperform when AI systems are treated as ordinary APIs or when new abuse paths are treated as purely model problems.
@@ -17,22 +19,6 @@ Security programs underperform when AI systems are treated as ordinary APIs or w
 - 15.3.2 [Standards And Bodies](15-03-02-standards-and-bodies.md)
 - 15.3.3 [Controls And Artifacts](15-03-03-controls-and-artifacts.md)
 
-## Why This Chapter Exists
-
-The atlas uses chapter front doors as real chapter maps, not as thin navigation stubs. This chapter therefore has to do more than list files. It should explain why the topic matters, show how the chapter is segmented, and help a reader choose the right depth before they disappear into detailed tables or worked examples.
-
-That matters here because security and abuse resistance is rarely a self-contained question. Decisions in this chapter usually spill into adjacent chapters about governance, data boundaries, evidence, security, operations, or sourcing. The front door keeps those relationships visible before local optimization starts.
-
-## Chapter Shape
-
-```mermaid
-flowchart LR
-    C0["15.1 Security Foundations"]
-    C1["15.2 Operating Security And Abuse Resistance"]
-    C2["15.3 Reference Points"]
-    C0 --> C1
-    C1 --> C2
-```
 
 ## What This Chapter Helps Decide
 
@@ -40,12 +26,6 @@ flowchart LR
 - where trust boundaries and control boundaries need to harden
 - which security and abuse-resistance controls should block rollout
 - which adjacent chapters should be read next because the issue is no longer only about security and abuse resistance
-
-## How To Use This Chapter
-
-Start with the first section when the language, scope, or boundary of the topic is still unstable. Move to the second section when the question becomes operational and the team needs practical sequencing, scenarios, or review logic. Use the third section after the conceptual and operating frame is clear enough that named tools, standards, controls, or reference artifacts will sharpen the decision rather than replace it.
-
-If you are reviewing a proposal rather than designing one, use the chapter map to confirm which section the proposal really belongs in. That small check prevents detailed reference material from being mistaken for the whole argument.
 
 ## Adjacent Chapters
 

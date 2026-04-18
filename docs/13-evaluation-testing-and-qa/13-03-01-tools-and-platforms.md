@@ -1,6 +1,6 @@
 # 13.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the main tooling used to test, benchmark, and gate AI systems. It spans regression harnesses, RAG and agent evaluators, benchmark suites, and managed evaluation platforms because release evidence is rarely credible if it relies on only one style of test.
 
@@ -48,6 +48,12 @@ These resources matter for external comparison, procurement realism, and public 
 | [HELM](https://crfm.stanford.edu/helm/latest/) | Public benchmark suite | Standardized model and scenario evaluation | Not applicable | Open benchmark and academic resource | Public benchmark resource | Public benchmarking and comparative model understanding | Public benchmarks rarely replace domain-specific release tests | [HELM](https://crfm.stanford.edu/helm/latest/) |
 | [MLCommons AILuminate](https://mlcommons.org/benchmarks/) | Benchmark program | Safety and public-comparison benchmark | Not applicable | Open benchmark ecosystem | Public benchmark resource | External safety reference and procurement context | Good external signal, not a substitute for organization-specific QA | [MLCommons](https://mlcommons.org/benchmarks/) |
 | [OpenCompass](https://opencompass.org.cn/home) | Public benchmark platform | Benchmark aggregation and model comparison | Not applicable | Open benchmark ecosystem | Public benchmark resource | External model comparison across broad benchmark sets | Useful for ecosystem scanning, not direct release decisions | [OpenCompass](https://opencompass.org.cn/home) |
+
+## Evidence Notes
+
+- Product and project rows are anchored in official documentation and repository pages linked in the `Primary source` column.
+- The portability, ecosystem-coupling, and governance commentary is atlas synthesis. It reflects how these tools behave inside broader release and evidence programs, not only their advertised feature sets.
+- Public benchmarks belong in procurement context and external comparison work; they are not substitutes for release-specific evaluation packs.
 
 ## Reading Notes
 

@@ -1,6 +1,6 @@
 # 18.3.2 Reference Stack Solutions
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file translates sourcing postures into reusable stack shapes. The summary table compares the patterns, and the component table breaks the common anchor choices into one row per entry so trade-offs are easier to compare.
 
@@ -55,6 +55,12 @@ This file translates sourcing postures into reusable stack shapes. The summary t
 | Hybrid predictive-plus-generative stack | Platform | [Dataiku](https://www.dataiku.com/product/machine-learning/) | Strong fit when one governed platform should span predictive, optimization, and language-interface work | [Dataiku](https://www.dataiku.com/product/machine-learning/) |
 | Hybrid predictive-plus-generative stack | Platform | [Databricks Mosaic AI](https://www.databricks.com/product/mosaic-ai) | Natural anchor when a lakehouse estate already exists | [Databricks](https://www.databricks.com/product/mosaic-ai) |
 | Hybrid predictive-plus-generative stack | Evaluation | [Inspect AI](https://inspect.aisi.org.uk/) | Useful portable evaluation layer when scenario-based testing matters across method families | [Inspect](https://inspect.aisi.org.uk/) |
+
+## Evidence Notes
+
+- The component anchors are linked to official documentation or project pages in the `Primary source` column.
+- The shapes and trade-offs are atlas synthesis. They are intended as reusable sourcing patterns, not certified reference architectures or one-size-fits-all blueprints.
+- A stronger openness posture does not eliminate operating burden; that trade-off is explicitly preserved in the summary table.
 
 ## Reading Notes
 

@@ -1,6 +1,6 @@
 # 8.3.2 Reference Stack Solutions
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file turns hosting patterns into reusable solution shapes. The summary table compares the patterns, and the component table breaks bundled tool lists into one anchor per row so readers can compare realistic runtime compositions more directly.
 

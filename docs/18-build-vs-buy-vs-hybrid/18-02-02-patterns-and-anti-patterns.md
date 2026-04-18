@@ -1,5 +1,7 @@
 # 18.2.2 Patterns And Anti-Patterns
 
+_Page Type: Reference Sheet | Maturity: Draft_
+
 This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
 
 Patterns matter here because build vs buy vs hybrid is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.

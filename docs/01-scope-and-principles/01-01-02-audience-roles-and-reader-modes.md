@@ -1,5 +1,7 @@
 # 1.1.2 Audience, Roles, And Reader Modes
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 The atlas is meant for mixed teams. No single role sees the whole system, so the repository is organized to help different readers converge on the same decision from different entry points.
 
 This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.

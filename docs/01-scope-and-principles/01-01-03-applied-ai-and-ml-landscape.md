@@ -1,5 +1,7 @@
 # 1.1.3 Applied AI And ML Landscape
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 The atlas is deliberately broader than LLM applications. Organizational AI and ML includes multiple technical families with different governance, evaluation, sourcing, and operational implications.
 
 This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.

@@ -1,5 +1,7 @@
 # 6.1.2 Decision Boundaries And Handling Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains how to separate privacy questions from sovereignty questions without pretending they can be solved independently.
 
 ## Decision Boundaries

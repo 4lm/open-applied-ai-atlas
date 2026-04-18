@@ -1,5 +1,7 @@
 # 3.2.2 Patterns And Anti-Patterns
 
+_Page Type: Reference Sheet | Maturity: Outline_
+
 This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
 
 This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.

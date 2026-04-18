@@ -1,5 +1,7 @@
 # 5.1.2 Portfolio Boundaries And Prioritization Heuristics
 
+_Page Type: Decision Guide | Maturity: Outline_
+
 This subsection helps teams reason about which system families deserve early investment, heavier review, or stricter governance.
 
 ## Prioritization Heuristics

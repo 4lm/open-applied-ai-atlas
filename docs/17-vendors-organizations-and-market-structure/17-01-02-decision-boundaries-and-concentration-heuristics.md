@@ -1,5 +1,7 @@
 # 17.1.2 Decision Boundaries And Concentration Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains when market structure should materially change a technical or sourcing decision instead of being treated as background context.
 
 ## Decision Boundaries

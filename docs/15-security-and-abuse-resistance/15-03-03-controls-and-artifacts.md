@@ -1,6 +1,6 @@
 # 15.3.3 Controls And Artifacts
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Controls and artifacts matter because security and abuse resistance only becomes durable when somebody can review it, approve it, operate it, and revisit it after something changes. The atlas treats documents, logs, decision records, checklists, and control evidence as working tools rather than bureaucratic decoration.
 

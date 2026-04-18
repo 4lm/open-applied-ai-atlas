@@ -9,7 +9,8 @@ Open Applied AI Atlas is a public documentation project. Good contributions impr
 3. Preserve the repository's broad applied-AI scope; do not narrow chapters implicitly to LLM-only framing unless the file is intentionally model-specific.
 4. Prefer explanatory prose, bullets, diagrams & graphs (inline Mermaid format), and comparison tables only where side-by-side reading genuinely helps.
 5. Keep chapter front doors concise and move substance into numbered subchapter files instead of overloading `CC-00-00-...md`.
-6. Re-run adjacent links, numbering, and mission framing after structural edits so the chapter outline and reader purpose remain coherent.
+6. Add or preserve the visible metadata line directly below the numbered H1: `_Page Type: … | Maturity: …_`.
+7. Re-run adjacent links, numbering, and mission framing after structural edits so the chapter outline and reader purpose remain coherent.
 
 ## What Good Contributions Look Like
 
@@ -18,6 +19,8 @@ Open Applied AI Atlas is a public documentation project. Good contributions impr
 - they improve a numbered chapter section without breaking the chapter outline
 - they reuse taxonomy and chapter language consistently
 - they leave the repository more navigable and more mission-faithful than before
+- they make the page type obvious instead of relying on generic template prose
+- they assign maturity honestly rather than implying polish the page has not earned
 
 ## Source Hierarchy
 
@@ -27,6 +30,40 @@ Open Applied AI Atlas is a public documentation project. Good contributions impr
 | High-quality public synthesis | Useful for context, not as the final authority |
 | Vendor marketing | Treat as claims to verify, not as atlas voice |
 
+## Page Types And Maturity
+
+Primary page types:
+
+- `Chapter Index`
+- `Concept Explainer`
+- `Comparison Page`
+- `Decision Guide`
+- `Worked Example`
+- `Operational Artifact`
+- `Reference Sheet`
+- `Glossary`
+
+Maturity labels:
+
+- `Outline`: structure exists but decision value is still limited.
+- `Draft`: useful but incomplete or lightly evidenced.
+- `Review-Ready`: substantial and coherent enough for editorial review.
+- `Curated Reference`: stable, denser, and strongly anchored in primary sources.
+
+## Evidence Notes
+
+Add `## Evidence Notes` when a page:
+
+- makes recommendations from a comparison table
+- summarizes vendor, standards, or regulatory claims
+- mixes direct facts with atlas synthesis or editorial judgment
+
+Use that section to distinguish:
+
+- primary-source-backed facts
+- atlas synthesis
+- explicit editorial judgment
+
 ## Anti-Patterns
 
 - drifting toward LLM-only framing when a chapter is supposed to cover broader applied AI/ML
@@ -34,3 +71,5 @@ Open Applied AI Atlas is a public documentation project. Good contributions impr
 - breaking section numbers, backlinks, or adjacent chapter links
 - creating comparison tables when a paragraph or bullet list would be clearer
 - removing sovereignty, compliance, or lock-in language from chapters where those concerns materially shape decisions
+- keeping a weak standalone page at a high maturity label
+- reintroducing stock intro paragraphs that could fit almost any chapter

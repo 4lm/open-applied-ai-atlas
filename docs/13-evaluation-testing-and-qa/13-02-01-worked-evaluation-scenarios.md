@@ -1,35 +1,43 @@
 # 13.2.1 Worked Evaluation Scenarios
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-These examples turn the chapter into concrete organizational situations. They are deliberately short and comparative so the reader can see where the chapter changes a real decision.
+These scenarios show what a credible evidence package looks like in practice. The point is not to name a tool, but to define what must be proven before release.
 
-## Internal assistant release
+## Internal Assistant Release
 
-A team uses retrieval traces, reviewer notes, and a gold-set before widening rollout.
+| Field | Decision |
+| --- | --- |
+| System | Retrieval-backed internal assistant |
+| Evidence mix | Gold set, citation review, permission-leakage checks, reviewer notes |
+| Release question | Can the team widen rollout without turning fluent answers into over-trusted policy? |
+| Gate logic | Do not launch broadly if citations fail or reviewer disagreement remains high |
 
-- What this example makes visible: covers how organizations decide an AI system is fit for purpose, including model-level evaluation, workflow testing, agentic QA, release controls, and assurance evidence.
-- What to watch for: The failure mode is approving based on a good demo instead of repeatable evidence.
+## Model Swap Behind A Gateway
 
-## Model swap behind a gateway
+| Field | Decision |
+| --- | --- |
+| System | Existing application with a model-routing change |
+| Evidence mix | System-level regression pack, routing comparison, prompt replay, exception log |
+| Release question | Did the gateway change alter downstream behavior even without app-code changes? |
+| Gate logic | Treat routing changes as release events, not invisible infrastructure tweaks |
 
-A routing change triggers system-level regression because behavior can shift even when the app code does not.
+## Action-Capable Workflow Agent
 
-- What this example makes visible: covers how organizations decide an AI system is fit for purpose, including model-level evaluation, workflow testing, agentic QA, release controls, and assurance evidence.
-- What to watch for: The failure mode is treating the gateway as if it hid all downstream differences.
+| Field | Decision |
+| --- | --- |
+| System | Bounded ticket or task-resolution agent |
+| Evidence mix | Success metrics, approval-path tests, rollback tests, tool misuse scenarios |
+| Release question | Can the agent act safely inside the approved action classes? |
+| Gate logic | Output quality is insufficient if approval handling or rollback behavior fails |
 
-## Action-capable workflow agent
+## Predictive Service Refresh
 
-An agent is tested not only for task success but also for approval handling and rollback.
-
-- What this example makes visible: covers how organizations decide an AI system is fit for purpose, including model-level evaluation, workflow testing, agentic QA, release controls, and assurance evidence.
-- What to watch for: The failure mode is evaluating only output quality and ignoring side effects.
-
-## Predictive service refresh
-
-A model refresh includes drift and explainability review because statistical improvement alone may not satisfy operators.
-
-- What this example makes visible: covers how organizations decide an AI system is fit for purpose, including model-level evaluation, workflow testing, agentic QA, release controls, and assurance evidence.
-- What to watch for: The failure mode is releasing on metrics without operational context.
+| Field | Decision |
+| --- | --- |
+| System | Forecasting or scoring service refresh |
+| Evidence mix | Drift review, recalibration checks, operator review, post-release monitoring hooks |
+| Release question | Does the refreshed model improve decisions in context, not just offline metrics? |
+| Gate logic | Statistical improvement alone is not enough when operational interpretation changes |
 
 Back to [13.2 Operating Evaluation And QA](13-02-00-operating-evaluation-and-qa.md).

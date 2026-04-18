@@ -1,5 +1,7 @@
 # 18.1.2 Decision Boundaries And Sourcing Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains how to decide whether a layer should be built, bought, or run in a hybrid posture once speed, control, and operating realism are all considered together.
 
 ## Decision Boundaries

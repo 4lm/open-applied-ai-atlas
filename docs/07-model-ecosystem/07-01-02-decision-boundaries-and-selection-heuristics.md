@@ -1,5 +1,7 @@
 # 7.1.2 Decision Boundaries And Selection Heuristics
 
+_Page Type: Decision Guide | Maturity: Draft_
+
 This subsection explains how to read the chapter well, where its boundaries sit, and which recurring mistakes distort decisions.
 
 This file exists because model ecosystem usually involves judgment under incomplete information. Heuristics do not replace evidence, but they help teams avoid false certainty and force the most important trade-offs into the open before a local preference hardens into policy or architecture.

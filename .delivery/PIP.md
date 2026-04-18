@@ -1,0 +1,931 @@
+---
+NEVER CHANGE THIS FILE.
+---
+
+# Product Improvement Plan (PIP)
+
+## Open Applied AI Atlas
+
+### Goal: Turn the repository from a strong structural scaffold into a decision-grade, evidence-rich, implementation-focused atlas for applied AI in organizations
+
+---
+
+## 1. Purpose of This Plan
+
+This Product Improvement Plan defines what should be changed in the **Open Applied AI Atlas** repository to improve its quality, usefulness, trustworthiness, and maturity.
+
+The current repository already has strong fundamentals:
+
+* a clear mission
+* a thoughtful chapter map
+* strong editorial intent
+* good cross-functional scope
+* a valuable focus on openness, sovereignty, privacy, compliance, portability, and lock-in
+
+However, the current state still shows signs of being an early-stage structured scaffold:
+
+* too much repeated boilerplate
+* too many pages that are thin or formulaic
+* not enough evidence-rich depth
+* not enough worked examples, decision aids, or operational artifacts
+* not enough visible maturity signaling
+
+This plan exists to fix those issues without changing the project’s core direction.
+
+---
+
+## 2. Product Objective
+
+Improve the atlas so that it becomes:
+
+* more useful for real decision-making
+* more concrete and implementation-oriented
+* less repetitive
+* more evidence-backed
+* more trustworthy for practitioners
+* more differentiated from generic AI landscape documentation
+* more readable and navigable at scale
+
+The atlas should feel like a serious, curated, practical reference for applied AI implementation across roles, not like a well-organized but partially templated outline.
+
+---
+
+## 3. Core Product Problems to Solve
+
+### Problem A: Repetition and boilerplate inflation
+
+Many chapter front pages and subpages use very similar structures and phrases. This creates repetition fatigue and reduces perceived content depth.
+
+### Problem B: Thin pages and low information density
+
+Some pages exist structurally but do not yet contain enough unique, decision-relevant substance.
+
+### Problem C: Not enough concrete implementation guidance
+
+The atlas claims to be practical and implementation-focused, but many sections still lack operational artifacts such as templates, scorecards, architecture variants, checklists, evaluation plans, or worked scenarios.
+
+### Problem D: Weak differentiation between page types
+
+Too many pages follow similar rhetorical patterns. Readers need clearer distinctions between concept pages, comparison pages, decision pages, worked examples, reference sheets, and operational artifacts.
+
+### Problem E: Trust and evidence maturity not visible enough
+
+The project needs stronger source discipline, more explicit evidence posture, and visible maturity signaling per page.
+
+---
+
+## 4. Product Principles for the Improvement Work
+
+All changes must preserve and strengthen the existing core direction:
+
+1. **Keep the broad applied AI scope**
+   Do not collapse the atlas into LLM-only content.
+
+2. **Keep the organizational perspective**
+   Continue treating AI systems as organizational systems, not just model demos or tool lists.
+
+3. **Keep the cross-functional reader model**
+   The atlas must remain useful to product, business, architecture, engineering, QA, security, privacy, governance, and leadership roles.
+
+4. **Keep openness, sovereignty, privacy, compliance, portability, and lock-in visible throughout the stack**
+
+5. **Favor decision utility over completeness theater**
+   Pages should help readers decide, compare, implement, govern, or evaluate.
+
+6. **Favor content density over symmetric document proliferation**
+   Not every topic needs the same number of files or the same page pattern.
+
+7. **Prefer primary sources and explicit sourcing**
+   Claims should become easier to verify.
+
+---
+
+## 5. Desired End State
+
+After implementation, the atlas should show the following qualities:
+
+* chapter front pages are concise and not repetitive
+* pages are denser and more differentiated
+* major sections contain worked examples and operational artifacts
+* comparison content follows clearer schemas
+* page maturity is explicit
+* sources are more consistently visible
+* readers can use the atlas to make real decisions, not just understand terminology
+* the repository feels curated, not merely scaffolded
+
+---
+
+## 6. Scope of This Improvement Plan
+
+### In Scope
+
+* repository-wide content architecture refinement
+* reduction of repeated boilerplate
+* stronger page-type differentiation
+* page maturity model
+* new decision aids and implementation artifacts
+* better comparison schemas
+* stronger sourcing patterns
+* improved chapter-level depth where currently thin
+* guidance for pruning or merging low-value pages
+
+### Out of Scope
+
+* changing the project mission
+* narrowing the scope to GenAI or LLM-only
+* replacing the existing chapter map entirely
+* converting the atlas into a vendor directory only
+* turning every page into a giant table
+* introducing unnecessary framework complexity
+
+---
+
+## 7. Improvement Workstreams
+
+---
+
+## Workstream 1: Reduce Boilerplate and Repetition
+
+### Objective
+
+Remove repetitive explanatory prose across chapter front pages and subpages.
+
+### Problems Being Solved
+
+* repeated “why this chapter exists” style text
+* repeated “how to use this chapter” style patterns
+* similar rhetorical structures across many files
+* inflated page count with low incremental value
+
+### Required Changes
+
+1. Audit all chapter front-door pages and identify repeated framing language.
+2. Compress front-door pages so they become concise navigational and framing pages, not mini-essays.
+3. Remove repeated prose patterns that appear across many files.
+4. Keep only the minimum reusable framing needed for navigation and orientation.
+5. Shift repeated editorial or reading instructions into one shared guidance convention instead of restating them in many pages.
+6. Review subsection intros and remove generic paragraphs that could apply to any topic.
+
+### Acceptance Criteria
+
+* chapter intro pages are noticeably shorter and less repetitive
+* repeated rhetorical phrases are reduced substantially
+* every page retains a reason to exist beyond structural symmetry
+* readers can scan the atlas without feeling that the same intro is repeated
+
+---
+
+## Workstream 2: Increase Information Density and Asymmetry
+
+### Objective
+
+Make pages more content-rich and less formulaic.
+
+### Problems Being Solved
+
+* thin pages
+* template feel
+* insufficient differentiation in page structure
+* low ratio of unique insight per page
+
+### Required Changes
+
+1. Audit all pages for substantive density.
+2. Classify each page as one of the following:
+
+   * concept explainer
+   * comparison page
+   * decision guide
+   * worked example
+   * operational artifact
+   * reference sheet
+   * glossary/terminology page
+   * chapter index page
+3. Rewrite pages so that the chosen page type is obvious in both structure and content.
+4. Merge, remove, or defer pages that are too thin to justify standalone existence.
+5. Prefer fewer, stronger pages over many weak ones.
+6. Break symmetry where necessary. Not every chapter must have the same content pattern.
+
+### Acceptance Criteria
+
+* each page has a clear type and purpose
+* pages no longer feel mechanically generated from the same template
+* thin pages are either strengthened, merged, or removed
+* overall information density improves significantly
+
+---
+
+## Workstream 3: Add Decision-Grade Artifacts
+
+### Objective
+
+Make the atlas genuinely useful for implementation and decision-making.
+
+### Problems Being Solved
+
+* practical usefulness not yet strong enough
+* insufficient operational depth
+* not enough “how to decide” support
+* not enough reusable implementation aids
+
+### Required Additions
+
+Create reusable, concrete artifacts such as:
+
+1. **Decision trees**
+
+   * build vs buy
+   * cloud vs self-hosted
+   * open-source-first vs vendor-led
+   * RAG vs fine-tuning vs workflow logic vs classical ML
+   * agentic orchestration vs deterministic workflow
+
+2. **Scored comparison matrices**
+
+   * model gateway options
+   * retrieval stack options
+   * orchestration patterns
+   * deployment patterns
+   * evaluation approaches
+   * sovereignty posture profiles
+
+3. **Reference architectures**
+
+   * SME cloud-first
+   * EU-sovereign / EU-hosted
+   * regulated enterprise
+   * open-source-first internal platform
+   * classical ML + LLM hybrid
+   * agent-heavy knowledge-work stack
+
+4. **Operational templates**
+
+   * evaluation plan template
+   * release gate template
+   * architecture decision record examples
+   * vendor due diligence checklist
+   * model selection checklist
+   * retrieval readiness checklist
+   * safety and escalation checklist
+   * governance review checklist
+
+5. **Worked organizational scenarios**
+
+   * startup
+   * SME
+   * regulated enterprise
+   * public sector
+   * on-prem sensitive environment
+   * hybrid global organization
+
+6. **Failure mode pages**
+
+   * common anti-patterns
+   * false “AI readiness” signals
+   * evaluation illusions
+   * retrieval misconceptions
+   * governance theater
+   * agent misuse patterns
+
+### Acceptance Criteria
+
+* major chapters contain at least some concrete decision-grade artifacts
+* readers can directly reuse or adapt atlas outputs
+* the atlas becomes operationally useful, not merely descriptive
+
+---
+
+## Workstream 4: Separate Concept, Evidence, and Action More Clearly
+
+### Objective
+
+Improve structure so readers can distinguish explanation, proof, and implementation guidance.
+
+### Problems Being Solved
+
+* concept and decision content are blended too loosely
+* evidence posture is not consistently visible
+* readers cannot always tell whether a page explains, compares, or recommends
+
+### Required Changes
+
+For important topics, move toward a recurring internal pattern where appropriate:
+
+* **Foundations**: what this is
+* **Distinctions**: what it is and is not
+* **Trade-offs**: what changes across options
+* **Decision Guidance**: how to choose
+* **Worked Scenarios**: examples
+* **Artifacts**: checklists, templates, reference structures
+* **Sources / Evidence Notes**: where claims come from
+
+This pattern should not be copied mechanically everywhere, but it should guide richer content design.
+
+### Acceptance Criteria
+
+* readers can easily tell what kind of value a page provides
+* major topics include explanation, trade-offs, and actionable guidance
+* pages feel curated rather than structurally repetitive
+
+---
+
+## Workstream 5: Introduce a Visible Page Maturity Model
+
+### Objective
+
+Signal content maturity honestly and improve reader trust.
+
+### Problems Being Solved
+
+* repository looks more mature structurally than it may be content-wise
+* readers cannot distinguish draft pages from curated reference pages
+* contributors lack a shared progression model
+
+### Required Additions
+
+Introduce a simple page maturity tag system such as:
+
+* Outline
+* Draft
+* Review-Ready
+* Curated Reference
+
+Each page should clearly indicate its maturity state near the top.
+
+Also define what each level means:
+
+* **Outline**: structural placeholder with minimal substance
+* **Draft**: useful but incomplete
+* **Review-Ready**: coherent and substantial, ready for editorial review
+* **Curated Reference**: high-confidence, evidence-backed, stable reference material
+
+### Acceptance Criteria
+
+* all pages have a maturity signal
+* maturity labels match actual page quality
+* readers can calibrate trust and completeness quickly
+* contributors have a clear target progression model
+
+---
+
+## Workstream 6: Strengthen Citation and Evidence Discipline
+
+### Objective
+
+Improve trustworthiness and verifiability.
+
+### Problems Being Solved
+
+* practical claims are not always visibly sourced
+* evidence density is uneven
+* comparison and recommendation pages need stronger grounding
+
+### Required Changes
+
+1. Add more explicit citations throughout the atlas.
+2. Prefer primary sources where possible.
+3. Require stronger citation coverage on:
+
+   * standards and regulatory claims
+   * vendor/project claims
+   * governance claims
+   * model ecosystem comparisons
+   * deployment claims
+4. Add source notes or evidence notes to comparison-heavy pages.
+5. Distinguish clearly between:
+
+   * normative guidance
+   * descriptive landscape mapping
+   * evidence-backed claim
+   * editorial judgment
+
+### Acceptance Criteria
+
+* evidence-rich pages show visibly stronger sourcing
+* trust-critical claims are easier to verify
+* readers can distinguish fact, synthesis, and recommendation
+
+---
+
+## Workstream 7: Standardize Comparison Schema Across the Atlas
+
+### Objective
+
+Make comparison content more reusable and coherent.
+
+### Problems Being Solved
+
+* comparison pages may vary too much in criteria
+* readers cannot easily compare across chapters
+* quality of analysis depends too much on local author style
+
+### Required Additions
+
+Define a reusable comparison schema where relevant. For entities such as vendors, tools, projects, components, or patterns, use comparable fields such as:
+
+* category / entity type
+* stack layer
+* primary purpose
+* deployment model
+* openness posture
+* control points
+* data boundary implications
+* portability implications
+* lock-in risk
+* observability implications
+* security implications
+* governance implications
+* operational complexity
+* fit by organization type
+* notable strengths
+* notable weaknesses
+* primary sources
+
+Do not force every field onto every page, but create a canonical comparison model that can be reused consistently.
+
+### Acceptance Criteria
+
+* comparison content becomes more consistent across chapters
+* readers can navigate trade-offs more easily
+* new comparison pages inherit a strong structure by default
+
+---
+
+## Workstream 8: Add a Glossary / Terminology Ledger
+
+### Objective
+
+Create a stable terminology anchor for readers and contributors.
+
+### Problems Being Solved
+
+* similar terms can drift in meaning across chapters
+* cross-functional readers need a faster entry point
+* taxonomy is distributed but not always convenient as a quick reference
+
+### Required Additions
+
+Create a glossary or terminology ledger that defines and disambiguates core terms such as:
+
+* AI system
+* ML system
+* model
+* frontier model
+* foundation model
+* agent
+* workflow
+* orchestration
+* tool use
+* retrieval
+* grounding
+* evaluation
+* governance
+* assurance
+* portability
+* sovereignty
+* lock-in
+* open source
+* open weights
+* self-hosted
+* managed service
+* safety
+* oversight
+* human-in-the-loop
+
+This glossary should not replace the taxonomy chapter. It should complement it as a fast reference.
+
+### Acceptance Criteria
+
+* key terms are easy to find and interpret
+* terminology becomes more stable across the atlas
+* contributors have a stronger shared language baseline
+
+---
+
+## Workstream 9: Strengthen High-Leverage Chapters First
+
+### Objective
+
+Prioritize improvement where it will have the highest product impact.
+
+### Priority Chapters to Strengthen First
+
+1. Taxonomy
+2. Use cases and application landscapes
+3. Agentic systems and orchestration
+4. Retrieval, knowledge systems, and context assembly
+5. Evaluation, testing, and QA
+6. Security, privacy, safety, and abuse resistance
+7. Reference architectures and implementation patterns
+8. Standards, frameworks, and bodies of knowledge
+9. Vendors, organizations, and market structure
+10. Build vs buy and sourcing strategy
+
+### Required Changes
+
+For these chapters first:
+
+* reduce boilerplate
+* improve depth
+* add decision artifacts
+* add worked examples
+* add stronger evidence notes
+* improve page-type differentiation
+
+### Acceptance Criteria
+
+* the most important chapters become obviously more valuable before long-tail refinement begins
+* the atlas quickly improves where readers are most likely to judge quality
+
+---
+
+## Workstream 10: Prune, Merge, or Defer Weak Pages
+
+### Objective
+
+Increase average quality by reducing low-value structural noise.
+
+### Problems Being Solved
+
+* too many weak pages dilute perceived quality
+* symmetry can create artificial fragmentation
+* early scaffolding may remain visible too long
+
+### Required Changes
+
+1. Audit every page for standalone justification.
+2. For pages that are too thin:
+
+   * strengthen them
+   * merge them into adjacent stronger pages
+   * or mark them clearly as Outline and defer full development
+3. Remove pages that add no unique value.
+4. Prefer coherence over file-count growth.
+
+### Acceptance Criteria
+
+* every page has a clear reason to exist
+* the repository’s average content strength rises
+* structural neatness does not outweigh reader value
+
+---
+
+## 8. Deliverables
+
+The AI agent must produce the following deliverables as part of the improvement work.
+
+### Required Deliverables
+
+1. A repository-wide content audit summary
+2. A page-type classification map for existing pages
+3. A page maturity assignment for existing pages
+4. A boilerplate reduction pass across chapter front pages
+5. A prioritized list of pages to merge, rewrite, defer, or remove
+6. A canonical comparison schema document
+7. A glossary / terminology ledger
+8. At least several new concrete decision artifacts
+9. At least several worked example pages
+10. Stronger citation coverage in trust-critical sections
+11. Updated contributor/editorial guidance if needed to reflect the new maturity and page-type system
+
+---
+
+## 9. Suggested Execution Order
+
+### Phase 1: Diagnose
+
+* audit pages
+* classify page types
+* assign maturity labels
+* identify repeated boilerplate
+* identify thin pages
+* identify high-leverage rewrite targets
+
+### Phase 2: Simplify structure
+
+* reduce repetitive chapter intros
+* prune or merge low-value pages
+* stabilize page roles
+
+### Phase 3: Add depth
+
+* improve the highest-impact chapters first
+* add decision guides, artifacts, and scenarios
+* strengthen comparison content
+
+### Phase 4: Improve trust
+
+* add maturity model to pages
+* increase citation discipline
+* improve evidence transparency
+
+### Phase 5: Final polish
+
+* review consistency
+* ensure terminology stability
+* ensure that page structure matches actual content purpose
+* ensure that the atlas feels curated and coherent as a whole
+
+---
+
+## 10. Success Metrics
+
+The improvement effort is successful if the atlas shows the following outcomes:
+
+### Qualitative Success Signals
+
+* less repetition
+* higher information density
+* clearer page purpose
+* stronger practical utility
+* more visible maturity honesty
+* more trust through sourcing
+* more concrete decision support
+* more distinctive voice and structure per chapter
+
+### Structural Success Signals
+
+* fewer weak standalone pages
+* more pages with explicit maturity states
+* more pages with usable decision artifacts
+* more pages with visible evidence backing
+* stronger consistency in comparison logic
+
+### Reader Experience Success Signals
+
+A new reader should be able to say:
+
+* “I understand what this atlas is for.”
+* “The pages are not all saying the same thing.”
+* “This helps me decide, not just learn vocabulary.”
+* “I can trust the stronger pages more.”
+* “I can reuse parts of this in real implementation work.”
+
+---
+
+## 11. Constraints for the AI Agent
+
+The AI agent improving the repository must follow these constraints:
+
+1. Do not change the mission of the atlas.
+2. Do not narrow it to LLM-only content.
+3. Do not replace the chapter system unless absolutely necessary.
+4. Do not add filler content just to increase volume.
+5. Do not make every page a table.
+6. Do not preserve weak symmetry for its own sake.
+7. Do not remove the cross-cutting emphasis on openness, sovereignty, privacy, compliance, portability, and lock-in.
+8. Do not flatten all page styles into a uniform template.
+9. Do not present unsupported claims as settled fact.
+10. Prefer fewer strong pages over many shallow pages.
+
+---
+
+## 12. Fully Self-Explanatory AI Agent Prompt
+
+Use the following prompt exactly as the working instruction for an AI agent tasked with improving the repository.
+
+---
+
+# AI Agent Prompt
+
+You are improving an open GitHub repository named **Open Applied AI Atlas**.
+
+## Repository Purpose
+
+This repository is an open knowledge base for applying AI and ML in organizations of all sizes across business, enterprise, public, nonprofit, and other real-world contexts. It is practical, taxonomy-driven, comparison-oriented, and implementation-focused. It is explicitly **not limited to LLMs**. It covers broader applied AI, including assistants, coding agents, retrieval systems, forecasting, optimization, recommendation systems, vision, speech, evaluation, governance, sourcing, architecture, security, privacy, compliance, portability, sovereignty, and lock-in.
+
+The repository already has a strong mission, a broad chapter map, and good editorial intent. However, it still needs substantial quality improvement in order to become a mature, decision-grade atlas.
+
+## Your Mission
+
+Improve the atlas from a strong structural scaffold into a **denser, less repetitive, more evidence-backed, more practical, more trustworthy, more reusable, more decision-oriented reference**.
+
+Do not change the mission. Strengthen the execution.
+
+## Product Problems You Must Solve
+
+You must address these repository-wide problems:
+
+1. Too much repeated boilerplate across chapter front pages and subpages
+2. Too many thin or formulaic pages
+3. Not enough concrete decision aids, operational artifacts, and worked examples
+4. Not enough differentiation between page types
+5. Not enough visible maturity signaling
+6. Not enough explicit evidence and citation discipline
+7. Not enough consistent comparison schema across the atlas
+
+## Non-Negotiable Principles
+
+You must preserve these core qualities:
+
+* broad applied AI scope, not LLM-only
+* organizational systems view of AI
+* cross-functional usefulness across product, business, architecture, engineering, QA, security, privacy, governance, and leadership roles
+* strong visibility of openness, sovereignty, privacy, compliance, portability, and lock-in throughout the stack
+* practical usefulness over abstract completeness
+* content density over symmetric but weak page proliferation
+* preference for primary sources and explicit sourcing
+
+## Required Workstreams
+
+### 1. Reduce boilerplate
+
+Audit chapter intro pages and repeated rhetorical patterns. Compress or rewrite repetitive framing text. Keep chapter intros concise and useful. Remove generic prose that could apply to nearly any chapter.
+
+### 2. Increase information density
+
+Audit pages for substance. Merge, rewrite, defer, or remove weak pages. Prefer fewer stronger pages over many thin ones.
+
+### 3. Differentiate page types
+
+Classify each page into one of these types where appropriate:
+
+* chapter index
+* concept explainer
+* comparison page
+* decision guide
+* worked example
+* operational artifact
+* reference sheet
+* glossary page
+
+Make the page type obvious in content and structure. Do not let all pages feel like template variants of one another.
+
+### 4. Add decision-grade artifacts
+
+Add practical, reusable content such as:
+
+* decision trees
+* scored comparison matrices
+* architecture decision aids
+* reference architectures
+* evaluation plans
+* checklists
+* governance review artifacts
+* failure mode pages
+* worked organizational scenarios
+
+### 5. Introduce a page maturity model
+
+Add a visible maturity marker to pages using a system such as:
+
+* Outline
+* Draft
+* Review-Ready
+* Curated Reference
+
+Define these clearly and assign them honestly.
+
+### 6. Strengthen citation and evidence discipline
+
+Improve sourcing throughout the repository, especially for:
+
+* standards
+* regulations
+* vendor or project claims
+* architectural claims
+* governance claims
+* comparison-heavy content
+
+Prefer primary sources when possible. Make it easier for readers to verify important claims.
+
+### 7. Standardize comparison schema
+
+Create a canonical comparison schema for tools, vendors, platforms, patterns, or projects, using fields such as:
+
+* entity type
+* stack layer
+* purpose
+* deployment model
+* openness posture
+* data boundary implications
+* portability implications
+* lock-in risks
+* observability implications
+* security implications
+* governance implications
+* operational complexity
+* strengths
+* weaknesses
+* primary sources
+
+Do not force every field everywhere, but use this as a reusable analysis model.
+
+### 8. Add a glossary / terminology ledger
+
+Create a glossary that stabilizes key terms and complements the taxonomy chapter.
+
+### 9. Prioritize high-leverage chapters first
+
+Improve the most important chapters first, especially:
+
+* taxonomy
+* use cases and application landscapes
+* agentic systems and orchestration
+* retrieval and knowledge systems
+* evaluation, testing, and QA
+* security, privacy, safety, and abuse resistance
+* reference architectures and implementation patterns
+* standards and frameworks
+* vendors and market structure
+* build vs buy and sourcing strategy
+
+### 10. Prune or merge weak pages
+
+If a page is too thin to justify standalone existence, either strengthen it, merge it, clearly mark it as Outline, or remove it.
+
+## Required Deliverables
+
+You must produce these outcomes in the repository:
+
+1. A repository-wide content audit summary
+2. A page-type classification map
+3. A page maturity assignment across pages
+4. Reduced boilerplate in chapter intros
+5. A list of pages that were merged, removed, deferred, or heavily rewritten
+6. A canonical comparison schema document
+7. A glossary / terminology ledger
+8. Several new concrete decision artifacts
+9. Several worked example pages
+10. Stronger citation coverage in trust-critical sections
+11. Any necessary updates to contributor or editorial guidance
+
+## Quality Bar for Your Work
+
+Your changes are good only if they produce these outcomes:
+
+* less repetition
+* higher information density
+* clearer page purpose
+* stronger practical value
+* stronger trustworthiness
+* more reusable implementation guidance
+* more honest maturity signaling
+* more coherent comparison logic
+* a more curated, less scaffold-like feel
+
+A new reader should come away feeling:
+
+* this atlas helps real decisions
+* this is not just a GenAI tool list
+* the pages are not repetitive
+* the stronger pages are visibly trustworthy
+* the atlas is useful for actual implementation work
+
+## Constraints
+
+Do not:
+
+* narrow the scope to GenAI or chatbots
+* add filler content
+* turn everything into tables
+* preserve symmetry for its own sake
+* present unsupported claims as settled fact
+* leave weak pages untouched just because they exist already
+
+Do:
+
+* prefer fewer stronger pages over more weaker pages
+* preserve the project’s strategic direction
+* improve the repository as a serious applied AI implementation atlas
+
+## Execution Order
+
+Follow this order:
+
+1. Audit the repository
+2. Classify pages by type
+3. Assign maturity levels
+4. Identify repetition and thin pages
+5. Simplify and prune structure where needed
+6. Strengthen highest-impact chapters first
+7. Add decision artifacts and worked examples
+8. Improve citation discipline
+9. Add glossary and comparison schema
+10. Review for coherence and final quality
+
+## Output Expectation
+
+Your output should not be superficial. It should materially improve the atlas. Optimize for:
+
+* stronger editorial quality
+* stronger decision utility
+* stronger implementation value
+* stronger reader trust
+* stronger long-term maintainability
+
+You are not merely editing prose. You are upgrading the repository into a better product.
+
+---
+
+## 13. Final Implementation Standard
+
+The atlas should emerge from this work as:
+
+* still broad
+* still open
+* still organization-centered
+* but now substantially less repetitive,
+* substantially more useful,
+* substantially more evidence-backed,
+* and substantially more capable of supporting real-world AI implementation decisions.

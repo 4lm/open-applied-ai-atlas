@@ -1,5 +1,7 @@
 # 4.3.1 Standards And Bodies
 
+_Page Type: Comparison Page | Maturity: Review-Ready_
+
 This subsection compares the main legal, standards, and framework anchors used in applied AI governance. Read it as a governance crosswalk, not as a claim that one item can replace the others.
 
 ## How To Read This File

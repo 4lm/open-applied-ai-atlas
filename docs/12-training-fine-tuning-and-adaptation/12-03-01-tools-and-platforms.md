@@ -1,6 +1,6 @@
 # 12.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the tools used to adapt systems after model selection: prompt and program optimization, fine-tuning stacks, training ops, and managed platform services. It keeps the chapter's core bias visible: escalate to heavier adaptation only when prompting, retrieval, and evaluation discipline are no longer enough.
 

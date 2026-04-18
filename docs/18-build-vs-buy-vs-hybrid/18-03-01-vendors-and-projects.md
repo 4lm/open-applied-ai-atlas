@@ -1,6 +1,6 @@
 # 18.3.1 Vendors And Projects
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the vendors and projects that tend to pull decisions toward buy, build, or hybrid sourcing. The same tool can appear in multiple sections because sourcing posture depends on how it is adopted, not only on what the product is.
 

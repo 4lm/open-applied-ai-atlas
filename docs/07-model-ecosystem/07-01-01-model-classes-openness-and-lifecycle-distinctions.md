@@ -1,5 +1,7 @@
 # 7.1.1 Model Classes, Openness, And Lifecycle Distinctions
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 This subsection isolates the most reusable distinctions in the chapter so later implementation and comparison material stays anchored to the right concepts.
 
 This distinction layer matters because the chapter on model ecosystem is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.

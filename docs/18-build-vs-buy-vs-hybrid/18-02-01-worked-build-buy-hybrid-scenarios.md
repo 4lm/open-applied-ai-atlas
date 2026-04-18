@@ -1,35 +1,43 @@
 # 18.2.1 Worked Build-Buy-Hybrid Scenarios
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-These examples turn the chapter into concrete organizational situations. They are deliberately short and comparative so the reader can see where the chapter changes a real decision.
+These scenarios show how sourcing answers split by layer. Each case is intentionally hybrid enough to avoid the false comfort of one universal build-or-buy rule.
 
-## Buy model access, build workflow logic
+## Buy Model Access, Build Workflow Logic
 
-A team buys commodity model capability but builds the domain workflow layer because differentiation lives there.
+| Field | Decision |
+| --- | --- |
+| Context | A team needs fast model capability but differentiates on domain workflow |
+| Recommended sourcing | Buy model access, build workflow and policy logic |
+| Why | Commodity model capability is not the strategic layer |
+| Watch for | Overbuilding low-value infrastructure around commodity layers |
 
-- What this example makes visible: helps organizations decide what to build, buy, compose, or self-host across the AI stack instead of seeking one global sourcing answer.
-- What to watch for: The failure mode is overbuilding low-value infrastructure.
+## Hybrid Retrieval Architecture
 
-## Hybrid retrieval architecture
+| Field | Decision |
+| --- | --- |
+| Context | The team accepts managed inference but wants tighter control over knowledge, permissions, and exit posture |
+| Recommended sourcing | Buy inference, self-host or tightly control retrieval and permission layers |
+| Why | Retrieval often carries the organization-specific data and governance burden |
+| Watch for | Treating a model contract as if it settled the whole architecture |
 
-A team buys managed inference but keeps retrieval and permissions under tighter internal control.
+## Self-Hosted Sovereign Posture
 
-- What this example makes visible: helps organizations decide what to build, buy, compose, or self-host across the AI stack instead of seeking one global sourcing answer.
-- What to watch for: The failure mode is treating one layer choice as if it answered all others.
+| Field | Decision |
+| --- | --- |
+| Context | A regulated organization values local control, auditability, and exit posture over raw speed |
+| Recommended sourcing | Self-host or compose portable layers across serving, retrieval, and telemetry |
+| Why | The strategic risk sits in dependence and jurisdictional exposure |
+| Watch for | Underestimating support, staffing, and lifecycle burden |
 
-## Self-hosted sovereign posture
+## Integrator-Led Bootstrap With Transfer
 
-A regulated team accepts higher ops burden because control and exit posture matter more than speed.
-
-- What this example makes visible: helps organizations decide what to build, buy, compose, or self-host across the AI stack instead of seeking one global sourcing answer.
-- What to watch for: The failure mode is pretending the burden is small.
-
-## Integrator-led bootstrap with transfer
-
-A partner helps assemble the stack, but capability transfer is written into the plan from the start.
-
-- What this example makes visible: helps organizations decide what to build, buy, compose, or self-host across the AI stack instead of seeking one global sourcing answer.
-- What to watch for: The failure mode is letting the hybrid architecture become dependent on one integrator.
+| Field | Decision |
+| --- | --- |
+| Context | The organization needs a partner to accelerate delivery but wants long-term internal ownership |
+| Recommended sourcing | Hybrid delivery with explicit capability-transfer milestones |
+| Why | External speed is useful only if the organization avoids permanent dependency on one integrator |
+| Watch for | Letting the partner become the irreplaceable control plane |
 
 Back to [18.2 Applying Sourcing Choices](18-02-00-applying-sourcing-choices.md).

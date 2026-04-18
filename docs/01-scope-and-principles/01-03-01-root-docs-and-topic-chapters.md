@@ -1,5 +1,7 @@
 # 1.3.1 Root Docs And Topic Chapters
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 The root of the repository is for repository-level guidance. The `docs/` directory is for topic-level knowledge.
 
 This distinction layer matters because the chapter on scope and principles is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.

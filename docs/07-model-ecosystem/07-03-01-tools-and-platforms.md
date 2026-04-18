@@ -1,6 +1,6 @@
 # 7.3.1 Tools And Platforms
 
-This subsection holds the chapter's named comparison material. Read it as a reference layer, not as a substitute for the chapter's conceptual and implementation sections.
+_Page Type: Comparison Page | Maturity: Review-Ready_
 
 This file compares the product surfaces through which organizations discover, select, and access model families. It is intentionally broader than a short vendor API list because the model ecosystem now includes managed catalogs, open-weight programs, hub platforms, and cloud-native model gardens.
 

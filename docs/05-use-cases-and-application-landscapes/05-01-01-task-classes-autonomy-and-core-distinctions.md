@@ -1,5 +1,7 @@
 # 5.1.1 Task Classes, Autonomy, And Core Distinctions
 
+_Page Type: Concept Explainer | Maturity: Draft_
+
 This subsection ties system family to autonomy, control, and assurance expectations. It keeps worker assistance, decision support, and action-taking systems visibly separate so teams do not inherit the wrong operating model by accident.
 
 ## Key Lenses

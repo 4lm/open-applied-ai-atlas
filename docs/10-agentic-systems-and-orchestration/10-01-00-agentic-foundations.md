@@ -1,44 +1,19 @@
 # 10.1 Agentic Foundations
 
-This section lays the conceptual foundation for Agentic Systems And Orchestration. Within the chapter, it separates assistants, workflows, and higher-autonomy agents so orchestration choices are reviewed against the right failure modes and operating risks, but the emphasis here is narrower: this section exists to establish a shared vocabulary, stable distinctions, and the minimum conceptual frame required before comparison or implementation makes sense.
+_Page Type: Chapter Index | Maturity: Review-Ready_
+
+This section sets the minimum conceptual discipline for discussing agents. Use it when a team is mixing up assistants, workflows, planners, tool use, and autonomy levels in the same proposal.
 
 ## Section Map
 
 - 10.1.1 [Autonomy, Tool Use, And Execution Distinctions](10-01-01-autonomy-tool-use-and-execution-distinctions.md)
 - 10.1.2 [Decision Boundaries And Orchestration Heuristics](10-01-02-decision-boundaries-and-orchestration-heuristics.md)
-
-This deep dive expands the chapter beyond front-door orientation. Its job is to explain the distinctions that make the topic useful in implementation work rather than only in taxonomy or planning language.
-
-## Why This Section Exists
-
-This section exists to establish a shared vocabulary, stable distinctions, and the minimum conceptual frame required before comparison or implementation makes sense. It gives readers a stable place to answer the questions that are most likely to be confused inside agentic systems and orchestration, which makes later comparison more reliable because it rests on a shared frame instead of local shorthand.
-
-This section should also be read as part of the atlas mission rather than as a self-contained mini-essay. The point is to surface how agentic foundations changes control, portability, sovereignty, privacy, compliance, and operating burden in real organizational systems.
-
-## Section Shape
-
-```mermaid
-flowchart LR
-    S0["10.1.1 Autonomy, Tool Use, And Execution Distinctions"]
-    S1["10.1.2 Decision Boundaries And Orchestration Heuristics"]
-    S0 --> S1
-```
+- 10.1.3 [Agent Vs Workflow Decision Guide](10-01-03-agent-vs-workflow-decision-guide.md)
 
 ## What To Look For Here
 
-- the definitions and boundaries that should remain stable across the chapter
-- the trade-offs or category errors that would distort later comparisons
-- the chapter-specific lenses that should stay visible in reviews and designs
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
-
-## Reading Guidance
-
-Read this section first whenever the team is still arguing about terms, boundaries, or which problem family is actually in scope. When in doubt, ask whether the material here changes a real decision, review, or operating posture. If it does not, go back up one level and confirm that the right chapter or section is being used.
-
-## Review Prompts
-
-- Are the chapter terms being used consistently with the taxonomy in chapter 2?
-- Would a new contributor understand what belongs in this chapter and what belongs elsewhere?
-- Do the distinctions here change a real design or review decision later in the stack?
+- what the system is being allowed to do, not only what it can say
+- which failures come from autonomy choice rather than model quality alone
+- when the right answer is tighter workflow design instead of broader agent freedom
 
 Back to [10. Agentic Systems And Orchestration](10-00-00-agentic-systems-and-orchestration.md).

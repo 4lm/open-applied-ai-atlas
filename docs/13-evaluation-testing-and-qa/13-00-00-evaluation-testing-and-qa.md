@@ -1,8 +1,8 @@
 # 13. Evaluation Testing And QA
 
-This chapter is the front door for Evaluation Testing And QA. It treats evaluation, testing, and QA as the evidence spine for release, review, and continuous improvement. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-Without explicit evidence design, product teams confuse demos, benchmarks, and real release readiness.
+This chapter treats evaluation, testing, and QA as the evidence spine for release, review, and continuous improvement. It is where teams should define what they must prove before launch instead of mistaking demos, benchmarks, or anecdotal success for release readiness.
 
 ## Chapter Index
 
@@ -15,36 +15,14 @@ Without explicit evidence design, product teams confuse demos, benchmarks, and r
 - 13.3 [Reference Points](13-03-00-reference-points.md)
 - 13.3.1 [Tools And Platforms](13-03-01-tools-and-platforms.md)
 - 13.3.2 [Controls And Artifacts](13-03-02-controls-and-artifacts.md)
-
-## Why This Chapter Exists
-
-The atlas uses chapter front doors as real chapter maps, not as thin navigation stubs. This chapter therefore has to do more than list files. It should explain why the topic matters, show how the chapter is segmented, and help a reader choose the right depth before they disappear into detailed tables or worked examples.
-
-That matters here because evaluation testing and qa is rarely a self-contained question. Decisions in this chapter usually spill into adjacent chapters about governance, data boundaries, evidence, security, operations, or sourcing. The front door keeps those relationships visible before local optimization starts.
-
-## Chapter Shape
-
-```mermaid
-flowchart LR
-    C0["13.1 Evaluation Foundations"]
-    C1["13.2 Operating Evaluation And QA"]
-    C2["13.3 Reference Points"]
-    C0 --> C1
-    C1 --> C2
-```
+- 13.3.3 [Evaluation Plan And Release Gate Templates](13-03-03-evaluation-plan-and-release-gate-templates.md)
 
 ## What This Chapter Helps Decide
 
 - what evidence is required before release
 - which failure modes deserve dedicated test design
 - how ongoing QA should connect to operations and governance
-- which adjacent chapters should be read next because the issue is no longer only about evaluation testing and qa
-
-## How To Use This Chapter
-
-Start with the first section when the language, scope, or boundary of the topic is still unstable. Move to the second section when the question becomes operational and the team needs practical sequencing, scenarios, or review logic. Use the third section after the conceptual and operating frame is clear enough that named tools, standards, controls, or reference artifacts will sharpen the decision rather than replace it.
-
-If you are reviewing a proposal rather than designing one, use the chapter map to confirm which section the proposal really belongs in. That small check prevents detailed reference material from being mistaken for the whole argument.
+- what reusable templates and gates should exist before the team scales delivery
 
 ## Adjacent Chapters
 
