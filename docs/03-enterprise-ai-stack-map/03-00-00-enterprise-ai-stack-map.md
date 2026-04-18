@@ -1,10 +1,8 @@
 # 3. Enterprise AI Stack Map
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This chapter is the front door for Enterprise AI Stack Map. It maps the enterprise AI stack from governance and data boundaries through runtime, assurance, and sourcing so teams can see how system layers interact. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
-
-Without a shared stack map, teams tend to over-focus on models while hiding governance, runtime, and evidence burdens.
+This chapter is the atlas control surface for reasoning across the enterprise AI stack. Use it when the real question is not "which tool is best," but "which layer owns the problem, where must controls sit, and which adjacent chapters should shape the design?"
 
 ## Chapter Index
 
@@ -18,16 +16,15 @@ Without a shared stack map, teams tend to over-focus on models while hiding gove
 - 3.3.1 [Tooling By Layer](03-03-01-tooling-by-layer.md)
 - 3.3.2 [Reference Stack Solutions](03-03-02-reference-stack-solutions.md)
 
-
 ## What This Chapter Helps Decide
 
-- where a capability sits in the broader stack
-- which control points belong in design review
-- which adjacent layers must be revisited when the architecture changes
-- which adjacent chapters should be read next because the issue is no longer only about enterprise ai stack map
+- where a capability belongs in the broader stack
+- which control points are mandatory before implementation choices harden
+- when a model, data, gateway, workflow, evaluation, or sourcing issue is being confused for another layer
+- when to leave the stack-map lane and move into governance, privacy, orchestration, assurance, or reference-architecture detail
 
 ## Adjacent Chapters
 
 - Previous: [2. Taxonomy](../02-taxonomy/02-00-00-taxonomy.md)
 - Next: [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
-- Repository guidance: [Contributing](../../CONTRIBUTING.md), [Editorial Rules](../../EDITORIAL_RULES.md)
+- Related: [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md), [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md), [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)

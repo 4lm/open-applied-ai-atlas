@@ -1,40 +1,41 @@
 # 3.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Outline_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use these patterns to test whether a proposal is using the stack map as a real design aid or only as explanatory decoration.
 
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
+## Reusable Patterns
 
-## Patterns To Reuse
+| Pattern | What good looks like |
+| --- | --- |
+| Boundary before model choice | The team identifies data, approval, and operating constraints before narrowing model options |
+| Shared control layers named explicitly | Gateway, telemetry, policy, and evidence services are treated as stack layers, not optional extras |
+| Stack map revisited on posture change | Managed-to-self-hosted, advisory-to-action, or single-team-to-platform changes reopen the map |
+| Cross-cutting concerns visible by layer | Portability, sovereignty, privacy, and lock-in are attached to concrete layers rather than generic statements |
 
-- The stack is a map, not a shopping list
-- Use-case and governance choices should appear before model and tooling choices
-- Control-plane decisions matter as much as model capability
+## Stack-Map Anti-Patterns
 
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
-
-
-## Decision Flow
-
-```mermaid
-flowchart TD
-    A[Start with chapter question] --> B[Clarify constraints and scope]
-    B --> C[Choose smallest viable pattern]
-    C --> D[Check adjacent chapter dependencies]
-    D --> E[Add review and rollback logic]
-```
+| Anti-pattern | Why it fails |
+| --- | --- |
+| Model-first architecture reasoning | The organization optimizes for capability while hiding workflow, data, or evidence risk |
+| Tool catalog as stack map | Named products replace layer reasoning, so teams cannot explain responsibilities clearly |
+| Shared dependency blindness | Different products appear independent while the same gateway, cloud, or support path dominates |
+| Architecture shape mistaken for layer map | A reusable architecture is chosen before the team understands which layer is actually driving the decision |
 
 ## Review Prompt
 
-| During review ask... | Why |
+| Ask during review... | Why it matters |
 | --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
+| Which layer carries the strongest unresolved risk? | Forces the team to name the real decision surface |
+| Which controls are shared platform capabilities versus application-local behavior? | Prevents hidden coupling and duplicate control logic |
+| What changes if the supplier or hosting posture changes? | Tests whether the stack map is portable or accidentally vendor-shaped |
+| Which adjacent chapter now owns the hardest question? | Prevents the stack map from becoming a catch-all answer |
+
+## Drift Signals
+
+- teams discuss suppliers without naming gateway, telemetry, or approval layers
+- self-hosting is proposed without a clear support, provenance, and observability plan
+- product comparisons dominate before the data boundary and review lane are stable
+- multiple teams claim autonomy while sharing one ungoverned control plane
 
 Back to [3.2 Applying The Stack Map](03-02-00-applying-the-stack-map.md).

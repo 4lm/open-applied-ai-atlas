@@ -1,23 +1,19 @@
 # 19.1 Architecture Foundations
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section lays the conceptual foundation for Reference Architectures. Within the chapter, it turns the atlas into reusable architecture shapes so teams can compare reference patterns without pretending one stack fits every system, but the emphasis here is narrower: this section exists to establish a shared vocabulary, stable distinctions, and the minimum conceptual frame required before comparison or implementation makes sense.
+This section establishes the architecture families and selection logic that keep reference architectures useful as design starting points rather than decorative diagrams.
 
 ## Section Map
 
 - 19.1.1 [Architecture Shapes, Constraints, And Core Distinctions](19-01-01-architecture-shapes-constraints-and-core-distinctions.md)
 - 19.1.2 [Decision Boundaries And Selection Heuristics](19-01-02-decision-boundaries-and-selection-heuristics.md)
 
-This deep dive expands the chapter beyond front-door orientation. Its job is to explain the distinctions that make the topic useful in implementation work rather than only in taxonomy or planning language.
+## What This Section Helps Clarify
 
-
-## What To Look For Here
-
-- the definitions and boundaries that should remain stable across the chapter
-- the trade-offs or category errors that would distort later comparisons
-- the chapter-specific lenses that should stay visible in reviews and designs
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
+- the difference between a reusable architecture family and a one-off system diagram
+- which constraints actually separate SaaS-first, gateway-centric, sovereign, local, and hybrid stacks
+- when the problem should stay in chapter `03` stack mapping versus move into chapter `19` pattern selection
 
 
 Back to [19. Reference Architectures](19-00-00-reference-architectures.md).

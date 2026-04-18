@@ -1,35 +1,68 @@
 # 19.2.1 Worked Architecture Scenarios
 
-_Page Type: Worked Example | Maturity: Outline_
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+These scenarios show how reference architectures should change with consequence, platform maturity, and control posture.
 
-## SaaS-first assistant
+## SaaS-First Assistant
 
-A low-risk internal service uses a small managed pattern to reduce startup burden.
+| Field | Decision |
+| --- | --- |
+| Context | A low-risk internal drafting service needs value quickly and has limited internal platform capacity |
+| Recommended posture | Use a SaaS-first assistant pattern with basic telemetry, approved provider lane, and explicit fallback to existing workflows |
+| Why | The organization benefits more from speed and constrained scope than from early platform investment |
+| Watch for | Letting a temporary assistant pattern become the default for stronger-control use cases |
+| Control implications | provider approval, usage logging, prompt/data boundary review, release gate for core tasks |
+| Adjacent chapters | `03`, `06`, `18` |
 
-- What this example makes visible: synthesizes the atlas into reusable architecture patterns, showing how governance, runtime control, and sourcing choices combine in practice.
-- What to watch for: The failure mode is letting a temporary pattern silently become the portfolio default.
+## Gateway-Centric Enterprise Pattern
 
-## Gateway-centric enterprise pattern
+| Field | Decision |
+| --- | --- |
+| Context | Many teams now depend on shared model access, common budgets, and audit visibility |
+| Recommended posture | Move to an enterprise gateway stack with shared auth, routing, trace standards, and evaluation templates |
+| Why | Platform-level control becomes more important than local team speed once reuse and spend coordination grow |
+| Watch for | Centralizing access without clear ownership of the gateway as a service |
+| Control implications | service owner, policy-as-code, budget lanes, model approval process, shared observability |
+| Adjacent chapters | `03`, `09`, `13`, `18` |
 
-A platform team standardizes around shared controls because many teams now depend on common model access.
+## Sovereign Private Stack
 
-- What this example makes visible: synthesizes the atlas into reusable architecture patterns, showing how governance, runtime control, and sourcing choices combine in practice.
-- What to watch for: The failure mode is centralizing without strong service ownership.
+| Field | Decision |
+| --- | --- |
+| Context | A high-control environment needs strong locality, operator control, and explicit exit posture |
+| Recommended posture | Use a sovereign private platform with self-hosted serving, local retrieval, policy enforcement, provenance, and auditable telemetry |
+| Why | Sovereignty changes runtime, support, update, and evidence obligations together |
+| Watch for | Underestimating staffing, lifecycle management, and support depth needed to keep the stack healthy |
+| Control implications | support-access limits, signed artifacts, controlled updates, local observability, re-certification triggers |
+| Adjacent chapters | `06`, `08`, `15`, `18` |
 
-## Sovereign private stack
+## Hybrid Predictive-Plus-Generative Stack
 
-A high-control environment accepts a heavier operating posture because portability and boundary control dominate.
+| Field | Decision |
+| --- | --- |
+| Context | A team combines forecasting or scoring with retrieval-backed explanation and human review |
+| Recommended posture | Use a hybrid predictive-plus-generative stack rather than forcing a pure assistant or agent pattern |
+| Why | The core business value still depends on classical ML or optimization components that need their own lifecycle controls |
+| Watch for | Letting the language interface hide the predictive model, feature pipeline, or evaluation burden underneath |
+| Control implications | ML lifecycle ownership, cross-method evaluation, retrieval provenance, workflow handoff rules |
+| Adjacent chapters | `03`, `12`, `13`, `18` |
 
-- What this example makes visible: synthesizes the atlas into reusable architecture patterns, showing how governance, runtime control, and sourcing choices combine in practice.
-- What to watch for: The failure mode is underestimating lifecycle cost.
+## Reusable Patterns Across Scenarios
 
-## Hybrid predictive-plus-generative stack
+| Pattern | What good looks like |
+| --- | --- |
+| Pattern family named first | The team can explain why this architecture family fits better than a lighter or heavier one |
+| Control model matched to scale | Shared platforms, sovereign stacks, and mixed-method systems carry visibly different control obligations |
+| Exit posture made explicit | The architecture preserves portability where the organization says portability matters most |
 
-A team combines predictive ML with retrieval-backed explanation because the problem is not purely conversational.
+## Architecture Anti-Patterns
 
-- What this example makes visible: synthesizes the atlas into reusable architecture patterns, showing how governance, runtime control, and sourcing choices combine in practice.
-- What to watch for: The failure mode is forcing one pattern family onto mixed-method workloads.
+| Anti-pattern | Why it fails |
+| --- | --- |
+| Accidental platform | A thin pilot stack silently becomes the enterprise default without re-review |
+| Control-free centralization | Shared infrastructure is introduced without service ownership, SLAs, or change governance |
+| Self-hosting as symbolism | The organization accepts the heaviest operating burden without proving that control benefits justify it |
+| One-pattern-for-everything | Low-risk assistance, action-taking workflows, and mixed predictive workloads are forced into the same stack family |
 
 Back to [19.2 Applying Reference Architectures](19-02-00-applying-reference-architectures.md).

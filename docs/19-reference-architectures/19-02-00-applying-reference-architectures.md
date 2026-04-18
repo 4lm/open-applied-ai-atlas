@@ -1,23 +1,24 @@
 # 19.2 Applying Reference Architectures
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Reference Architectures. Within the chapter, it turns the atlas into reusable architecture shapes so teams can compare reference patterns without pretending one stack fits every system, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns architecture families into delivery choices. Use it to see how the same chapter logic changes across low-risk, shared-platform, sovereign, and mixed-method environments.
 
 ## Section Map
 
 - 19.2.1 [Worked Architecture Scenarios](19-02-01-worked-architecture-scenarios.md)
-- 19.2.2 [Patterns And Anti-Patterns](19-02-02-patterns-and-anti-patterns.md)
 
-This guide turns the chapter into a delivery and operating sequence. It is intentionally practical: what to check first, what to defer, and what should trigger review before wider rollout.
+## What This Section Helps Decide
 
+- which reference architecture family fits common organizational contexts
+- which controls make that architecture viable rather than decorative
+- which recurring anti-patterns show that the chosen family is being stretched too far
 
-## What To Look For Here
+## Related Chapters
 
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
+- [3. Enterprise AI Stack Map](../03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
 
 
 Back to [19. Reference Architectures](19-00-00-reference-architectures.md).

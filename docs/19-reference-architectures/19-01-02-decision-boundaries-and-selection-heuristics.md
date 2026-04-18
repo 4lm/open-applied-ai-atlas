@@ -1,55 +1,46 @@
 # 19.1.2 Decision Boundaries And Selection Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to read the chapter well, where its boundaries sit, and which recurring mistakes distort decisions.
+Use this page to narrow the architecture family before comparing detailed reference stacks or named suppliers.
 
-This file exists because reference architectures usually involves judgment under incomplete information. Heuristics do not replace evidence, but they help teams avoid false certainty and force the most important trade-offs into the open before a local preference hardens into policy or architecture.
+## Decision Lanes
 
-## Why These Heuristics Matter
+| Lane | Use it when the main question is... |
+| --- | --- |
+| Speed-first | how to ship quickly with proportionate controls and low platform overhead |
+| Shared-control | how to support many teams with one gateway, telemetry, and review model |
+| Sovereignty-first | how to maximize operator control, locality, and exit posture |
+| Workflow-automation | how to support tool use, approvals, and durable multi-step execution |
+| Mixed-method | how to combine predictive ML, retrieval, and language interfaces coherently |
 
-A good heuristic should make a decision safer, faster, and more reviewable. It should also make clear when the team has moved beyond a heuristic and now needs stronger evidence, broader review, or a different chapter entirely.
+## Practical Heuristics
 
-## Decision Flow
+- Do not jump from use case to tooling without naming the architecture family first.
+- If more than one team will depend on the system, re-evaluate whether a thin SaaS-first pattern is about to become an accidental platform.
+- Treat sovereignty and exit posture as architecture-level questions, not as procurement clauses layered onto the same managed pattern.
+- Default to workflow-first control when the system can take actions, call tools, or trigger downstream processes.
+- Choose hybrid predictive-plus-generative patterns when forecasting, scoring, ranking, or optimization remain core to the business outcome.
 
-```mermaid
-flowchart TD
-    A[Clarify the chapter question] --> B[Identify constraints and non-negotiables]
-    B --> C[Choose the smallest viable option]
-    C --> D[Check adjacent chapter dependencies]
-    D --> E[Set review or escalation triggers]
-```
+## Escalate When
 
-## Reading The Chapter
+- the team cannot explain why a lighter or heavier pattern was rejected
+- a managed pattern is being stretched to meet strong locality, auditability, or workflow-control demands
+- the same architecture is being proposed for low-risk assistance and high-consequence action-taking work
+- the main dispute is really about supplier dependence, data boundary, or governance ownership rather than pattern shape
 
-Use this chapter to anchor the topic before dropping into implementation details, examples, or comparison material. The goal is not to replace the deeper files in the folder. The goal is to make the chapter readable as a front door and to surface the questions that matter most.
+## Architecture Anti-Patterns
 
-## Reading Heuristics
+- letting a temporary SaaS-first assistant become the portfolio default without review
+- centralizing on a shared gateway or platform without naming service ownership and support burden
+- treating self-hosting as a virtue when the organization lacks the operating capacity to sustain it
+- forcing one architecture family onto mixed predictive, generative, and workflow-heavy workloads
 
-- Start with this front door if you need the chapter's main distinctions and failure modes.
-- Move to the implementation guide when you need rollout, review, or operating advice.
-- Use the examples file when the topic feels too abstract and you need a concrete scenario.
-- Use typed resource files for named tools, standards, or vendor comparison rather than for conceptual orientation.
+## Chapter Handoffs
 
-## Common Reader Mistakes
-
-- Jumping straight to tools before the chapter's core distinctions are clear.
-- Treating one table or one pattern as if it covered the entire topic.
-- Ignoring adjacent chapters that shape the same decision from another angle.
-
-## Open Questions
-
-- Which parts of this chapter deserve deeper worked examples in future passes?
-- Which distinctions are stable enough to stay canonical across future expansions?
-
-## Review Questions
-
-- Which constraint or risk is this heuristic trying to make visible?
-- What would cause the team to escalate beyond a rule of thumb into deeper review?
-- Are the heuristics here still consistent with the taxonomy and chapter boundaries of the atlas?
-
-## Practical Reading Rule
-
-Use this file when a team needs a disciplined default, not a permanent shortcut. If the heuristics stop matching the system consequence, scale, or evidence burden, revisit the chapter from the top.
+- [3. Enterprise AI Stack Map](../03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [10. Agentic Systems And Orchestration](../10-agentic-systems-and-orchestration/10-00-00-agentic-systems-and-orchestration.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
 
 Back to [19.1 Architecture Foundations](19-01-00-architecture-foundations.md).

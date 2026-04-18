@@ -1,23 +1,26 @@
 # 3.2 Applying The Stack Map
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Enterprise AI Stack Map. Within the chapter, it maps the enterprise AI stack from governance and data boundaries through runtime, assurance, and sourcing so teams can see how system layers interact, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns the stack map into delivery guidance. Use it when teams need to translate layer reasoning into architecture review, portfolio rationalization, or rollout sequencing.
 
 ## Section Map
 
 - 3.2.1 [Worked Stack Scenarios](03-02-01-worked-stack-scenarios.md)
 - 3.2.2 [Patterns And Anti-Patterns](03-02-02-patterns-and-anti-patterns.md)
 
-This guide turns the chapter into a delivery and operating sequence. It is intentionally practical: what to check first, what to defer, and what should trigger review before wider rollout.
+## What This Section Helps Decide
 
+- which layer deserves first attention in a delivery or review sequence
+- how the same stack map changes across managed, regulated, sovereign, or portfolio-wide contexts
+- which recurring failure shapes show that the team has skipped a layer or hidden a dependency
 
-## What To Look For Here
+## Related Chapters
 
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
+- [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
+- [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)
 
 
 Back to [3. Enterprise AI Stack Map](03-00-00-enterprise-ai-stack-map.md).

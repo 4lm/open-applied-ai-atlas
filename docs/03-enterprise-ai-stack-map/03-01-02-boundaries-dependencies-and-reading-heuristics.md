@@ -1,55 +1,47 @@
 # 3.1.2 Boundaries, Dependencies, And Reading Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to read the chapter well, where its boundaries sit, and which recurring mistakes distort decisions.
+Use this page to decide whether the issue in front of you is really a stack-mapping problem, or whether another chapter now owns the decision.
 
-This file exists because enterprise ai stack map usually involves judgment under incomplete information. Heuristics do not replace evidence, but they help teams avoid false certainty and force the most important trade-offs into the open before a local preference hardens into policy or architecture.
+## Decision Lanes
 
-## Why These Heuristics Matter
+| Lane | Use it when the main question is... |
+| --- | --- |
+| Layer-location | where a capability belongs and which layer must own the decision |
+| Control-placement | where policy, approval, logging, redaction, or monitoring should sit |
+| Dependency-reading | whether a supplier, gateway, workflow, or data choice creates hidden coupling |
+| Handoff-to-architecture | whether the team is now choosing a reusable architecture family rather than locating a responsibility |
 
-A good heuristic should make a decision safer, faster, and more reviewable. It should also make clear when the team has moved beyond a heuristic and now needs stronger evidence, broader review, or a different chapter entirely.
+## Practical Heuristics
 
-## Decision Flow
+- Map the full path before comparing vendors: governance, data boundary, model access, runtime, workflow, evaluation, and operating controls.
+- Treat shared gateways, telemetry, and identity systems as architecture-shaping layers, not as implementation detail.
+- Do not let a model-quality discussion replace questions about data access, approval ownership, or release evidence.
+- Revisit the stack map whenever the deployment posture changes from managed to self-hosted, from single-team to shared platform, or from advisory to action-taking.
+- Use chapter `19` only after the layer map is stable enough that reusable architecture families can be compared meaningfully.
 
-```mermaid
-flowchart TD
-    A[Clarify the chapter question] --> B[Identify constraints and non-negotiables]
-    B --> C[Choose the smallest viable option]
-    C --> D[Check adjacent chapter dependencies]
-    D --> E[Set review or escalation triggers]
-```
+## Escalate When
 
-## Reading The Chapter
+- the team cannot say which layer owns policy, budget, telemetry, or rollback
+- a single product is being asked to solve governance, hosting, retrieval, and workflow concerns all at once
+- the main disagreement is no longer about layer placement but about sourcing, sovereignty, or architecture family
+- two apparently different options still rely on the same hidden cloud, gateway, or support dependency
 
-Use this chapter to anchor the topic before dropping into implementation details, examples, or comparison material. The goal is not to replace the deeper files in the folder. The goal is to make the chapter readable as a front door and to surface the questions that matter most.
+## Common Failure Modes
 
-## Reading Heuristics
+- picking a model before deciding which data and review constraints dominate
+- treating the gateway as optional even though multiple teams, suppliers, or budgets must be coordinated
+- assuming self-hosting settles privacy or sovereignty questions without reviewing support access and evidence burden
+- confusing a reference architecture with the stack map that explains why the architecture exists
 
-- Start with this front door if you need the chapter's main distinctions and failure modes.
-- Move to the implementation guide when you need rollout, review, or operating advice.
-- Use the examples file when the topic feels too abstract and you need a concrete scenario.
-- Use typed resource files for named tools, standards, or vendor comparison rather than for conceptual orientation.
+## Chapter Handoffs
 
-## Common Reader Mistakes
-
-- Jumping straight to tools before the chapter's core distinctions are clear.
-- Treating one table or one pattern as if it covered the entire topic.
-- Ignoring adjacent chapters that shape the same decision from another angle.
-
-## Open Questions
-
-- Which parts of this chapter deserve deeper worked examples in future passes?
-- Which distinctions are stable enough to stay canonical across future expansions?
-
-## Review Questions
-
-- Which constraint or risk is this heuristic trying to make visible?
-- What would cause the team to escalate beyond a rule of thumb into deeper review?
-- Are the heuristics here still consistent with the taxonomy and chapter boundaries of the atlas?
-
-## Practical Reading Rule
-
-Use this file when a team needs a disciplined default, not a permanent shortcut. If the heuristics stop matching the system consequence, scale, or evidence burden, revisit the chapter from the top.
+- [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [10. Agentic Systems And Orchestration](../10-agentic-systems-and-orchestration/10-00-00-agentic-systems-and-orchestration.md)
+- [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
+- [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)
 
 Back to [3.1 Stack Foundations](03-01-00-stack-foundations.md).
