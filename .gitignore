@@ -6,4 +6,5 @@
 .codex/skills/.system/**
 !.codex/prompts/
 !.codex/prompts/**
+.delivery/PIP.md
 .omx/
