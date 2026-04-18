@@ -26,11 +26,12 @@ Before substantive work, read these files in this order:
 1. `AGENTS.md` for the agent workflow and completion contract.
 2. `.delivery/MISSION.md` for immutable mission, scope, and value boundaries.
 3. `.delivery/PIP.md` for the active improvement plan and execution target.
-4. `README.md` for public mission, audience, and chapter navigation.
-5. `CONTRIBUTING.md` for contribution workflow and anti-patterns.
-6. `EDITORIAL_RULES.md` for canonical structure, metadata, and evidence rules.
-7. `CONTENT_AUDIT_SUMMARY.md` for the current page-type, maturity, and quality-pass conventions.
+4. `.delivery/STATUS.md` for the current execution board: active tranche, open gaps, last completed pass, and next queue.
+5. `README.md` for public mission, audience, and chapter navigation.
+6. `CONTRIBUTING.md` for contribution workflow and anti-patterns.
+7. `EDITORIAL_RULES.md` for canonical structure, metadata, and evidence rules.
 8. `.delivery/page-audit.md` when the task touches page-level quality work, prioritization, merge/defer choices, or maturity-driven rewrites.
+9. `CONTENT_AUDIT_SUMMARY.md` for the public quality snapshot.
 
 If the task is trivial and clearly non-substantive, use judgment. For any meaningful content, structure, or quality change, follow the full read order.
 
@@ -41,8 +42,9 @@ Use this precedence when guidance overlaps:
 1. `AGENTS.md` for coding-agent operating workflow.
 2. `.delivery/MISSION.md` for immutable scope and value boundaries.
 3. `.delivery/PIP.md` for the active change objective, success criteria, and workstreams.
-4. `README.md`, `CONTRIBUTING.md`, `EDITORIAL_RULES.md`, and `CONTENT_AUDIT_SUMMARY.md` for durable public guidance on mission, structure, evidence, page types, and maturity.
-5. Local file context and adjacent documents for topic-specific fit and coherence.
+4. `.delivery/STATUS.md` for mutable execution state.
+5. `README.md`, `CONTRIBUTING.md`, `EDITORIAL_RULES.md`, and `CONTENT_AUDIT_SUMMARY.md` for durable public guidance on mission, structure, evidence, page types, and maturity.
+6. Local file context and adjacent documents for topic-specific fit and coherence.
 
 If guidance appears to conflict, preserve the mission, follow the active PIP for change direction, and avoid creating a parallel policy layer in topical docs.
 
@@ -51,11 +53,12 @@ If guidance appears to conflict, preserve the mission, follow the active PIP for
 - `AGENTS.md` defines how coding agents should enter, interpret, and complete work in this repository.
 - `.delivery/MISSION.md` defines the unchangeable mission, scope, audience, and value compass for the current delivery effort.
 - `.delivery/PIP.md` defines the active improvement work that pushes changes forward.
+- `.delivery/STATUS.md` is the single mutable execution board for current tranche, gap, and pass state.
 - `README.md` explains the repository publicly.
 - `CONTRIBUTING.md` defines contribution workflow and anti-patterns.
 - `EDITORIAL_RULES.md` defines canonical structure, page metadata, and evidence rules.
 - `CONTENT_AUDIT_SUMMARY.md` exposes the current public quality-pass signals.
-- `.delivery/page-audit.md` is the detailed maintenance and prioritization inventory for page-level improvement work.
+- `.delivery/page-audit.md` is the page-level state inventory linked to the current execution board.
 
 Do not create parallel copies of root or `.delivery` guidance inside topical chapter files unless that duplication is intentionally useful to readers.
 
@@ -63,16 +66,66 @@ Do not create parallel copies of root or `.delivery` guidance inside topical cha
 
 For substantive tasks, use this workflow:
 
-1. Start from `AGENTS.md`, then read `.delivery/MISSION.md` and `.delivery/PIP.md`.
-2. Identify the active PIP objective, workstream, and quality gap relevant to the task.
+1. Start from `AGENTS.md`, then read `.delivery/MISSION.md`, `.delivery/PIP.md`, and `.delivery/STATUS.md`.
+2. Identify the active PIP objective, workstream, tranche, and gap relevant to the task.
 3. Check the root guidance and adjacent documents so the change fits the repository contract.
-4. If the task touches page quality, use `CONTENT_AUDIT_SUMMARY.md` and `.delivery/page-audit.md` to choose the highest-leverage pass.
+4. If the task touches page quality, use `.delivery/page-audit.md` to confirm page-level state and `CONTENT_AUDIT_SUMMARY.md` for the public snapshot.
 5. Make a concrete improvement pass that materially advances the PIP rather than just changing wording superficially.
 6. Review the result for mission fit, taxonomy reuse, evidence posture, duplication, structure, links, numbering, and public readability.
-7. Decide whether another pass is still needed under the same PIP.
-8. Continue with further quality-improvement passes until the relevant PIP objective can honestly be considered done.
+7. Update `.delivery/STATUS.md` so the pass, gap, and next-queue state stay current.
+8. Update `.delivery/page-audit.md`, `CONTENT_AUDIT_SUMMARY.md`, and `CHANGELOG.md` only where their role is actually affected.
+9. Run `./scripts/delivery-harness-check.sh` if the pass touched delivery tracking, page metadata, or audit-summary counts.
+10. Run `./scripts/delivery-harness-status.sh` when you need a quick operator snapshot before planning the next tranche or after a substantial pass.
+11. Decide whether another pass is still needed under the same PIP.
+12. Continue with further quality-improvement passes until the relevant PIP objective can honestly be considered done.
 
 Do not treat a first pass as completion by default.
+
+## Delivery Harness Check Policy
+
+Use `./scripts/delivery-harness-check.sh` as the final consistency gate for delivery-harness state.
+
+Run it from the repository root after updating files and before declaring the pass complete when any of these are true:
+
+- `.delivery/STATUS.md` changed
+- `.delivery/page-audit.md` changed
+- `CONTENT_AUDIT_SUMMARY.md` changed
+- a pass updated maturity labels, page types, or other `docs/` metadata that should change audit counts or tracking state
+- a pass closed, reopened, renamed, or added gap IDs or pass IDs
+
+You may skip it for narrowly local edits that cannot affect delivery tracking or audit counts, but if there is any doubt, run it.
+
+How to use it:
+
+1. Run `./scripts/delivery-harness-check.sh` from the repository root after all intended edits are in place.
+2. Treat any nonzero exit as unresolved harness drift, not as an ignorable warning.
+3. Fix the source documents or tracking state that caused the error, then rerun the script until it passes.
+4. Do not mark the pass complete, claim tracking is current, or commit delivery-harness changes until the script passes.
+
+What it validates:
+
+- page-type and maturity counts against `CONTENT_AUDIT_SUMMARY.md`
+- gap and pass references between `.delivery/STATUS.md` and `.delivery/page-audit.md`
+- closed-gap consistency against linked page-audit rows
+
+## Delivery Harness Status Policy
+
+Use `./scripts/delivery-harness-status.sh` as the concise human-readable snapshot for current delivery state.
+
+Run it from the repository root when you need a fast read on:
+
+- the last delivery update
+- the current tranche and recommendation
+- current page-type and maturity counts
+- open versus closed gaps
+- the top next-gap queue
+
+Do not use it as a substitute for validation:
+
+- `delivery-harness-status.sh` reports tracked state
+- `delivery-harness-check.sh` validates tracked state against repository truth
+
+If both are used during a substantial pass, run `./scripts/delivery-harness-check.sh` first and `./scripts/delivery-harness-status.sh` second.
 
 ## PIP Pass Model
 
@@ -155,7 +208,8 @@ Do:
 - treat `AGENTS.md` as the entry-point for substantive work
 - treat `.delivery/MISSION.md` as the unchangeable scope and value compass
 - treat `.delivery/PIP.md` as the active driver of change
-- use `CONTENT_AUDIT_SUMMARY.md` and `.delivery/page-audit.md` to choose high-leverage quality passes where relevant
+- use `.delivery/STATUS.md` to understand the active tranche, open gaps, and last completed pass
+- use `.delivery/page-audit.md` to confirm page-level state where relevant
 - prefer improving existing content and structure over adding parallel duplicates
 - keep mission, taxonomy, evidence posture, and cleanup discipline visible through each pass
 
@@ -177,6 +231,9 @@ Work is done only when:
 - structure, numbering, links, and references are coherent
 - taxonomy reuse and evidence posture still hold
 - temporary scaffolding was removed unless intentionally retained
+- `.delivery/STATUS.md` accurately reflects the resulting pass and gap state
+- `./scripts/delivery-harness-check.sh` passed when the change affected delivery-harness state or audit counts
+- `./scripts/delivery-harness-status.sh` was used when a concise operator snapshot was needed for tranche selection or pass close-out
 - the affected material no longer obviously needs another quality-improvement pass under the same PIP
 
 ## Cleanup Loop

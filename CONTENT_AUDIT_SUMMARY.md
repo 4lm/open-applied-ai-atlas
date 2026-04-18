@@ -4,6 +4,8 @@ This summary records the current public quality signals under the Product Improv
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
+Last delivery update: `2026-04-18.c` on `2026-04-18`.
+
 ## Current Counts
 
 ### By Page Type
