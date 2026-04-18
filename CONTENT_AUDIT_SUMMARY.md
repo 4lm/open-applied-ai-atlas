@@ -4,7 +4,7 @@ This summary records the current public quality signals under the Product Improv
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
-Last delivery update: `2026-04-18.e` on `2026-04-18`.
+Last delivery update: `2026-04-18.f` on `2026-04-18`.
 
 ## Current Counts
 
@@ -21,9 +21,9 @@ Last delivery update: `2026-04-18.e` on `2026-04-18`.
 
 ### By Maturity
 
-- `Outline`: 63
-- `Draft`: 54
-- `Review-Ready`: 94
+- `Outline`: 61
+- `Draft`: 51
+- `Review-Ready`: 99
 - `Curated Reference`: 1
 
 ## What Changed
@@ -33,6 +33,7 @@ Last delivery update: `2026-04-18.e` on `2026-04-18`.
 - Added a terminology ledger and a canonical comparison schema in the taxonomy chapter.
 - Hardened the taxonomy chapter's distinction, heuristic, scenario, and pattern surfaces into review-ready decision aids and closed `G-02`.
 - Promoted the stack-map and reference-architecture chapters into review-ready decision surfaces and resolved the thin standalone chapter `19` pattern page.
+- Closed `G-11` by hardening the remaining build-vs-buy sourcing distinctions, operational review surfaces, pattern sheet, and reference overview in chapter `18`.
 - Added first-wave decision and artifact pages in high-leverage chapters.
 - Strengthened evidence posture on comparison-heavy and standards-heavy pages.
 - Promoted the governance, privacy, and market-structure chapters through a concentrated cross-cutting pass.
@@ -71,7 +72,7 @@ Last delivery update: `2026-04-18.e` on `2026-04-18`.
 - `docs/11-knowledge-retrieval-and-memory/11-01-00-retrieval-foundations.md` (Chapter Index)
 - `docs/12-training-fine-tuning-and-adaptation/12-03-00-reference-points.md` (Chapter Index)
 - `docs/13-evaluation-testing-and-qa/13-01-00-evaluation-foundations.md` (Chapter Index)
-- `docs/18-build-vs-buy-vs-hybrid/18-03-00-reference-points.md` (Chapter Index)
+- `docs/20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md` (Chapter Index)
 - `docs/20-standards-frameworks-and-bodies-of-knowledge/20-03-00-reference-points.md` (Chapter Index)
 - `docs/21-research-open-knowledge-and-community/21-00-00-research-open-knowledge-and-community.md` (Chapter Index)
 

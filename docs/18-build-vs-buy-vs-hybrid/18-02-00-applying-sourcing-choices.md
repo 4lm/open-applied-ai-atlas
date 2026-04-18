@@ -1,23 +1,26 @@
 # 18.2 Applying Sourcing Choices
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Build Vs Buy Vs Hybrid. Within the chapter, it makes build-versus-buy-versus-hybrid a layered sourcing decision rather than a single binary choice, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns sourcing posture into delivery review. Use it to test whether the chosen build, buy, or hybrid shape still makes sense once rollout sequence, operating ownership, and re-review triggers become concrete.
 
 ## Section Map
 
 - 18.2.1 [Worked Build-Buy-Hybrid Scenarios](18-02-01-worked-build-buy-hybrid-scenarios.md)
 - 18.2.2 [Patterns And Anti-Patterns](18-02-02-patterns-and-anti-patterns.md)
 
-This guide turns the chapter into a delivery and operating sequence. It is intentionally practical: what to check first, what to defer, and what should trigger review before wider rollout.
+## What This Section Helps Decide
 
+- which sourcing posture still holds up once delivery and operating work are visible
+- which recurrent patterns are healthy reuse versus hidden dependence
+- which changes should reopen the sourcing decision before wider rollout
 
-## What To Look For Here
+## Related Chapters
 
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
+- [3. Enterprise AI Stack Map](../03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
+- [16. Human Oversight And Operating Model](../16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md)
+- [17. Vendors Organizations And Market Structure](../17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md)
+- [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)
 
 
 Back to [18. Build Vs Buy Vs Hybrid](18-00-00-build-vs-buy-vs-hybrid.md).

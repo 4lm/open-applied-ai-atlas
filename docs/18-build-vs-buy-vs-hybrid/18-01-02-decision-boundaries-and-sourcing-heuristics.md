@@ -1,36 +1,49 @@
 # 18.1.2 Decision Boundaries And Sourcing Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to decide whether a layer should be built, bought, or run in a hybrid posture once speed, control, and operating realism are all considered together.
+Use this page to narrow the sourcing posture before comparing vendors or stack shapes. The goal is not to produce one universal answer for the chapter; it is to identify which decision lane dominates and which chapter must be pulled into the review before the sourcing choice hardens.
 
-## Decision Boundaries
+## Decision Lanes
 
-- Favor **buy** when the layer is non-differentiating, time-to-value dominates, and the organization can tolerate the resulting dependence.
-- Favor **build** when the layer creates strategic leverage, the team can realistically operate it, and sovereignty, control, or portability demands are too strong for the managed alternatives.
-- Favor **hybrid** when the stack contains a mix of commodity and strategic layers or when the organization needs faster delivery now without foreclosing a later migration path.
-- Treat the question as **capability realism first** when the organization is attracted to control but lacks the people, process, or operational maturity to sustain it.
+| Lane | Use it when the main question is... | Typical sourcing bias |
+| --- | --- | --- |
+| Speed-first | how to deliver acceptable capability quickly with proportionate controls | buy commodity layers, keep scope narrow, preserve an exit path where it matters |
+| Differentiation-first | which layer creates durable business leverage or domain advantage | build workflow, policy, or knowledge layers that create the differentiation |
+| Sovereignty-first | how to keep locality, operator control, auditability, or jurisdictional exposure within bounds | self-host or compose the control-critical layers; buy only what can remain bounded |
+| Shared-control | how to support many teams with common policies, budgets, and evidence standards | hybrid, with an internal or semi-portable gateway/control plane |
+| Capability-transfer | how to use vendors or integrators now without making them permanent owners of the operating model | hybrid, with explicit transition milestones and retained internal control artifacts |
 
 ## Practical Heuristics
 
-- Default to hybrid when governance, privacy, or sovereignty requirements are strong but the platform team is not ready to own every layer from day one.
-- Do not build a layer only because the vendor is disliked; build it only when the organization can name the strategic benefit and operate the resulting burden.
-- Do not buy a layer only because it is fast; inspect whether the control plane, data path, and exit posture remain acceptable after integration.
-- Weigh openness and portability alongside cost. A cheaper managed option can still be strategically expensive if it blocks migration or auditability.
-- Use buy-first for rapidly changing commodity interfaces unless the managed posture creates unacceptable compliance, sovereignty, or concentration constraints.
-- Use build-first sparingly for layers tied directly to core differentiation, regulated boundary control, or non-negotiable evidence requirements.
+- Default to hybrid when the organization needs speed now but also expects control, portability, or multi-team reuse later.
+- Build only when the team can name the strategic benefit and the operator who will carry the ongoing burden.
+- Buy only when the control plane, data path, and evidence model remain acceptable after integration, not only at contract signature.
+- Treat retrieval, policy, workflow logic, and telemetry as the layers most likely to decide real exit posture.
+- Use managed capability for commodity interfaces unless jurisdiction, concentration, or runtime-control demands change the economics.
+- Revisit the sourcing decision when a local tool becomes a shared service, when one provider becomes structurally dominant, or when the evidence burden rises.
 
 ## Escalate When
 
-- The team cannot name who will operate the built or self-hosted layer after launch.
-- Contract terms, export limits, or telemetry behavior undermine the claimed exit posture.
-- A managed service would force unacceptable changes to privacy, sovereignty, or legal-review assumptions.
-- The build case depends on heroic staffing assumptions or undocumented platform work.
+- the team cannot name a service owner for the internally built or composed layer
+- the claimed exit path depends on undocumented data export, retraining, or policy recreation work
+- a managed service changes privacy, sovereignty, procurement, or audit assumptions more than the delivery team admits
+- an integrator or vendor is effectively being asked to own the long-term control plane
+- the proposal assumes self-hosting without staffing for upgrades, incidents, security patches, and lifecycle management
 
-## Common Failure Modes
+## Sourcing Anti-Patterns
 
-- Arguing build vs buy as one decision for the whole stack instead of a layer-by-layer choice.
-- Treating hybrid as indecision rather than as the normal posture for mixed constraints.
-- Overvaluing short-term delivery speed while underpricing future migration and control costs.
+- one build-vs-buy answer for the whole stack
+- hybrid presented as indecision instead of as a deliberate mixed-control posture
+- buying speed and accidentally outsourcing the policy or evidence layer
+- self-hosting as symbolism without a credible operating model
+- treating supplier dissatisfaction as a sufficient reason to build
+
+## Chapter Handoffs
+
+- [3. Enterprise AI Stack Map](../03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [17. Vendors Organizations And Market Structure](../17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md)
+- [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)
 
 Back to [18.1 Sourcing Foundations](18-01-00-sourcing-foundations.md).

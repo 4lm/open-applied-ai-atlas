@@ -1,39 +1,40 @@
 # 18.1.1 Layered Sourcing, Control, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Draft_
+_Page Type: Concept Explainer | Maturity: Review-Ready_
 
-This subsection isolates the most reusable distinctions in the chapter so later implementation and comparison material stays anchored to the right concepts.
+Use this page to separate sourcing questions by layer before arguing about named vendors or hosting products. Build-vs-buy only becomes useful when the team can say which part of the stack is being sourced, where real control sits, and which dependence will be hardest to unwind later.
 
-This distinction layer matters because the chapter on build vs buy vs hybrid is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.
+## Layered Sourcing Matrix
 
-## Why These Distinctions Matter
+| Layer | Typical sourcing bias | Build or own it when... | Buy or outsource it when... | Hidden dependence risk | Adjacent chapter |
+| --- | --- | --- | --- | --- | --- |
+| Model access | Buy or hybrid | model behavior, weights, or runtime control are strategic or regulated | speed, breadth, and supplier support matter more than model ownership | provider APIs, policy changes, and model retirement become the real constraint | [07. Model Ecosystem](../07-model-ecosystem/07-00-00-model-ecosystem.md) |
+| Hosting and inference runtime | Hybrid | latency, locality, cost control, or hardware policy justify direct runtime ownership | the organization is not ready to own GPUs, upgrades, and serving reliability | hosted inference can lock the team into one cloud, one acceleration path, or one support channel | [08. Model Hosting And Inference](../08-model-hosting-and-inference/08-00-00-model-hosting-and-inference.md) |
+| Gateway and control plane | Build or hybrid | routing, policy, budgets, approvals, or multi-provider abstraction must stay internal | one managed estate already provides proportionate controls | the gateway can become the real lock-in layer even when models look portable | [09. Model Gateways And Access Control](../09-model-gateways-and-access-control/09-00-00-model-gateways-and-access-control.md) |
+| Retrieval and data layer | Hybrid | permissions, freshness, provenance, and exit posture depend on internal control | the content is low-risk and governance demands are modest | a managed retrieval layer can absorb the sensitive data, permission, and audit burden | [11. Knowledge Retrieval And Memory](../11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md) |
+| Workflow and application logic | Build | the process itself creates differentiation, risk controls, or domain leverage | the workflow is commodity and tightly tied to a purchased suite | buying the app can quietly transfer business logic ownership to the vendor | [10. Agentic Systems And Orchestration](../10-agentic-systems-and-orchestration/10-00-00-agentic-systems-and-orchestration.md) |
+| Telemetry and evidence layer | Build or compose around portable tools | auditability, cross-provider comparison, and incident reconstruction must stay exportable | vendor-native visibility is sufficient for a low-consequence workload | teams think they have portability until traces, evals, and review evidence are trapped in one estate | [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md) |
+| Service operations and support model | Hybrid | the service is becoming a real internal platform with support, SLAs, and review obligations | the workload is narrow enough that managed support is proportionate | integrators or SaaS operators can become the irreplaceable operating memory of the system | [16. Human Oversight And Operating Model](../16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md) |
 
-The practical question is not whether the labels are elegant. The practical question is whether the distinctions change how a team designs, reviews, buys, operates, or audits a system. In this chapter, that means checking whether the topic is being reasoned about in the right layer and with the right cross-cutting lenses still visible.
+## Core Distinctions
 
-## Key Lenses
-
-| Sourcing lens | Why it matters |
+| Distinction | Why it matters |
 | --- | --- |
-| Strategic value | Shows where building may be justified |
-| Capability realism | Tests whether the team can actually operate the chosen posture |
-| Exit posture | Connects sourcing to data, policy, and runtime portability |
-| Control need | Makes sovereignty and governance constraints explicit |
-
-## What Matters Most
-
-- Sourcing should be decided per layer, not once for the whole stack
-- Hybrid is often the realistic default
-- Exit posture should be designed in from the start
-- Operating capability constrains what should be built or self-hosted
+| Vendor contract vs. real control | Buying one supplier does not mean the organization controls data paths, policies, telemetry, or migration timing. |
+| Hosting choice vs. sourcing choice | Self-hosting one layer does not mean the rest of the system is built; managed hosting can still sit inside an otherwise portable design. |
+| Commodity layer vs. differentiating layer | A team should only own the burden of a layer when it can name the strategic, regulatory, or operating reason. |
+| Exit posture vs. present convenience | Migration difficulty is determined by data, workflow, and evidence dependence, not only by the initial contract term. |
+| Bought capability vs. bought operating model | Managed services often bundle support, incident response, upgrade cadence, and control logic along with the technical feature. |
 
 ## What Reviewers Should Check
 
-- Are the distinctions here still connected to the chapter's real decision surface rather than being treated as abstract categories?
-- Is the proposal using these distinctions to expose trade-offs in control, evidence, ownership, or lock-in?
-- Does the chapter language stay consistent with the atlas taxonomy instead of introducing new local categories without need?
+- Which layer is actually being proposed for ownership, and which layers are merely assumed to come along with it?
+- Where would the organization feel lock-in first: runtime, data plane, workflow, or operating evidence?
+- Is the proposal buying speed in one layer while accidentally outsourcing the control plane somewhere else?
+- If the supplier changed terms or the integrator exited, which layer would break first?
 
-## Practical Reading Rule
+## Reading Rule
 
-Use this file to sharpen the chapter, not to replace it. If a proposal still sounds plausible after the distinctions here are applied, it is usually ready to move into heuristics, scenarios, or reference material. If it falls apart, the distinction work has already paid for itself.
+Use this page to name the layer and dependence shape first. Then move to [18.1.2 Decision Boundaries And Sourcing Heuristics](18-01-02-decision-boundaries-and-sourcing-heuristics.md) and [18.1.3 Build Buy And Hosting Decision Tree](18-01-03-build-buy-and-hosting-decision-tree.md) to narrow the actual sourcing choice.
 
 Back to [18.1 Sourcing Foundations](18-01-00-sourcing-foundations.md).

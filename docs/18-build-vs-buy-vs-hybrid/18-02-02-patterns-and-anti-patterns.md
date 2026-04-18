@@ -1,55 +1,34 @@
 # 18.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use this page during design and renewal review to recognize good sourcing shapes before local politics or tool preferences flatten the decision.
 
-Patterns matter here because build vs buy vs hybrid is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
+## Reusable Sourcing Patterns
 
-## Why Pattern Language Helps
+| Pattern | What good looks like | Fit signal | Review warning |
+| --- | --- | --- | --- |
+| Buy commodity capability, own workflow and policy | Managed model or platform access is paired with internally controlled workflow, approval, or policy logic | the organization differentiates in process design rather than in base model ownership | the bought layer starts absorbing workflow rules, approval logic, or tacit policy decisions |
+| Managed now with explicit transfer path | A vendor or integrator accelerates delivery, but internal artifacts, telemetry, and runbooks are retained for later transition | the team can name capability-transfer milestones and retained evidence from day one | transfer is promised but no owner, date, or internal skill ramp exists |
+| Self-host only the control-critical layers | The team keeps runtime, retrieval, or policy components local only where sovereignty, evidence, or cost control require it | one or two layers clearly dominate the control requirement | self-hosting expands outward because the organization cannot define the real boundary |
+| Portable telemetry before deeper platform commitment | Evaluations, traces, and review evidence stay exportable even while the runtime is managed | multi-provider comparison, incident review, or future migration is likely | the telemetry stack becomes vendor-native only and portability becomes theoretical |
+| Hybrid retrieval with managed inference | Sensitive knowledge and permission logic stay under stronger internal control while model access remains managed | internal content, provenance, and access rules matter more than owning model serving | the team treats the managed model contract as if it settled retrieval governance too |
 
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
+## Sourcing Anti-Patterns
 
-## Decision Flow
+| Anti-pattern | Why it fails | Early signal | Review action |
+| --- | --- | --- | --- |
+| One sourcing answer for the whole stack | Different layers have different dependence, control, and operating burdens | the proposal says "we decided to build" or "we decided to buy" with no layer map | force a layer-by-layer sourcing breakdown |
+| Integrator becomes the permanent control plane | Delivery speed is purchased at the cost of internal operating memory and exit posture | the partner owns the runbooks, gateway logic, and renewal decisions | require retained artifacts, owner assignment, and transfer milestones |
+| Sovereignty theater | The team claims control while leaving core runtime, evidence, or support dependence unchanged | hosting is local but policy, telemetry, or update control remains external | verify which control actually moved and which did not |
+| Premature self-hosting | The organization accepts the heaviest burden before proving a strong control or economics case | staffing, upgrades, and incident ownership are vague or aspirational | revisit whether hybrid or managed layers would meet the real need |
+| Hidden lock-in in the gateway or telemetry layer | The team focuses on model portability while the control and evidence plane becomes sticky | migration looks easy on paper until tracing, policy, or eval history is considered | inspect data export, control policy portability, and evidence retention explicitly |
 
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
+## Review Prompts
 
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
-
-## Patterns To Reuse
-
-- Sourcing should be decided per layer, not once for the whole stack
-- Hybrid is often the realistic default
-- Exit posture should be designed in from the start
-
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
-
-## Review Prompt
-
-| During review ask... | Why |
-| --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
-
-## Review Signals
-
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
-
-## Practical Reading Rule
-
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+- Which pattern best describes the current proposal, and why is that pattern proportionate to the actual constraint?
+- Which anti-pattern would be most likely to appear after the first successful rollout?
+- What artifact proves that the organization could re-source the control-critical layer later if it had to?
+- Which chapter should be pulled back in before the proposal is treated as settled: `06`, `09`, `16`, `17`, or `19`?
 
 Back to [18.2 Applying Sourcing Choices](18-02-00-applying-sourcing-choices.md).
