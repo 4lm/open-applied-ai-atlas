@@ -97,7 +97,28 @@ flowchart TB
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
 - Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
 - Read [CONTENT_AUDIT_SUMMARY.md](./CONTENT_AUDIT_SUMMARY.md) for the current page-type, maturity, and quality-pass conventions.
+- Operator scripts: use `./scripts/delivery-harness-check.sh` for delivery validation, `./scripts/delivery-harness-status.sh` for the concise delivery snapshot, and `./scripts/ralph-codex.sh` as a human-run external loop for repeated `codex exec` runs. Run `./scripts/ralph-codex.sh --help` for the script's built-in help text.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
+
+## Human-Run Ralph Loop
+
+`./scripts/ralph-codex.sh` is a human-run outer loop for repeated fresh `codex exec -` runs. The default prompt lives at `.delivery/PROMPT.md`, and the script already runs in unattended auto-allow mode via `-a never -s danger-full-access`.
+
+Examples:
+
+1. Advance the current `.delivery/PIP.md` with the tracked default prompt:
+
+```sh
+./scripts/ralph-codex.sh
+```
+
+2. Run a different bounded task with a custom prompt file:
+
+```sh
+PROMPT_FILE=prompts/fix-tests.md ./scripts/ralph-codex.sh
+```
+
+`PROFILE` is optional and only useful for user-level defaults such as model selection; it does not replace the script's explicit auto-allow flags. Run `./scripts/ralph-codex.sh --help` for the full env-var matrix, profile example, and longer prompt examples.
 
 ## Page Signals
 

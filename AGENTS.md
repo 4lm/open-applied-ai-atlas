@@ -127,6 +127,17 @@ Do not use it as a substitute for validation:
 
 If both are used during a substantial pass, run `./scripts/delivery-harness-check.sh` first and `./scripts/delivery-harness-status.sh` second.
 
+## Ralph Codex Loop Policy
+
+`./scripts/ralph-codex.sh` is a human-run external loop that launches fresh `codex exec -` passes against a stable prompt file. It is not part of the coding-agent workflow inside a live Codex session and should not be used for recursive Codex-in-Codex execution.
+
+Keep agent-facing guidance here minimal:
+
+- it does not replace `delivery-harness-check.sh` as the validation gate
+- it does not replace `delivery-harness-status.sh` as the operator snapshot
+- the default prompt for repo delivery work lives in `.delivery/PROMPT.md`
+- human-facing usage examples live in `README.md` and `./scripts/ralph-codex.sh --help`
+
 ## PIP Pass Model
 
 A Product Improvement Plan is the force that pushes change forward in this repository.

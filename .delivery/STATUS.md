@@ -2,7 +2,7 @@
 
 This file is the internal execution board for the active Product Improvement Plan. Use it to understand what the current highest-leverage tranche is, which gaps remain open, which pass changed what, and what should happen next.
 
-Operator note: `./scripts/delivery-harness-check.sh` validates delivery consistency. `./scripts/delivery-harness-status.sh` prints the current delivery snapshot.
+Operator note: `./scripts/delivery-harness-check.sh` validates delivery consistency. `./scripts/delivery-harness-status.sh` prints the current delivery snapshot. `./scripts/ralph-codex.sh` is a human-run external loop that launches fresh `codex exec` passes against `.delivery/PROMPT.md` by default; human usage examples live in `README.md` and `./scripts/ralph-codex.sh --help`.
 
 ## Current State
 
@@ -10,7 +10,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
 | Current tranche | Standards and bodies system completion (`20`) complete; next recommended content tranche is knowledge retrieval and adaptation decision surfaces (`11`, `12`) |
-| Last completed pass ID | `2026-04-18.g` |
+| Last completed pass ID | `2026-04-18.m` |
 | Current recommendation | `advance to G-08` |
 
 ## Workstream Board
@@ -48,6 +48,30 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.m`
+
+- Date: `2026-04-18`
+- Tranche: Ralph default prompt and full-auto clarification
+- Goal: Add `.delivery/PROMPT.md`, make it the default Ralph prompt, document that Ralph already runs in explicit auto-allow mode, and expand help/examples for profiles and env-var options
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, `.delivery`, audit summary, delivery status tracking, changelog, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.l`
+
+- Date: `2026-04-18`
+- Tranche: Ralph loop rollout
+- Goal: Add `scripts/ralph-codex.sh` as a human-run external Codex loop, move human guidance into `README.md` and script help, tighten the README overview, and set `MAX_ITERS` default to `100` as a safety stop
+- Workstreams advanced: `WS10`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: root operator guidance, audit summary, delivery status tracking, changelog, and `scripts/`
+- Maturity moves: none
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.g`
 
