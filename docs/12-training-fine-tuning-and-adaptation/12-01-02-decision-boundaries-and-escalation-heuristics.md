@@ -1,55 +1,53 @@
 # 12.1.2 Decision Boundaries And Escalation Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to read the chapter well, where its boundaries sit, and which recurring mistakes distort decisions.
+Use this page when a team knows system behavior must improve but has not yet earned the right to choose fine-tuning or retraining. The goal is to identify the dominant adaptation lane, keep the lighter options visible, and make sure cost, evaluation burden, data dependence, and lock-in rise only when the evidence justifies them.
 
-This file exists because training fine-tuning and adaptation usually involves judgment under incomplete information. Heuristics do not replace evidence, but they help teams avoid false certainty and force the most important trade-offs into the open before a local preference hardens into policy or architecture.
+## Decision Lanes
 
-## Why These Heuristics Matter
+| Lane | Use it when the main question is... | Default posture |
+| --- | --- | --- |
+| Prompt-and-workflow lane | whether the failure is really underspecified instructions, weak structure, or missing review controls | tighten prompts, schemas, routing, approval steps, and task-specific evaluation before touching weights |
+| Retrieval-first lane | whether the system is failing because facts change quickly, citations are weak, or source coverage is incomplete | improve retrieval coverage, freshness, provenance, and permission handling before any tuning step |
+| Parameter-efficient tuning lane | whether a stable, repetitive task has hit a plateau after strong prompt and retrieval baselines | use narrow fine-tuning only with labeled data discipline, explicit rollback, and release-gate evaluation |
+| Classical retraining lane | whether the issue is a predictive-model drift, feature-quality, or label-regime problem rather than an LLM behavior problem | run a governed retraining cycle with data review, holdout or backtest evidence, and updated monitoring thresholds |
 
-A good heuristic should make a decision safer, faster, and more reviewable. It should also make clear when the team has moved beyond a heuristic and now needs stronger evidence, broader review, or a different chapter entirely.
+## Practical Heuristics
 
-## Decision Flow
+- Start with the lightest reversible intervention that can plausibly close the failure mode.
+- Do not fine-tune to solve freshness, permissions, or source-governance problems; those belong in retrieval and data-boundary work first.
+- Require a prompt-only or prompt-plus-retrieval baseline before approving weight adaptation, otherwise the team cannot show that heavier change was necessary.
+- Treat model-specific tuning formats, hosted training pipelines, and non-portable adapter choices as sourcing decisions, not only technical details.
+- Raise the evidence bar when adaptation creates persistent state, uses sensitive internal data, or changes a release path that many teams depend on.
+- For classical ML systems, assume retraining is incomplete unless the monitoring regime, drift thresholds, and business-loss assumptions are refreshed too.
 
-```mermaid
-flowchart TD
-    A[Clarify the chapter question] --> B[Identify constraints and non-negotiables]
-    B --> C[Choose the smallest viable option]
-    C --> D[Check adjacent chapter dependencies]
-    D --> E[Set review or escalation triggers]
-```
+## Escalate When
 
-## Reading The Chapter
+- the team cannot name the failure category it is trying to fix or the metric that proves improvement
+- proposed training data has unclear provenance, licensing, consent, or retention posture
+- the adaptation path would make rollback slower than the business can tolerate
+- the system serves regulated, high-impact, or externally exposed decisions and the release gate has not been expanded accordingly
+- a vendor-managed tuning workflow would materially change portability, sovereignty, or long-term operating cost
+- prompt, retrieval, and workflow controls have not been tried seriously but the team is already treating weight changes as inevitable
 
-Use this chapter to anchor the topic before dropping into implementation details, examples, or comparison material. The goal is not to replace the deeper files in the folder. The goal is to make the chapter readable as a front door and to surface the questions that matter most.
+## Adaptation Anti-Patterns
 
-## Reading Heuristics
+- escalating because stakeholders are impatient rather than because the lighter lane failed on evidence
+- using fine-tuning to encode rapidly changing business facts that should stay in governed source systems
+- comparing a tuned model only against a weak baseline instead of the best prompt, workflow, and retrieval version
+- treating vendor-hosted tuning as lower-governance work simply because infrastructure details are abstracted away
+- importing LLM adaptation language into a classical ML drift problem and skipping retraining discipline
 
-- Start with this front door if you need the chapter's main distinctions and failure modes.
-- Move to the implementation guide when you need rollout, review, or operating advice.
-- Use the examples file when the topic feels too abstract and you need a concrete scenario.
-- Use typed resource files for named tools, standards, or vendor comparison rather than for conceptual orientation.
+## Chapter Handoffs
 
-## Common Reader Mistakes
-
-- Jumping straight to tools before the chapter's core distinctions are clear.
-- Treating one table or one pattern as if it covered the entire topic.
-- Ignoring adjacent chapters that shape the same decision from another angle.
-
-## Open Questions
-
-- Which parts of this chapter deserve deeper worked examples in future passes?
-- Which distinctions are stable enough to stay canonical across future expansions?
-
-## Review Questions
-
-- Which constraint or risk is this heuristic trying to make visible?
-- What would cause the team to escalate beyond a rule of thumb into deeper review?
-- Are the heuristics here still consistent with the taxonomy and chapter boundaries of the atlas?
+- [11. Knowledge Retrieval And Memory](../11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md) when the real problem is freshness, provenance, permissions, or memory scope.
+- [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md) when adaptation cannot proceed without stronger baselines, regressions, and release gates.
+- [14. Observability Logging And Monitoring](../14-observability-logging-and-monitoring/14-00-00-observability-logging-and-monitoring.md) when drift, rollback detection, or post-release monitoring becomes the dominant risk.
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md) when portability, supplier dependence, or hosting posture changes more than model quality alone.
 
 ## Practical Reading Rule
 
-Use this file when a team needs a disciplined default, not a permanent shortcut. If the heuristics stop matching the system consequence, scale, or evidence burden, revisit the chapter from the top.
+Escalate up the adaptation ladder only after the lower rung has been tested and documented. If the chosen path increases data dependence, release burden, or supplier lock-in, the evidence pack should become stronger, not thinner.
 
 Back to [12.1 Adaptation Foundations](12-01-00-adaptation-foundations.md).

@@ -4,7 +4,7 @@ This summary records the current public quality signals under the Product Improv
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
-Last delivery update: `2026-04-18.p` on `2026-04-18`.
+Last delivery update: `2026-04-18.u` on `2026-04-18`.
 
 ## Current Counts
 
@@ -21,13 +21,18 @@ Last delivery update: `2026-04-18.p` on `2026-04-18`.
 
 ### By Maturity
 
-- `Outline`: 55
-- `Draft`: 47
-- `Review-Ready`: 109
+- `Outline`: 51
+- `Draft`: 46
+- `Review-Ready`: 114
 - `Curated Reference`: 1
 
 ## What Changed
 
+- Promoted `docs/12-training-fine-tuning-and-adaptation/12-02-00-operating-adaptation-work.md` from `Outline` to `Review-Ready` by rewriting it as an adaptation operating-review overview with explicit evidence outputs, rollback posture, re-review triggers, and chapter handoffs.
+- Promoted `docs/11-knowledge-retrieval-and-memory/11-02-00-operating-retrieval-and-memory.md` from `Outline` to `Review-Ready` by rewriting it as a retrieval operating-review overview with explicit evidence outputs, re-review triggers, and chapter handoffs.
+- Promoted `docs/11-knowledge-retrieval-and-memory/11-01-00-retrieval-foundations.md` from `Outline` to `Review-Ready` by rewriting it as a retrieval-versus-memory foundations overview with explicit control boundaries and chapter handoffs.
+- Promoted `docs/12-training-fine-tuning-and-adaptation/12-01-02-decision-boundaries-and-escalation-heuristics.md` from `Draft` to `Review-Ready` by rewriting it into an adaptation-escalation guide with explicit prompt, retrieval, fine-tuning, and classical-retraining lanes.
+- Promoted `docs/12-training-fine-tuning-and-adaptation/12-02-01-worked-adaptation-scenarios.md` from `Outline` to `Review-Ready` by rewriting it as a set of adaptation-escalation scenarios covering prompt-first stabilization, retrieval-before-training, evidence-based fine-tuning, and classical retraining under drift.
 - Hardened `scripts/ralph-codex.sh` so Ralph only stops when the final assistant reply contains the completion marker, preventing prompt echo or transcript echo from ending multi-pass runs early.
 - Promoted `docs/11-knowledge-retrieval-and-memory/11-02-01-worked-retrieval-scenarios.md` from `Outline` to `Review-Ready` by rewriting it as a set of retrieval-versus-memory decision scenarios with explicit evidence outputs and chapter handoffs.
 - Refactored `scripts/ralph-codex.sh` so Codex output stays on the console, `.ralph` is recreated as a single per-run timing ledger, and the generated root `.ralph` file is ignored.
@@ -75,7 +80,6 @@ Last delivery update: `2026-04-18.p` on `2026-04-18`.
 - `docs/01-scope-and-principles/01-03-00-repository-contract.md` (Chapter Index)
 - `docs/07-model-ecosystem/07-00-00-model-ecosystem.md` (Chapter Index)
 - `docs/08-model-hosting-and-inference/08-03-00-reference-points.md` (Chapter Index)
-- `docs/11-knowledge-retrieval-and-memory/11-01-00-retrieval-foundations.md` (Chapter Index)
 - `docs/12-training-fine-tuning-and-adaptation/12-03-00-reference-points.md` (Chapter Index)
 - `docs/13-evaluation-testing-and-qa/13-01-00-evaluation-foundations.md` (Chapter Index)
 - `docs/21-research-open-knowledge-and-community/21-00-00-research-open-knowledge-and-community.md` (Chapter Index)

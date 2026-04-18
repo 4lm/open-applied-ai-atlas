@@ -9,8 +9,8 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | Field | Value |
 | --- | --- |
 | Active PIP | Open Applied AI Atlas Product Improvement Plan |
-| Current tranche | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) in progress; retrieval scenario layer strengthened in chapter `11` |
-| Last completed pass ID | `2026-04-18.p` |
+| Current tranche | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) in progress; retrieval fronts and the adaptation operating front are stronger, but adaptation chapter/reference fronts and retrieval/adaptation pattern surfaces remain thin |
+| Last completed pass ID | `2026-04-18.u` |
 | Current recommendation | `continue G-08` |
 
 ## Workstream Board
@@ -39,7 +39,7 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-05` | Use-case portfolio density and asymmetry cleanup (`05`) | `WS1`, `WS2`, `WS3`, `WS9`, `WS10` | `thin_content` | Open | High | Deepen prioritization logic and resolve weak pattern/reference surfaces | `05.*` |  |
 | `G-06` | Model, hosting, and gateway stack refinement (`07`, `08`, `09`) | `WS1`, `WS2`, `WS4`, `WS6`, `WS7`, `WS9` | `thin_content` | Open | High | Push runtime, hosting, and gateway foundations and reference pages to review-ready | `07.*`, `08.*`, `09.*` |  |
 | `G-07` | Agentic operating surfaces completion (`10`) | `WS2`, `WS3`, `WS4`, `WS9` | `thin_content` | Open | High | Finish operating and reference surfaces so chapter `10` is consistent with its stronger decision pages | `10.*` |  |
-| `G-08` | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS9` | `thin_content` | Open | High | Deepen retrieval and adaptation foundations, worked scenarios, and supporting artifacts | `11.*`, `12.*` |  |
+| `G-08` | Knowledge retrieval and adaptation decision surfaces (`11`, `12`) | `WS1`, `WS2`, `WS3`, `WS4`, `WS9` | `thin_content` | Open | High | Finish the remaining adaptation section fronts and strengthen retrieval/adaptation pattern sheets | `11.*`, `12.*` |  |
 | `G-09` | Assurance, observability, and security hardening (`13`, `14`, `15`) | `WS2`, `WS3`, `WS4`, `WS6`, `WS7`, `WS9` | `evidence_gap` | Open | High | Finish evaluation foundations and strengthen observability and security artifact/reference pages | `13.*`, `14.*`, `15.*` |  |
 | `G-10` | Human oversight operating model completion (`16`) | `WS2`, `WS3`, `WS4`, `WS9` | `thin_content` | Open | Medium | Deepen oversight foundations, scenarios, and operational artifacts | `16.*` |  |
 | `G-11` | Build-vs-buy follow-through and reference cleanup (`18`) | `WS1`, `WS2`, `WS3`, `WS7`, `WS9` | `thin_content` | Closed | High | Keep chapter `18` stable as a sourcing reference pattern for later passes | `18.*` | `2026-04-18.f` |
@@ -48,6 +48,66 @@ Operator note: `./scripts/delivery-harness-check.sh` validates delivery consiste
 | `G-14` | Delivery harness drift | `WS10` | `tracking_drift` | Closed | High | Maintain the single-board execution model and run harness checks after substantial passes | `.delivery`, `AGENTS.md`, `CONTENT_AUDIT_SUMMARY.md`, `CHANGELOG.md` | `2026-04-18.b` |
 
 ## Pass Log
+
+### `2026-04-18.u`
+
+- Date: `2026-04-18`
+- Tranche: Adaptation operating section front (`12`)
+- Goal: Rewrite the adaptation operating section overview into a concrete operating-review surface so chapter `12` no longer relies on scaffold prose between its stronger escalation and scenario pages
+- Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `12-02-00` promoted from `Outline` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.t`
+
+- Date: `2026-04-18`
+- Tranche: Retrieval operating section front (`11`)
+- Goal: Rewrite the retrieval operating section overview into a concrete operating-review surface so chapter `11` no longer relies on scaffold prose between its stronger foundations and scenario pages
+- Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `11-02-00` promoted from `Outline` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.s`
+
+- Date: `2026-04-18`
+- Tranche: Retrieval foundations section front (`11`)
+- Goal: Rewrite the retrieval foundations section overview into a concrete decision surface so chapter `11` starts from retrieval-versus-memory boundaries rather than scaffold prose
+- Workstreams advanced: `WS1`, `WS2`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `11`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `11-01-00` promoted from `Outline` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.r`
+
+- Date: `2026-04-18`
+- Tranche: Adaptation foundation heuristics (`12`)
+- Goal: Rewrite the adaptation decision-guide page into a concrete escalation surface so chapter `12` has usable lanes, triggers, and chapter handoffs before teams jump from prompts or retrieval into tuning or retraining
+- Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `12-01-02` promoted from `Draft` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
+
+### `2026-04-18.q`
+
+- Date: `2026-04-18`
+- Tranche: Adaptation worked scenarios (`12`)
+- Goal: Rewrite the adaptation worked-example page into concrete escalation scenarios so chapter `12` has usable guidance for prompt-first stabilization, retrieval-before-training, justified fine-tuning, and classical retraining under drift
+- Workstreams advanced: `WS2`, `WS3`, `WS4`, `WS9`
+- Gap IDs moved: none
+- Pages / chapter clusters touched: chapter `12`, plus page-audit, audit-summary, status, and changelog tracking
+- Maturity moves: `12-02-01` promoted from `Outline` to `Review-Ready`
+- Commit(s): `pending`
+- Remaining gaps: `G-01`, `G-05`, `G-06`, `G-07`, `G-08`, `G-09`, `G-10`, `G-13`
 
 ### `2026-04-18.p`
 

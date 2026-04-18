@@ -4,6 +4,11 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-04-18 | Rewrote `docs/12-training-fine-tuning-and-adaptation/12-02-00-operating-adaptation-work.md` into a review-ready adaptation operating-review overview with explicit evidence outputs, rollback posture, re-review triggers, and chapter handoffs (`2026-04-18.u`). |
+| 2026-04-18 | Rewrote `docs/11-knowledge-retrieval-and-memory/11-02-00-operating-retrieval-and-memory.md` into a review-ready retrieval operating-review overview with explicit evidence outputs, re-review triggers, and chapter handoffs (`2026-04-18.t`). |
+| 2026-04-18 | Rewrote `docs/11-knowledge-retrieval-and-memory/11-01-00-retrieval-foundations.md` into a review-ready retrieval-versus-memory foundations overview with explicit control boundaries and chapter handoffs (`2026-04-18.s`). |
+| 2026-04-18 | Rewrote `docs/12-training-fine-tuning-and-adaptation/12-01-02-decision-boundaries-and-escalation-heuristics.md` into a review-ready adaptation escalation guide with explicit prompt, retrieval, fine-tuning, and classical-retraining lanes (`2026-04-18.r`). |
+| 2026-04-18 | Rewrote `docs/12-training-fine-tuning-and-adaptation/12-02-01-worked-adaptation-scenarios.md` into review-ready scenario tables covering prompt-first stabilization, retrieval-before-training, evidence-based fine-tuning, and classical retraining under drift (`2026-04-18.q`). |
 | 2026-04-18 | Hardened `scripts/ralph-codex.sh` so Ralph only stops when the final assistant reply contains the completion marker, preventing prompt echo or transcript echo from ending multi-pass runs early (`2026-04-18.p`). |
 | 2026-04-18 | Rewrote `docs/11-knowledge-retrieval-and-memory/11-02-01-worked-retrieval-scenarios.md` into review-ready scenario tables covering live retrieval, bounded memory, graph-backed retrieval, and permission-sensitive access design (`2026-04-18.o`). |
 | 2026-04-18 | Refactored `scripts/ralph-codex.sh` to stream Codex output directly to the console, replace per-iteration `iter-*.out` / `iter-*.err` artifacts with a recreated root `.ralph` timing ledger, and add ignore coverage for that generated file (`2026-04-18.n`). |
