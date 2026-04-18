@@ -1,6 +1,6 @@
 # Content Audit Summary
 
-This summary records the first repository-wide quality pass completed under the Product Improvement Plan.
+This summary records the current public quality signals under the Product Improvement Plan.
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
@@ -19,9 +19,9 @@ The detailed per-page inventory lives in `.delivery/page-audit.md`. This public 
 
 ### By Maturity
 
-- `Outline`: 92
-- `Draft`: 72
-- `Review-Ready`: 48
+- `Outline`: 77
+- `Draft`: 60
+- `Review-Ready`: 75
 - `Curated Reference`: 1
 
 ## What Changed
@@ -31,6 +31,7 @@ The detailed per-page inventory lives in `.delivery/page-audit.md`. This public 
 - Added a terminology ledger and a canonical comparison schema in the taxonomy chapter.
 - Added first-wave decision and artifact pages in high-leverage chapters.
 - Strengthened evidence posture on comparison-heavy and standards-heavy pages.
+- Promoted the governance, privacy, and market-structure chapters through a concentrated cross-cutting pass.
 
 ## Canonical Page Types
 
@@ -59,18 +60,17 @@ The detailed per-page inventory lives in `.delivery/page-audit.md`. This public 
 
 ## Highest-Priority Remaining Outline Pages
 
-- `docs/04-governance-risk-compliance/04-01-00-governance-foundations.md` (Chapter Index)
-- `docs/06-data-sovereignty-and-privacy/06-01-00-boundary-foundations.md` (Chapter Index)
 - `docs/01-scope-and-principles/01-02-00-using-the-atlas.md` (Chapter Index)
-- `docs/17-vendors-organizations-and-market-structure/17-01-00-market-foundations.md` (Chapter Index)
-- `docs/17-vendors-organizations-and-market-structure/17-03-00-reference-points.md` (Chapter Index)
 - `docs/01-scope-and-principles/01-03-00-repository-contract.md` (Chapter Index)
-- `docs/18-build-vs-buy-vs-hybrid/18-03-00-reference-points.md` (Chapter Index)
-- `docs/04-governance-risk-compliance/04-03-00-reference-points.md` (Chapter Index)
-- `docs/06-data-sovereignty-and-privacy/06-03-00-reference-points.md` (Chapter Index)
+- `docs/03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md` (Chapter Index)
+- `docs/03-enterprise-ai-stack-map/03-03-00-stack-reference-points.md` (Chapter Index)
 - `docs/08-model-hosting-and-inference/08-03-00-reference-points.md` (Chapter Index)
+- `docs/11-knowledge-retrieval-and-memory/11-01-00-retrieval-foundations.md` (Chapter Index)
 - `docs/12-training-fine-tuning-and-adaptation/12-03-00-reference-points.md` (Chapter Index)
+- `docs/13-evaluation-testing-and-qa/13-01-00-evaluation-foundations.md` (Chapter Index)
+- `docs/18-build-vs-buy-vs-hybrid/18-03-00-reference-points.md` (Chapter Index)
 - `docs/19-reference-architectures/19-03-00-reference-points.md` (Chapter Index)
+- `docs/20-standards-frameworks-and-bodies-of-knowledge/20-03-00-reference-points.md` (Chapter Index)
 
 ## Reading Rule
 

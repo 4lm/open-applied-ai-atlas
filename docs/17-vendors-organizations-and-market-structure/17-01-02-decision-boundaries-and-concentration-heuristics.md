@@ -1,36 +1,44 @@
 # 17.1.2 Decision Boundaries And Concentration Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains when market structure should materially change a technical or sourcing decision instead of being treated as background context.
+Use this page to decide when ecosystem concentration should materially change a technical or sourcing choice instead of being treated as background commentary.
 
-## Decision Boundaries
+## Decision Lanes
 
-- Treat the issue as a **concentration problem** when multiple seemingly different options depend on the same cloud, hardware, model-distribution, or control-plane actor.
-- Treat the issue as an **openness problem** when the organization can technically access a tool or model but still cannot inspect, run, adapt, or migrate it on acceptable terms.
-- Treat the issue as a **sovereignty problem** when market choice constrains deployability, auditability, support control, or geographic-operational control.
-- Treat the issue as an **exit-posture problem** when switching cost depends more on ecosystem coupling, data gravity, or control-plane policy than on API syntax alone.
+| Market-structure lane | Use it when the main question is... |
+| --- | --- |
+| Concentration risk | supposedly different options share the same cloud, hardware, or control-plane actor |
+| Openness gap | an option is usable but still cannot be inspected, run, adapted, or migrated on acceptable terms |
+| Sovereignty constraint | deployment, auditability, support control, or jurisdictional control is narrowed by the ecosystem structure |
+| Exit-posture problem | switching cost depends more on data gravity, tooling, skills, or policy coupling than on the interface alone |
 
 ## Practical Heuristics
 
-- Ask whether two suppliers are actually distinct or whether they share the same hidden dependency on a hyperscaler, hardware estate, or dominant open-source steward.
-- Discount apparent optionality when policy, logging, orchestration, or deployment artifacts are tied to one vendor ecosystem.
-- Treat “open” posture as incomplete if the surrounding runtime, packaging, support, or hardware path is still highly concentrated.
-- Increase scrutiny when a single actor controls both the model path and the gateway, observability, or deployment path.
-- Route to chapter `18` when the concentration question should change a build-vs-buy posture, not only a market narrative.
-- Route to chapter `3` or `19` when the concentration issue is really an architectural control-point issue.
+- Ask whether fallback suppliers are actually independent or just new wrappers around the same underlying platform.
+- Discount apparent optionality when routing, telemetry, policy controls, or deployment artifacts are tied to one ecosystem.
+- Treat open-weight or open-source access as incomplete if the viable operating path is still concentrated in one hardware or cloud estate.
+- Increase scrutiny when one actor influences several layers at once: model path, hosting, gateway, observability, or marketplace.
+- Route to chapter `18` when the answer should change what the organization builds, buys, or keeps portable.
+- Route to chapter `19` when the concentration issue is really a control-point design question inside the architecture.
 
 ## Escalate When
 
-- The fallback supplier still depends on the same cloud, accelerator, or hosted control plane.
-- Exit requires rebuilding operational knowledge, evaluation assets, or policy controls from scratch.
-- The organization is implicitly accepting hardware or hyperscaler dependence without naming it as a strategic choice.
-- Procurement is treating list-price competition as if it eliminated concentration risk.
+- the fallback supplier still depends on the same hyperscaler, accelerator vendor, or hosted control plane
+- exit would require rebuilding evaluation assets, policy controls, or operating knowledge from scratch
+- procurement treats price competition as proof of strategic independence
+- a delivery partner becomes the only party who knows how the system actually works
 
 ## Common Failure Modes
 
-- Confusing supplier plurality with real strategic independence.
-- Treating concentration as purely commercial when it also shapes sovereignty, portability, and evidence quality.
-- Ignoring integrator and talent dependence while focusing only on software vendors.
+- confusing supplier plurality with real independence
+- treating concentration as only a commercial issue instead of a sovereignty and evidence issue too
+- focusing on software vendors while ignoring hardware, cloud, integrator, or ecosystem-hub dependence
+
+## Chapter Handoffs
+
+- [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
+- [19. Reference Architectures](../19-reference-architectures/19-00-00-reference-architectures.md)
 
 Back to [17.1 Market Foundations](17-01-00-market-foundations.md).

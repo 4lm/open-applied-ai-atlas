@@ -1,61 +1,43 @@
 # 6.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Draft_
+_Page Type: Operational Artifact | Maturity: Review-Ready_
 
-Controls and artifacts matter because data sovereignty and privacy only becomes durable when somebody can review it, approve it, operate it, and revisit it after something changes. The atlas treats documents, logs, decision records, checklists, and control evidence as working tools rather than bureaucratic decoration.
+Use this page to make privacy and sovereignty claims inspectable. A boundary posture is not real until the team can show how data enters, persists, is reviewed, and is removed.
 
-## Why Artifacts Matter
+## Readiness Checks
 
-A control that cannot be tied to an owner, a trigger, or a review moment is underspecified. An artifact that nobody reuses during release, incident response, or audit work is probably only nominally part of the operating model.
-
-## Artifact Flow
-
-```mermaid
-flowchart LR
-    A[Design decision] --> B[Required artifact]
-    B --> C[Review and approval]
-    C --> D[Release or deployment]
-    D --> E[Incident or audit reuse]
-```
-
-This file translates the chapter into concrete controls, documents, and review artifacts teams usually need in practice.
-
-## How To Use This File
-
-- The goal is repeatable execution, not documentation for its own sake.
-- Good artifacts should support review, release, and incident response.
-- If a control cannot be tied to an owner or a trigger, it is probably underspecified.
-
-## Key Controls
-
-| Control | Purpose |
+| Check | What must be true |
 | --- | --- |
-| Data minimization | Reduce unnecessary exposure |
-| Regional boundary controls | Constrain processing geography |
-| Retention limits | Bound persistence |
-| Export and deletion workflows | Support lifecycle obligations and exit |
+| Data-flow coverage | The team can describe prompts, outputs, logs, traces, memory, and support copies end to end |
+| Retention logic | Each persistent state has an owner, purpose, and retention rule |
+| Access-path clarity | Human support, engineering access, subprocessors, and telemetry routes are documented |
+| Export and deletion evidence | The organization can explain how data leaves or is removed, not only that the contract says it can |
+| Boundary-change review | New memory, retrieval, observability, or supplier features trigger reassessment |
 
-## Key Artifacts
+## Minimum Artifact Set
 
-| Artifact | Purpose |
-| --- | --- |
-| Data flow map | Shows where data enters, persists, and exits |
-| Retention schedule | Clarifies what survives and for how long |
-| Vendor data posture review | Captures reuse, telemetry, and support access |
+- data-flow map with storage and transfer points
+- retention schedule
+- export and deletion evidence or tested procedure
+- vendor data posture review
+- support-access and subprocessors review
+- boundary re-review trigger list
 
-## Reading Notes
+## Owner And Review Guidance
 
-- Re-check the main chapter if the comparison starts to feel more detailed than the underlying decision.
-- Prefer adjacent chapter context over treating a single table row as a final answer.
+| Artifact | Primary owner | Revisit when... |
+| --- | --- | --- |
+| Data-flow map | System owner with architecture input | data path, storage, or provider changes |
+| Retention schedule | Privacy or data owner | new traces, memory, or offline datasets are introduced |
+| Vendor data posture review | Procurement or governance owner | contract, service tier, or supplier changes |
+| Support-access review | Security or privacy owner | support model or subprocessor list changes |
+| Export and deletion evidence | Service owner | renewal, migration planning, or regulator/customer inquiry |
 
-## What Good Looks Like
+## Release And Re-Review Prompts
 
-- Each control or artifact has a clear owner and usage point.
-- The same artifact can support design review, release discipline, and post-change accountability.
-- The file makes it easier to ask whether the chapter's promises are actually visible in day-to-day work.
-
-## Practical Reading Rule
-
-Use this file after the concepts and scenarios are clear enough that the question becomes operational evidence. If the organization cannot name which artifacts it would inspect during review, the chapter is not yet implemented in practice.
+- Which stored state would be hardest to enumerate and delete today?
+- Which supplier claim about data handling is not technically demonstrated?
+- What new telemetry, memory, or evaluation artifact was added since the last review?
+- If the organization had to migrate providers in ninety days, which data states would be hardest to export or recreate?
 
 Back to [6.3 Reference Points](06-03-00-reference-points.md).

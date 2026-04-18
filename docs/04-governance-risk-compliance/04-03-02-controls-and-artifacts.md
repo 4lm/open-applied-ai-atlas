@@ -1,62 +1,44 @@
 # 4.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Draft_
+_Page Type: Operational Artifact | Maturity: Review-Ready_
 
-Controls and artifacts matter because governance risk compliance only becomes durable when somebody can review it, approve it, operate it, and revisit it after something changes. The atlas treats documents, logs, decision records, checklists, and control evidence as working tools rather than bureaucratic decoration.
+Use this page to make governance inspectable. A governance model is not operational until the organization can point to the artifacts, owners, and triggers that support approval, exception handling, and re-review.
 
-## Why Artifacts Matter
+## Readiness Checks
 
-A control that cannot be tied to an owner, a trigger, or a review moment is underspecified. An artifact that nobody reuses during release, incident response, or audit work is probably only nominally part of the operating model.
-
-## Artifact Flow
-
-```mermaid
-flowchart LR
-    A[Design decision] --> B[Required artifact]
-    B --> C[Review and approval]
-    C --> D[Release or deployment]
-    D --> E[Incident or audit reuse]
-```
-
-This file translates the chapter into concrete controls, documents, and review artifacts teams usually need in practice.
-
-## How To Use This File
-
-- The goal is repeatable execution, not documentation for its own sake.
-- Good artifacts should support review, release, and incident response.
-- If a control cannot be tied to an owner or a trigger, it is probably underspecified.
-
-## Core Governance Artifacts
-
-| Artifact | Purpose |
+| Check | What must be true |
 | --- | --- |
-| Use-case classification record | Captures risk, autonomy, and intended behavior |
-| Control mapping | Connects policy to technical enforcement |
-| Release evidence packet | Captures validation, approvals, and exceptions |
-| Incident review note | Feeds back into control design |
+| System ownership | A named owner is accountable for the system after approval, not only during intake |
+| Classification record | Risk, autonomy, user context, and regulated-use implications are documented |
+| Control mapping | Policy statements are tied to concrete technical, process, or supplier controls |
+| Release evidence | Evaluations, reviews, approvals, and exceptions are stored in a reviewable package |
+| Exception handling | Deviations have owner, rationale, compensating controls, and expiry date |
+| Re-review triggers | Material model, data, supplier, workflow, or incident changes reopen governance review |
 
-## Control Families
+## Minimum Artifact Set
 
-| Family | Example |
-| --- | --- |
-| Preventive | Access controls, model allowlists, tool restrictions |
-| Detective | Monitoring, abuse alerts, drift detection |
-| Corrective | Rollback, disablement, revocation |
-| Administrative | Approval forums, exception handling, review cadence |
+- use-case classification record
+- control mapping with owners
+- approval log with reviewer roles
+- exception register with expiry and compensating controls
+- re-review trigger log
+- linked evidence package for release or renewal
 
-## Reading Notes
+## Owner And Review Guidance
 
-- Re-check the main chapter if the comparison starts to feel more detailed than the underlying decision.
-- Prefer adjacent chapter context over treating a single table row as a final answer.
+| Artifact | Primary owner | Revisit when... |
+| --- | --- | --- |
+| Classification record | Product or system owner | scope, autonomy, or user population changes |
+| Control mapping | Governance owner with engineering and security input | controls or dependencies change |
+| Approval log | Governance or program management | each formal approval or renewal |
+| Exception register | Control owner plus approving authority | expiry nears or compensating controls weaken |
+| Evidence package | Delivery owner plus QA and review functions | each release, reclassification, or significant incident |
 
-## What Good Looks Like
+## Release And Re-Review Prompts
 
-- Each control or artifact has a clear owner and usage point.
-- The same artifact can support design review, release discipline, and post-change accountability.
-- The file makes it easier to ask whether the chapter's promises are actually visible in day-to-day work.
-
-## Practical Reading Rule
-
-Use this file after the concepts and scenarios are clear enough that the question becomes operational evidence. If the organization cannot name which artifacts it would inspect during review, the chapter is not yet implemented in practice.
+- Which artifact would prove that this system stayed inside approved use boundaries?
+- Which exception is still open, and why is it still justified?
+- What changed since the last approval that should force re-review?
+- If the supplier posture or data boundary changed tomorrow, which governance record would need immediate update?
 
 Back to [4.3 Reference Points](04-03-00-reference-points.md).

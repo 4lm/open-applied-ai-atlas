@@ -1,35 +1,51 @@
 # 6.2.1 Worked Privacy And Sovereignty Scenarios
 
-_Page Type: Worked Example | Maturity: Outline_
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+These scenarios show how the same privacy question can lead to different answers once sovereignty, portability, and support control are considered explicitly.
 
-## Managed internal assistant
+## Managed Internal Assistant
 
-A team discovers that prompt logging and support access matter as much as model training reuse.
+| Field | Decision |
+| --- | --- |
+| Context | A team adopts a managed internal assistant for everyday staff productivity |
+| Recommended posture | Moderate-risk managed posture with explicit logging, retention, and support-access review |
+| Why | The main exposure often sits in prompts, logs, and support channels rather than model-training reuse alone |
+| Watch for | Asking only whether prompts are used for training |
+| Control implications | Data-flow map, retention setting review, support-access review, and user guidance on sensitive content |
+| Adjacent chapters | `04`, `13`, `18` |
 
-- What this example makes visible: covers where data goes, what persists, what gets reused, and how sovereignty claims translate into real operational control.
-- What to watch for: The failure mode is asking only whether prompts are used for training.
+## Region-Pinned Managed Service
 
-## Region-bound managed service
+| Field | Decision |
+| --- | --- |
+| Context | A provider offers EU region pinning and claims stronger sovereignty posture |
+| Recommended posture | Treat residency as one control within a broader operational-control review |
+| Why | Region choice does not answer telemetry routing, support operations, subcontractor access, or exit posture |
+| Watch for | Treating a regional deployment option as complete proof of sovereignty |
+| Control implications | Subprocessor review, support-path review, export test, deletion evidence, and contractual override review |
+| Adjacent chapters | `04`, `17`, `18`, `20` |
 
-A provider offers region pinning, but the team still reviews telemetry, support, and update dependence.
+## Persistent Memory Feature
 
-- What this example makes visible: covers where data goes, what persists, what gets reused, and how sovereignty claims translate into real operational control.
-- What to watch for: The failure mode is treating region selection as sufficient proof of sovereignty.
+| Field | Decision |
+| --- | --- |
+| Context | A product team wants long-lived user memory to personalize outputs across sessions |
+| Recommended posture | Approve only with explicit storage, deletion, access, and retention design |
+| Why | Memory changes the system from transient interaction into durable recordkeeping |
+| Watch for | Framing memory as only a user-experience enhancement |
+| Control implications | Memory-state inventory, retention schedule, deletion workflow, and access-review logic |
+| Adjacent chapters | `04`, `11`, `13` |
 
-## Long-lived memory feature
+## Self-Hosted Sensitive Workflow
 
-A product proposes persistent user memory and is forced to define deletion, access, and retention rules first.
-
-- What this example makes visible: covers where data goes, what persists, what gets reused, and how sovereignty claims translate into real operational control.
-- What to watch for: The failure mode is treating memory as only a UX improvement.
-
-## Private deployment for sensitive workflows
-
-A team chooses a more private posture but still has to design export and lifecycle closure.
-
-- What this example makes visible: covers where data goes, what persists, what gets reused, and how sovereignty claims translate into real operational control.
-- What to watch for: The failure mode is assuming self-hosting automatically solves governance.
+| Field | Decision |
+| --- | --- |
+| Context | A regulated team moves a sensitive workflow to self-hosted infrastructure to reduce exposure |
+| Recommended posture | High-control deployment with explicit lifecycle, export, and observability design |
+| Why | Self-hosting can improve control, but it does not solve retention, operator access, or evidence quality automatically |
+| Watch for | Assuming self-hosting alone closes the review |
+| Control implications | Operator-access controls, telemetry policy, deletion procedures, and re-review after architecture changes |
+| Adjacent chapters | `04`, `14`, `18`, `19` |
 
 Back to [6.2 Operating Data Boundaries](06-02-00-operating-data-boundaries.md).

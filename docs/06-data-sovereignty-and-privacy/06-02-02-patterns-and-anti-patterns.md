@@ -1,55 +1,41 @@
 # 6.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use these patterns to check whether a data-boundary design still holds once memory, telemetry, support, and exit posture are included.
 
-Patterns matter here because data sovereignty and privacy is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
+## Reusable Patterns
 
-## Why Pattern Language Helps
+| Pattern | What good looks like |
+| --- | --- |
+| Full-surface boundary mapping | Reviews include prompts, outputs, logs, memory, eval traces, and support artifacts |
+| Residency plus control review | Region selection is paired with support, telemetry, subcontractor, and key-control analysis |
+| Verifiable deletion and export | Lifecycle claims are supported by product capability or tested operating procedure |
+| Boundary review triggered by feature change | New memory, retrieval, telemetry, or supplier features reopen the assessment automatically |
 
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
+## Boundary Anti-Patterns
 
-## Decision Flow
-
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
-
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
-
-## Patterns To Reuse
-
-- The real boundary includes prompts, outputs, logs, memory, and evaluation traces
-- Residency claims are weaker than operational control claims
-- Memory and telemetry change privacy posture materially
-
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
+| Anti-pattern | Why it fails |
+| --- | --- |
+| Region equals sovereignty | Geography alone does not answer operational control or override rights |
+| Training-only framing | A provider can avoid training reuse and still keep broad retention or support access |
+| Invisible persistence | Logs, traces, memory, and eval datasets accumulate without owner or retention policy |
+| Contract-only comfort | Legal terms are treated as a substitute for technical evidence and operating checks |
 
 ## Review Prompt
 
-| During review ask... | Why |
+| Ask during review... | Why it matters |
 | --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
+| Which data states persist after the interaction ends? | Persistence often creates the real control burden |
+| Which access paths are technical versus contractual? | Helps separate enforceable controls from assurances |
+| Could the team export and delete this state today? | Tests portability and lifecycle reality early |
+| What change would force boundary re-review? | Prevents stale approvals from covering a wider system later |
 
-## Review Signals
+## Drift Signals
 
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
-
-## Practical Reading Rule
-
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+- the team cannot describe where traces, memory, or support snapshots live
+- portability is discussed only at renewal time
+- supplier docs and contracts describe different data handling behavior
+- the architecture adds observability or memory features without reopening the boundary assessment
 
 Back to [6.2 Operating Data Boundaries](06-02-00-operating-data-boundaries.md).

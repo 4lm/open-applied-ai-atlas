@@ -1,36 +1,45 @@
 # 6.1.2 Decision Boundaries And Handling Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to separate privacy questions from sovereignty questions without pretending they can be solved independently.
+Use this page to decide which boundary question actually dominates before choosing controls or providers.
 
-## Decision Boundaries
+## Decision Lanes
 
-- Treat the issue as **privacy-first** when the core concern is lawful basis, minimization, retention, deletion, access rights, or personal-data handling under GDPR or equivalent privacy obligations.
-- Treat the issue as **sovereignty-first** when the core concern is who controls operation, support access, telemetry, key runtime services, or contractual override power.
-- Treat the issue as **portability-first** when the risk is whether data, traces, memory state, or policy configuration can be exported, deleted, or migrated in a supplier change.
-- Treat the issue as **combined privacy and sovereignty review** when personal data is processed through a managed service that also controls logging, support access, or cross-border operations.
+| Boundary lane | Use it when the main question is... |
+| --- | --- |
+| Privacy-first | lawful basis, minimization, retention, deletion, rights handling, or personal-data exposure |
+| Sovereignty-first | who controls operation, support access, telemetry, key management, and deployability |
+| Portability-first | whether data, traces, memory, or policy state can be exported, deleted, and migrated without vendor paralysis |
+| Combined review | personal data is processed through a managed service that also controls logs, support, or cross-border operations |
 
 ## Practical Heuristics
 
-- Do not accept region selection as proof of sovereignty; also inspect support pathways, telemetry routing, subcontractors, and contractually permitted access.
-- Map the full data surface before judging the boundary posture: prompts, outputs, logs, traces, memory, evaluation artifacts, and support snapshots.
-- Ask whether deletion and export are technically verifiable or only contractually promised.
-- Use GDPR logic when the key question is personal-data rights and lawful handling; use EU Data Act logic when the key question is access, sharing, ecosystem control, or portability posture.
-- When a supplier claims “no training on your data,” still inspect retention, observability, abuse-detection logging, and support-copy behavior.
-- Route to chapter `18` when the cleanest boundary answer may require a different sourcing posture rather than a different contract clause.
+- Do not accept region selection as proof of sovereignty; inspect support access, telemetry routing, subcontractors, and override rights.
+- Map the full data surface before approving the posture: prompts, outputs, logs, traces, embeddings, memory, eval sets, and support artifacts.
+- Treat "no training on your data" as only one claim among many; retention and support-copy behavior still matter.
+- Ask whether export and deletion are technically demonstrable or only described in documentation.
+- Route to chapter `18` when a different sourcing posture is cleaner than trying to contract around weak boundary control.
+- Route to chapter `4` when the main issue becomes approval ownership, review triggers, or exception handling.
 
 ## Escalate When
 
-- The team cannot explain where logs, traces, memory, or evaluation artifacts are stored.
-- A provider’s boundary posture depends on undocumented operational practices.
-- Export, deletion, or support-access answers change depending on which sales or engineering contact is asked.
-- Cross-border processing, customer-data reuse, or telemetry exceptions appear only in detailed terms or support policies.
+- the team cannot explain where logs, traces, memory, or evaluation artifacts are stored
+- export, deletion, or support-access answers differ across sales, docs, and engineering contacts
+- telemetry or cross-border handling appears only in detailed service terms
+- the same system claims strong privacy posture but has weak portability and opaque support operations
 
 ## Common Failure Modes
 
-- Treating privacy compliance as if it automatically delivers sovereignty.
-- Treating contract language as equivalent to observable technical control.
-- Ignoring the persistence created by monitoring, memory, or offline evaluation workflows.
+- treating privacy compliance as if it automatically solves sovereignty
+- treating contract language as if it were equivalent to observable technical control
+- ignoring persistence created by memory, monitoring, or offline evaluation workflows
+
+## Chapter Handoffs
+
+- [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
+- [11. Knowledge Retrieval And Memory](../11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md)
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
+- [20. Standards Frameworks And Bodies Of Knowledge](../20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md)
 
 Back to [6.1 Boundary Foundations](06-01-00-boundary-foundations.md).

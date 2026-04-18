@@ -1,39 +1,36 @@
 # 4.1.1 Policy, Ownership, And Control Mapping
 
-_Page Type: Concept Explainer | Maturity: Draft_
+_Page Type: Concept Explainer | Maturity: Review-Ready_
 
-This subsection isolates the most reusable distinctions in the chapter so later implementation and comparison material stays anchored to the right concepts.
+This page separates the recurring governance concepts that are easy to blur together in review meetings. The distinction work matters because teams often say "governance" when they actually mean policy writing, approval routing, control enforcement, or evidence collection.
 
-This distinction layer matters because the chapter on governance risk compliance is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.
+## Key Distinctions
 
-## Why These Distinctions Matter
-
-The practical question is not whether the labels are elegant. The practical question is whether the distinctions change how a team designs, reviews, buys, operates, or audits a system. In this chapter, that means checking whether the topic is being reasoned about in the right layer and with the right cross-cutting lenses still visible.
-
-## Key Lenses
-
-| Governance lens | Why it matters |
+| Distinction | Why it changes the decision |
 | --- | --- |
-| Policy and acceptable use | Prevents local teams from inventing their own red lines |
-| Control mapping | Turns governance from a document exercise into operational reality |
-| Evidence discipline | Creates a repeatable basis for release and incident decisions |
-| Lifecycle oversight | Keeps governance active from discovery through retirement |
+| Policy statement vs control | Policy defines what must be true; a control is how the organization makes it true in practice |
+| Control owner vs reviewer | The owner keeps the control working; the reviewer checks whether it is adequate for the risk |
+| Approval lane vs advice lane | Legal, privacy, security, and GRC input may be mandatory without each function being the final approver |
+| Standard control vs compensating control | Exceptions can be approved, but only if the substitute control and expiry are explicit |
+| Evidence artifact vs narrative justification | Audit, release, and incident decisions need inspectable records, not only persuasive prose |
 
-## What Matters Most
+## What Changes In Practice
 
-- Good governance clarifies what is allowed and who owns it
-- Policy must translate into enforceable controls
-- Release evidence matters as much as written policy
-- Exceptions and risk acceptance need explicit treatment
+- Governance is weak if policy exists without named owners, review triggers, and control evidence.
+- A release decision should name both the approving role and the artifact set used to justify the decision.
+- Exception handling must be time-bounded and tied to compensating controls rather than informal tolerance.
+- The same issue may involve several reviewers, but only one lane should hold final accountability for the decision.
 
-## What Reviewers Should Check
+## Review Questions
 
-- Are the distinctions here still connected to the chapter's real decision surface rather than being treated as abstract categories?
-- Is the proposal using these distinctions to expose trade-offs in control, evidence, ownership, or lock-in?
-- Does the chapter language stay consistent with the atlas taxonomy instead of introducing new local categories without need?
+- Which role owns the control after launch?
+- Which artifact proves that the control was actually checked?
+- Is the team asking governance to solve a runtime, privacy, or sourcing problem that belongs elsewhere?
 
-## Practical Reading Rule
+## Handoffs
 
-Use this file to sharpen the chapter, not to replace it. If a proposal still sounds plausible after the distinctions here are applied, it is usually ready to move into heuristics, scenarios, or reference material. If it falls apart, the distinction work has already paid for itself.
+- Go to [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md) when the real dispute is about data handling, deletion, residency, or support access.
+- Go to [17. Vendors Organizations And Market Structure](../17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md) and [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md) when supplier concentration or exit posture is the dominant constraint.
+- Go to [20. Standards Frameworks And Bodies Of Knowledge](../20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md) when the team is mixing laws, standards, and frameworks as if they played the same role.
 
 Back to [4.1 Governance Foundations](04-01-00-governance-foundations.md).

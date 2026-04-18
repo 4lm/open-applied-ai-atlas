@@ -1,55 +1,41 @@
 # 4.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use these patterns to stress-test whether governance is operating as a real management system or only as reassuring language.
 
-Patterns matter here because governance risk compliance is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
+## Reusable Patterns
 
-## Why Pattern Language Helps
+| Pattern | What good looks like |
+| --- | --- |
+| Named ownership with reusable review lanes | Each system has a clear owner, and reviewers know when they are advisory versus approving |
+| Policy translated into controls | Stated rules map to runtime, process, and evidence controls that can actually be inspected |
+| Release evidence before launch | Approval depends on a reviewable package of tests, exceptions, and ownership records |
+| Re-review triggered by change | Material model, data, supplier, or workflow changes reopen the right lane automatically |
 
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
+## Governance Anti-Patterns
 
-## Decision Flow
-
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
-
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
-
-## Patterns To Reuse
-
-- Good governance clarifies what is allowed and who owns it
-- Policy must translate into enforceable controls
-- Release evidence matters as much as written policy
-
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
+| Anti-pattern | Why it fails |
+| --- | --- |
+| Approval theater | A forum exists, but nobody can say what evidence is required or who owns the decision after launch |
+| Policy without enforcement | The organization writes red lines that are not mapped to controls, tooling, or approval criteria |
+| Permanent temporary exception | A short-term accommodation becomes the default pattern without expiry, compensating control, or exit plan |
+| Incident isolation | The team patches the failure but never asks whether the approval model, thresholds, or ownership were wrong |
 
 ## Review Prompt
 
-| During review ask... | Why |
+| Ask during review... | Why it matters |
 | --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
+| Which role owns this system after release? | Governance fails quickly when ownership ends at approval |
+| Which artifact would an auditor or incident reviewer inspect first? | Forces the team to name real evidence, not only confidence |
+| What change would trigger re-review? | Prevents stale approvals from silently covering new systems |
+| Which risk is being accepted rather than controlled? | Exceptions should be explicit, not hidden inside vague language |
 
-## Review Signals
+## Drift Signals
 
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
-
-## Practical Reading Rule
-
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+- nobody can distinguish policy, control, and evidence
+- the review group signs off without a standard evidence package
+- supplier or data-boundary changes happen outside governance visibility
+- teams describe governance as "just paperwork" because it never changes delivery decisions
 
 Back to [4.2 Operating The Governance Model](04-02-00-operating-the-governance-model.md).

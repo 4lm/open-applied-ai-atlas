@@ -1,29 +1,24 @@
 # 4.2 Operating The Governance Model
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Governance Risk Compliance. Within the chapter, it anchors governance, accountability, policy ownership, and compliance review as operational design work rather than after-the-fact approval theater, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns governance from principle into operating routine. Use it to test whether ownership, evidence, exceptions, and re-review actually work under delivery pressure.
 
 ## Section Map
 
+- 4.2.1 [Worked Governance Scenarios](04-02-01-worked-governance-scenarios.md)
+- 4.2.2 [Patterns And Anti-Patterns](04-02-02-patterns-and-anti-patterns.md)
 
+## What This Section Helps Decide
 
-## Why This Section Exists
+- what a proportionate governance pattern looks like in different delivery contexts
+- which warning signs show that governance is becoming paperwork or theater
+- when incidents, supplier changes, or model updates should trigger re-review
 
-This section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations. It gives readers a stable place to answer the questions that are most likely to be confused inside governance risk compliance, which makes later comparison more reliable because it rests on a shared frame instead of local shorthand.
+## Related Chapters
 
-This section should also be read as part of the atlas mission rather than as a self-contained mini-essay. The point is to surface how operating the governance model changes control, portability, sovereignty, privacy, compliance, and operating burden in real organizational systems.
-
-## Section Shape
-
-
-
-## What To Look For Here
-
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
-
+- [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md)
+- [15. Security And Abuse Resistance](../15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md)
 
 Back to [4. Governance Risk Compliance](04-00-00-governance-risk-compliance.md).

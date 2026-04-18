@@ -1,10 +1,8 @@
 # 6. Data Sovereignty And Privacy
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This chapter is the front door for Data Sovereignty And Privacy. It separates privacy, sovereignty, portability, and control questions so data-boundary decisions reflect the real operational surface. The chapter is designed to help readers move from orientation into real decisions without losing the atlas priorities around openness, sovereignty, portability, privacy, compliance, and lock-in.
-
-If privacy and sovereignty are reduced to region selection alone, organizations miss control-plane and lifecycle risks that matter just as much.
+This chapter separates privacy, sovereignty, portability, and control posture so teams do not mistake region settings or contract language for full boundary control. Use it to decide what data surface an AI system actually creates, who can reach it, what persists, and what exit posture remains practical.
 
 ## Chapter Index
 
@@ -18,16 +16,15 @@ If privacy and sovereignty are reduced to region selection alone, organizations 
 - 6.3.1 [Standards And Bodies](06-03-01-standards-and-bodies.md)
 - 6.3.2 [Controls And Artifacts](06-03-02-controls-and-artifacts.md)
 
-
 ## What This Chapter Helps Decide
 
-- which data classes and states need distinct handling
-- whether residency claims match actual control posture
-- which telemetry, memory, and support pathways create hidden exposure
-- which adjacent chapters should be read next because the issue is no longer only about data sovereignty and privacy
+- which data classes and traces need distinct handling
+- whether residency claims match real operational control
+- which retention, memory, telemetry, and support paths widen the boundary
+- when the right answer is a sourcing, governance, or architecture change rather than a contract clause
 
 ## Adjacent Chapters
 
 - Previous: [5. Use Cases And Application Landscapes](../05-use-cases-and-application-landscapes/05-00-00-use-cases-and-application-landscapes.md)
 - Next: [7. Model Ecosystem](../07-model-ecosystem/07-00-00-model-ecosystem.md)
-- Repository guidance: [Contributing](../../CONTRIBUTING.md), [Editorial Rules](../../EDITORIAL_RULES.md)
+- Related: [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md), [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md), [20. Standards Frameworks And Bodies Of Knowledge](../20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md)
