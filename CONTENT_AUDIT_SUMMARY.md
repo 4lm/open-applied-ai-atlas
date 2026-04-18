@@ -4,7 +4,7 @@ This summary records the current public quality signals under the Product Improv
 
 The detailed per-page inventory lives in `.delivery/page-audit.md`. This public summary keeps the durable signals visible for contributors without turning the root of the repository into a spreadsheet dump.
 
-Last delivery update: `2026-04-18.c` on `2026-04-18`.
+Last delivery update: `2026-04-18.d` on `2026-04-18`.
 
 ## Current Counts
 
@@ -21,9 +21,9 @@ Last delivery update: `2026-04-18.c` on `2026-04-18`.
 
 ### By Maturity
 
-- `Outline`: 77
-- `Draft`: 60
-- `Review-Ready`: 75
+- `Outline`: 75
+- `Draft`: 58
+- `Review-Ready`: 79
 - `Curated Reference`: 1
 
 ## What Changed
@@ -31,6 +31,7 @@ Last delivery update: `2026-04-18.c` on `2026-04-18`.
 - Added a visible page-type and maturity system to `docs/`.
 - Reduced recurring chapter and section boilerplate.
 - Added a terminology ledger and a canonical comparison schema in the taxonomy chapter.
+- Hardened the taxonomy chapter's distinction, heuristic, scenario, and pattern surfaces into review-ready decision aids and closed `G-02`.
 - Added first-wave decision and artifact pages in high-leverage chapters.
 - Strengthened evidence posture on comparison-heavy and standards-heavy pages.
 - Promoted the governance, privacy, and market-structure chapters through a concentrated cross-cutting pass.

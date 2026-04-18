@@ -27,12 +27,12 @@ Columns:
 | `docs/01-scope-and-principles/01-03-01-root-docs-and-topic-chapters.md` | Concept Explainer | Draft | Rewrite | G-01 |  | Useful page with uneven depth, evidence, or scenario detail. |
 | `docs/02-taxonomy/02-00-00-taxonomy.md` | Chapter Index | Review-Ready | Keep | G-02 |  | Navigation page should stay concise while accurately reflecting chapter structure and reader value. |
 | `docs/02-taxonomy/02-01-00-classification-foundations.md` | Chapter Index | Review-Ready | Keep | G-02 |  | Navigation page should stay concise while accurately reflecting chapter structure and reader value. |
-| `docs/02-taxonomy/02-01-01-entity-classes-and-core-distinctions.md` | Concept Explainer | Draft | Rewrite | G-02 |  | Useful page with uneven depth, evidence, or scenario detail. |
-| `docs/02-taxonomy/02-01-02-cross-cutting-dimensions-and-heuristics.md` | Decision Guide | Outline | Rewrite | G-02 |  | Thin page after first pass; deepen, merge, or explicitly defer in a later wave. |
+| `docs/02-taxonomy/02-01-01-entity-classes-and-core-distinctions.md` | Concept Explainer | Review-Ready | Keep | G-02 | 2026-04-18.d | Entity classes now separate systems, models, tools, suppliers, standards, architectures, and evidence artifacts with explicit handoffs. |
+| `docs/02-taxonomy/02-01-02-cross-cutting-dimensions-and-heuristics.md` | Decision Guide | Review-Ready | Keep | G-02 | 2026-04-18.d | Three-step taxonomy triage now makes dimension selection and chapter handoff lanes operational. |
 | `docs/02-taxonomy/02-01-03-terminology-ledger.md` | Glossary | Review-Ready | Keep | G-02 |  | Clear role and useful current depth for this pass. |
 | `docs/02-taxonomy/02-02-00-applying-the-taxonomy.md` | Chapter Index | Review-Ready | Keep | G-02 |  | Navigation page should stay concise while accurately reflecting chapter structure and reader value. |
-| `docs/02-taxonomy/02-02-01-worked-classification-scenarios.md` | Worked Example | Outline | Rewrite | G-02 |  | Thin page after first pass; deepen, merge, or explicitly defer in a later wave. |
-| `docs/02-taxonomy/02-02-02-patterns-and-anti-patterns.md` | Reference Sheet | Draft | Rewrite | G-02 |  | Useful page with uneven depth, evidence, or scenario detail. |
+| `docs/02-taxonomy/02-02-01-worked-classification-scenarios.md` | Worked Example | Review-Ready | Keep | G-02 | 2026-04-18.d | Scenario tables now cover managed APIs, gateways, classical-ML platforms, and regulated workflows with clear classification logic. |
+| `docs/02-taxonomy/02-02-02-patterns-and-anti-patterns.md` | Reference Sheet | Review-Ready | Keep | G-02 | 2026-04-18.d | Review-sheet patterns and anti-patterns now make recurring taxonomy failure shapes fast to catch. |
 | `docs/02-taxonomy/02-02-03-comparison-schema.md` | Reference Sheet | Review-Ready | Keep | G-02 |  | Clear role and useful current depth for this pass. |
 | `docs/02-taxonomy/02-03-00-reference-points.md` | Chapter Index | Review-Ready | Keep | G-02 |  | Navigation page should stay concise while accurately reflecting chapter structure and reader value. |
 | `docs/02-taxonomy/02-03-01-standards-and-bodies.md` | Comparison Page | Review-Ready | Keep | G-02 |  | Clear role and useful current depth for this pass. |

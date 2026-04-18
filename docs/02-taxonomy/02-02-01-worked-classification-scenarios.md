@@ -1,35 +1,53 @@
 # 2.2.1 Worked Classification Scenarios
 
-_Page Type: Worked Example | Maturity: Outline_
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-This subsection turns the chapter into concrete organizational situations so the abstractions can be checked against real delivery contexts.
+These scenarios show how the taxonomy changes real review work. Each example is intentionally practical: the goal is not only to label the thing correctly, but to stop the wrong downstream comparison before it starts.
 
-## Classifying a managed model API
+## Managed Model API For An Internal Assistant
 
-A vendor-hosted model endpoint is first classified as a solution-bearing platform entry, then scored for openness, hosting control, and exit posture.
+| Field | Decision |
+| --- | --- |
+| Context | A team wants a fast internal assistant and plans to call a vendor-hosted model API directly from an application and retrieval layer |
+| Common wrong shortcut | Treat the whole proposal as "which model should we use?" and compare only model capability rows |
+| Correct classification | The runtime choice is a managed platform or service that exposes one or more models; if suppliers are being compared, the vendor must be named as a separate class |
+| Dimensions to apply | Openness posture, sovereignty, privacy, portability, compliance exposure, lock-in and exit posture |
+| Downstream handoff | Chapters `07` and `08` for model and hosting questions, `09` for access-control posture, `11` if retrieval is involved, and `18` if dependence versus speed becomes the real decision |
 
-- What this example makes visible: defines the canonical classification system reused across the atlas so models, vendors, tools, standards, and architectures can be compared without collapsing into one fuzzy category.
-- What to watch for: The mistake is to classify it only as a model and ignore the vendor dependence wrapped around it.
+## Open-Source Gateway In A Hybrid Estate
 
-## Classifying an open-source gateway
+| Field | Decision |
+| --- | --- |
+| Context | An organization wants one routing and policy layer across multiple managed model providers and one self-hosted fallback path |
+| Common wrong shortcut | Compare the gateway directly against model vendors or treat the gateway as the whole architecture |
+| Correct classification | The gateway is a tool, framework, or project at the control-plane layer; the vendors behind routed endpoints remain separate entity classes |
+| Dimensions to apply | Openness posture, portability, observability implications, security implications, and lock-in created by configuration, plugins, or policy logic |
+| Downstream handoff | Chapters `03` and `09` for layer placement and gateway controls, `14` for telemetry, `17` for supplier dependence, and `18` for sourcing posture |
 
-A gateway project is classified as a tool, not as a vendor or architecture, and then scored only on the dimensions that genuinely apply.
+## Forecasting Platform In An Existing Data Estate
 
-- What this example makes visible: defines the canonical classification system reused across the atlas so models, vendors, tools, standards, and architectures can be compared without collapsing into one fuzzy category.
-- What to watch for: The mistake is to compare it directly with cloud providers or standards bodies.
+| Field | Decision |
+| --- | --- |
+| Context | A team with an established analytics estate is deciding between a managed forecasting platform, an existing ML workbench, and a more self-managed composition path |
+| Common wrong shortcut | Treat the choice as if a classical-ML platform were the same class of decision as a frontier chat-model API |
+| Correct classification | The primary comparison is between managed platform or service options and self-managed architecture patterns; individual algorithms or models are subordinate rows, not the entire decision |
+| Dimensions to apply | Portability, governance implications, data boundary implications, operational complexity, lock-in and exit posture, and fit by organization type |
+| Downstream handoff | Chapters `03` and `05` for stack and use-case fit, `13` for evaluation requirements, `17` for supplier leverage, and `18` for build-buy-hybrid posture |
 
-## Classifying a framework
+## Regulated Workflow With Legal And Standards Anchors
 
-A framework is compared by role, extensibility, and portability, not by the same fields used for public standards.
+| Field | Decision |
+| --- | --- |
+| Context | A regulated workflow, such as claims review or eligibility support, must be designed under legal obligations and internal assurance requirements |
+| Common wrong shortcut | Put the EU AI Act, ISO/IEC 42001, and NIST AI RMF into the same table as products and ask which option is "best" |
+| Correct classification | Laws and regulations, standards and frameworks, and internal control artifacts are separate reference classes; they are anchors that shape the design, not products being purchased as runtime components |
+| Dimensions to apply | Compliance exposure, governance implications, evidence implications, privacy, and sourcing only after obligations and controls are clear |
+| Downstream handoff | Chapters `04`, `06`, `13`, `16`, and `20` for governance lanes, data boundaries, evidence, oversight, and standards crosswalks |
 
-- What this example makes visible: defines the canonical classification system reused across the atlas so models, vendors, tools, standards, and architectures can be compared without collapsing into one fuzzy category.
-- What to watch for: This keeps chapter tables coherent instead of stretching one schema to everything.
+## Cross-Scenario Reading Rule
 
-## Classifying a standards body
-
-A standards body is evaluated on scope and lifecycle coverage rather than on openness-policy tier.
-
-- What this example makes visible: defines the canonical classification system reused across the atlas so models, vendors, tools, standards, and architectures can be compared without collapsing into one fuzzy category.
-- What to watch for: The mistake is to force software-scoring logic onto public knowledge institutions.
+- A taxonomy mistake usually appears before the architecture, sourcing, or compliance mistake it later causes.
+- If the scenario still feels ambiguous after naming the entity class, go back to [2.1.1 Entity Classes And Core Distinctions](02-01-01-entity-classes-and-core-distinctions.md).
+- If the class is clear but the dimensions are not, use [2.1.2 Cross-Cutting Dimensions And Heuristics](02-01-02-cross-cutting-dimensions-and-heuristics.md) before touching a comparison table.
 
 Back to [2.2 Applying The Taxonomy](02-02-00-applying-the-taxonomy.md).

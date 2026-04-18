@@ -1,55 +1,39 @@
 # 2.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
-
-Patterns matter here because taxonomy is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
-
-## Why Pattern Language Helps
-
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
-
-## Decision Flow
-
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
-
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
+Use this file during review after the team has named the entity class. The point is to catch recurring taxonomy mistakes quickly enough that later chapter work is still fixable.
 
 ## Patterns To Reuse
 
-- Entity class comes before comparison
-- Openness must be separated into code, artifacts, pipeline, and deployment freedom
-- Risk and oversight dimensions belong beside technical ones
+| Pattern | Good shape in practice | What it protects |
+| --- | --- | --- |
+| Classify before comparing | The page names whether it is comparing systems, models, tools, vendors, standards, or architectures before any ranking language appears | Prevents mixed-category tables and false equivalence |
+| Separate product choice from standards choice | A runtime decision is compared against peer products, while laws and frameworks are used as reference anchors and control inputs | Keeps governance language from replacing design work |
+| Separate openness from sovereignty | The review names source availability, deployment control, support dependence, telemetry exposure, and jurisdictional exposure independently | Prevents "open" from hiding control risk |
+| Normalize vendor language back to atlas terms | Marketing categories are translated into the shared terms in [2.1.3 Terminology Ledger](02-01-03-terminology-ledger.md) before they enter the atlas | Keeps chapter language stable across suppliers |
+| Keep non-LLM applicability visible | Retrieval, forecasting, recommender, optimization, and classical-ML examples remain legible alongside chat or agentic examples | Preserves the repository's broad applied-AI scope |
 
-## Anti-Patterns To Avoid
+## Anti-Patterns To Stop
 
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
+| Anti-pattern | Why it distorts the review | Corrective move |
+| --- | --- | --- |
+| Mixing vendors with standards in one table | It makes obligations, supplier dependence, and product fit look interchangeable | Split the table by entity class and move standards work to chapter `20` |
+| Using "open" as a proxy for portability or compliance | Source availability does not tell you who operates the system, where the data sits, or how easy exit really is | Re-score with sovereignty, privacy, and exit posture visible separately |
+| Treating frameworks as proof of implementation | A cited framework can look complete even when no controls, owners, or evidence exist | Ask which internal artifact, test, or review lane the framework changes |
+| Letting local terminology drift from chapter `02` | Teams silently redefine terms and later chapters stop comparing like with like | Normalize back to the terminology ledger before publishing or reviewing |
+| Comparing a model row to a service row without naming the difference | Capability, supplier, hosting, and control trade-offs get flattened into one misleading score | Split model, managed-service, and vendor comparisons into separate surfaces |
 
-## Review Prompt
+## Fast Review Prompts
 
-| During review ask... | Why |
-| --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
+- What entity class is each row actually describing?
+- Which cross-cutting dimensions are first-order for that class, and which are being added out of habit?
+- If a standard or framework is named, what concrete control, evidence, or review lane does it change?
+- If a vendor claim uses words like "open," "private," or "sovereign," which atlas dimensions still need to be checked separately?
+- Would this page still make sense for a non-LLM system such as forecasting, ranking, optimization, or vision?
 
-## Review Signals
+## Reading Rule
 
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
-
-## Practical Reading Rule
-
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+Use the patterns here to stress-test draft comparison or policy material before it becomes chapter-local doctrine. If the anti-patterns still describe the page accurately, the review is not finished.
 
 Back to [2.2 Applying The Taxonomy](02-02-00-applying-the-taxonomy.md).
