@@ -1,6 +1,6 @@
 # 21.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during pilot review, adoption pressure, and chapter handoffs to recognize healthy research-to-practice operating shapes before a paper, benchmark, repository, or public guide quietly becomes policy, platform standard, or sourcing commitment.
 

@@ -1,6 +1,6 @@
 # 19.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the named component anchors and reusable stack combinations that support the architecture families defined earlier in the chapter.
 

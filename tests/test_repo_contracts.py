@@ -114,10 +114,10 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("./scripts/ralph-codex.py --resume 3", ralph_text)
         self.assertNotIn("--prompt", ralph_text)
         self.assertNotIn("--config", ralph_text)
+        self.assertNotIn("prompts/fix-tests.md", ralph_text)
 
         for relative_path in [
-            "prompts/fix-tests.md",
-            "profiles/cautious.json",
+            "profiles/restricted.json",
             "profiles/dangerously-unrestricted.json",
         ]:
             self.assertIn(relative_path, ralph_text)
@@ -125,8 +125,11 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("schemas/ralph-codex/", ralph_text)
         self.assertTrue((ROOT / "schemas" / "ralph-codex").is_dir())
 
-        default_access_mode = ralph_codex.DEFAULT_PROFILE["thread_policy"]["access_mode"]
+        default_profile = ralph_codex.load_profile(ralph_codex.SchemaCatalog(ralph_codex.SCHEMA_FILES), None)
+        default_access_mode = default_profile["thread_policy"]["access_mode"]
         default_sandbox = ralph_codex.SANDBOX_BY_ACCESS_MODE[default_access_mode]
+        self.assertEqual(ralph_codex.DEFAULT_PROFILE_PATH, ROOT / "profiles" / "restricted.json")
+        self.assertIn("default profile comes from `profiles/restricted.json`", ralph_text)
         self.assertIn(f'thread_policy.access_mode: "{default_access_mode}"', ralph_text)
         self.assertIn(default_sandbox, ralph_text)
         self.assertIn("dangerously-unrestricted", ralph_text)
@@ -135,18 +138,42 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("`never`", ralph_text)
         self.assertIn("max_iterations", ralph_text)
         self.assertIn("execution.max_prompt_chars", ralph_text)
+        self.assertIn("codex --search app-server", ralph_text)
+        self.assertIn("research_policy", ralph_text)
+        self.assertIn("tranche_policy", ralph_text)
+        self.assertIn("quality_policy", ralph_text)
+        self.assertIn("loop_policy", ralph_text)
+        self.assertIn("memory_policy", ralph_text)
+        self.assertIn("milestone_policy", ralph_text)
+        self.assertIn("worker_policy", ralph_text)
+        self.assertIn("evidence_policy", ralph_text)
+        self.assertIn("eval_policy", ralph_text)
+        self.assertIn("program_board", ralph_text)
+        self.assertIn("active_milestone", ralph_text)
+        self.assertIn("current_tranche", ralph_text)
+        self.assertIn("verification", ralph_text)
+        self.assertIn("evaluation-result", ralph_text)
+        self.assertIn("same-tranche repair", ralph_text)
+        self.assertIn("iteration-scoped repo baseline", ralph_text)
+        self.assertIn("xhigh", ralph_text)
         self.assertIn("events.jsonl", ralph_text)
         self.assertIn("charter-history.jsonl", ralph_text)
         self.assertIn("logs/<run-id>.log", ralph_text)
+        self.assertTrue((ROOT / "scripts" / "ralph-eval.py").exists())
+        self.assertTrue((ROOT / "scripts" / "ralph-session-diagnostics.py").exists())
+        self.assertTrue((ROOT / "evals" / "ralph" / "suites" / "quality-first.json").exists())
+        self.assertTrue((ROOT / "evals" / "ralph" / "fixtures" / "long-running-broad-atlas-closure.json").exists())
+        self.assertFalse((ROOT / "evals" / "ralph" / "repo-native-corpus.json").exists())
         self.assertIn("stdin", ralph_text)
         self.assertIn("stdout", ralph_text)
         self.assertIn("stderr", ralph_text)
         self.assertIn("approve/change/abort", ralph_text)
+        self.assertIn("progress checkpoint", ralph_text)
         self.assertIn("request_user_input", ralph_text)
         self.assertIn("update_plan", ralph_text)
 
         self.assertIn(
-            "python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py",
+            "python3 -m py_compile scripts/ralph-codex.py scripts/ralph-eval.py scripts/ralph-session-diagnostics.py tests/test_ralph_codex.py tests/test_repo_contracts.py",
             ralph_text,
         )
         self.assertIn(

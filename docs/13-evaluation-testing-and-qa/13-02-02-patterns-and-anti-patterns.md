@@ -1,6 +1,6 @@
 # 13.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during release planning, regression review, and post-change re-approval to recognize healthy evaluation operating shapes before polished demos or narrow metrics substitute for real evidence.
 

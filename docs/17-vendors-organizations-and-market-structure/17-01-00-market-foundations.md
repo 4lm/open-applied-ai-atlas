@@ -1,6 +1,6 @@
 # 17.1 Market Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the distinctions that keep market-structure analysis from collapsing into generic vendor lists or price comparison.
 

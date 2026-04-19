@@ -1,6 +1,6 @@
 # 2.1.2 Cross-Cutting Dimensions And Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to decide which cross-cutting dimensions belong in the analysis before a local preference turns into a misleading comparison. The taxonomy layer is not a scoring system; it is a triage step that decides what kind of thing is being reviewed, which dimensions matter, and which chapter owns the next decision.
 

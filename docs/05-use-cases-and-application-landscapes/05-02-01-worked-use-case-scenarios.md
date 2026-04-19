@@ -1,6 +1,6 @@
 # 5.2.1 Worked Use-Case Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how the chapter changes a real portfolio decision. Each one is framed around the pattern that should be chosen first, not around the tool someone wants to buy.
 

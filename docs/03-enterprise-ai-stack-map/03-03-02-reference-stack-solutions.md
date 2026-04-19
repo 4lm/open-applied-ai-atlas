@@ -1,6 +1,6 @@
 # 3.3.2 Reference Stack Solutions
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file groups reusable solution shapes so readers can move from individual layers to coherent stack combinations. It now separates comparable anchors into individual rows rather than hiding multiple tools inside one cell.
 

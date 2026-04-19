@@ -1,6 +1,6 @@
 # 21.2 Applying Open Knowledge
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns external signals into delivery review. Use it when a paper, benchmark, open-source project, nonprofit guide, or community practice already looks promising and the remaining question is whether it deserves a pilot, shortlist slot, control update, or local rejection.
 

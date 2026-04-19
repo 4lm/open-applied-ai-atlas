@@ -1,6 +1,6 @@
 # 13.1.1 Evidence, Failure Modes, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to classify what must be proved before release. Evaluation work breaks down when benchmark scores, regression results, scenario tests, abuse probes, human review, and live-operating signals are treated as interchangeable evidence just because they all produce numbers or notes.
 

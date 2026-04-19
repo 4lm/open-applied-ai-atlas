@@ -1,6 +1,6 @@
 # 17. Vendors Organizations And Market Structure
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter examines the organizations, foundations, and infrastructure control points that shape real AI optionality. Use it to decide where concentration risk sits, which dependencies are strategic rather than incidental, and when an apparently technical choice is really a market-structure choice.
 

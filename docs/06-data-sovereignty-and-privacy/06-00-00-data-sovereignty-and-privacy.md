@@ -1,6 +1,6 @@
 # 6. Data Sovereignty And Privacy
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter separates privacy, sovereignty, portability, and control posture so teams do not mistake region settings or contract language for full boundary control. Use it to decide what data surface an AI system actually creates, who can reach it, what persists, and what exit posture remains practical.
 

@@ -8,11 +8,20 @@
     "status",
     "summary",
     "evidence",
+    "verification",
+    "touched_files",
+    "created_files",
+    "off_tranche_justifications",
+    "quality_claims",
+    "milestone_progress",
+    "acceptance_artifacts",
+    "evidence_updates",
     "workstream_updates",
     "remaining_gaps",
     "validation_completed",
     "explicit_deferrals",
     "next_step",
+    "next_tranche_recommendation",
     "gate_reasoning"
   ],
   "properties": {
@@ -22,6 +31,120 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "scope", "findings", "sources"],
+      "properties": {
+        "status": { "type": "string", "enum": ["completed", "blocked", "not_needed"] },
+        "scope": { "type": "string", "minLength": 1 },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "url", "source_type", "used_for"],
+            "properties": {
+              "title": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "minLength": 1 },
+              "source_type": { "type": "string", "enum": ["primary", "secondary"] },
+              "used_for": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "touched_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "created_files": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "off_tranche_justifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "quality_claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tranche_followed",
+        "user_facing_outcome",
+        "avoided_meta_artifacts",
+        "repeated_heading_risk"
+      ],
+      "properties": {
+        "tranche_followed": { "type": "boolean" },
+        "user_facing_outcome": { "type": "string", "minLength": 1 },
+        "avoided_meta_artifacts": { "type": "boolean" },
+        "repeated_heading_risk": { "type": "string", "minLength": 1 }
+      }
+    },
+    "milestone_progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "milestone_id",
+        "criteria_met",
+        "criteria_remaining",
+        "novelty_notes",
+        "closure_notes"
+      ],
+      "properties": {
+        "milestone_id": { "type": "string", "minLength": 1 },
+        "criteria_met": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "criteria_remaining": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "novelty_notes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "closure_notes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "acceptance_artifacts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "url", "source_type", "used_for", "status"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "source_type": { "type": "string", "enum": ["primary", "secondary"] },
+          "used_for": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["new", "confirmed", "contradicted", "stale"] }
+        }
+      }
     },
     "workstream_updates": {
       "type": "array",
@@ -54,6 +177,7 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "next_step": { "type": "string", "minLength": 1 },
+    "next_tranche_recommendation": { "type": "string", "minLength": 1 },
     "gate_reasoning": { "type": "string", "minLength": 1 }
   }
 }

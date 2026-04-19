@@ -1,6 +1,6 @@
 # 21.1.2 Decision Boundaries And Research Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when public research, benchmark results, open-source projects, or community guidance are starting to influence a real organizational decision. The goal is to name the dominant review lane before novelty, prestige, or community momentum turns outside knowledge into an unexamined local default.
 

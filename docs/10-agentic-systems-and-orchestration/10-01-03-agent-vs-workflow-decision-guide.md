@@ -1,6 +1,6 @@
 # 10.1.3 Agent Vs Workflow Decision Guide
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this guide when a team is deciding whether a task needs an agentic runtime or whether explicit workflow design is the safer and more durable answer.
 

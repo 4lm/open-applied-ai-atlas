@@ -1,6 +1,6 @@
 # 3. Enterprise AI Stack Map
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter is the atlas control surface for reasoning across the enterprise AI stack. Use it when the real question is not "which tool is best," but "which layer owns the problem, where must controls sit, and which adjacent chapters should shape the design?"
 

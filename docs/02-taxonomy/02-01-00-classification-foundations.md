@@ -1,6 +1,6 @@
 # 2.1 Classification Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section defines the terms and distinctions that other chapters are expected to reuse rather than restate. Read it first when a team is mixing categories, arguing over definitions, or comparing unlike things as if they shared the same trade-offs.
 

@@ -1,6 +1,6 @@
 # 8.1.2 Decision Boundaries And Deployment Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the runtime posture is clear enough and the remaining question is which deployment lane fits by default. The goal is to match hosting control, evidence, and operating burden to the actual workload so teams do not self-host for prestige, mistake dedicated managed endpoints for true sovereignty, or push regulated and latency-sensitive services onto runtime estates that cannot be defended later.
 

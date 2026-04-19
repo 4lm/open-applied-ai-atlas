@@ -1,6 +1,6 @@
 # 4.1.2 Decision Boundaries And Review Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to decide which governance lane owns a question before the organization wastes time in the wrong forum.
 

@@ -1,6 +1,6 @@
 # 7.2 Applying The Model Landscape
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns model selection into operating review. Use it when a team already has a plausible model shortlist and now needs to prove that portfolio fit, openness posture, evaluation burden, refresh discipline, and sourcing consequences still hold under real delivery pressure.
 

@@ -1,6 +1,6 @@
 # 10. Agentic Systems And Orchestration
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter separates assistants, workflows, and action-taking agents so teams can choose the minimum autonomy that solves the problem. It is the place to slow down when “agent” is being used as a synonym for “advanced” rather than as a deliberate operating decision.
 

@@ -1,6 +1,6 @@
 # 9.1.1 Routing, Identity, And Policy Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate gateway control-plane responsibilities before the discussion collapses into "put a proxy in front of the model APIs." Gateway design becomes misleading when provider routing, caller identity, policy enforcement, quota ownership, and audit evidence are treated as one feature set instead of as distinct control questions.
 

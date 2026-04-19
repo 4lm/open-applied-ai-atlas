@@ -1,6 +1,6 @@
 # 1.1.3 Applied AI And ML Landscape
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page when a discussion about "AI" is drifting toward chat systems, copilots, or one model family as if they represent the whole organizational landscape. The atlas is intentionally broader: organizations adopt predictive systems, retrieval-backed services, document workflows, recommenders, optimization engines, perception systems, and hybrid control surfaces that share some infrastructure concerns but do not create the same proof burden, review sequence, or operating risk.
 

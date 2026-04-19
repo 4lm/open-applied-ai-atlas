@@ -1,6 +1,6 @@
 # 10.1.2 Decision Boundaries And Orchestration Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page after the execution posture is clear enough and the remaining question is which control lane fits by default. The goal is to stop teams from calling everything an "agent" and then skipping the harder review questions around typed actions, durable state, approvals, traces, and fallback.
 

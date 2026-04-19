@@ -1,6 +1,6 @@
 # 5. Use Cases And Application Landscapes
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter organizes applied AI demand into reusable work patterns so organizations choose solution shapes before they choose products. It is where portfolio design should start when teams are tempted to buy a tool before defining the real task, risk, owner, and control profile.
 

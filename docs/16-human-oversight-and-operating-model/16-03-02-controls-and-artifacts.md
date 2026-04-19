@@ -1,6 +1,6 @@
 # 16.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page when a team says a system has "human oversight" and a reviewer needs proof that the phrase maps to real owners, thresholds, approval rights, and intervention paths. The point is not to create bureaucracy. The point is to make accountability, escalation, and exception handling inspectable before scale, incident pressure, or vendor dependence turns vague oversight promises into operational drift.
 

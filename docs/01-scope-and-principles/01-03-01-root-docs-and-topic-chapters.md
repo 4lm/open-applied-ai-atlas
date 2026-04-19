@@ -1,6 +1,6 @@
 # 1.3.1 Root Docs And Topic Chapters
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page when a proposed addition sounds useful, but the team has not yet decided whether it is repository contract, optional prompt/control context, or reusable applied-AI content. Placement is not a housekeeping detail. It changes who the audience is, how often the material should change, what kind of evidence it needs, and whether the atlas stays readable instead of turning topical pages into process notes or root guidance into a topic dump.
 

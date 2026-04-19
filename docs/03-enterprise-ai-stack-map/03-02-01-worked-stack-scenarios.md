@@ -1,6 +1,6 @@
 # 3.2.1 Worked Stack Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how the stack map changes what a team reviews first, even when the visible application problem looks familiar.
 

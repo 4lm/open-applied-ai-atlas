@@ -1,6 +1,6 @@
 # 8. Model Hosting And Inference
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats model hosting and inference as the point where model choice turns into runtime reality: where workloads execute, which party controls the serving path, what telemetry and support access exist, and how latency, cost, resilience, and exportability actually show up in operations.
 

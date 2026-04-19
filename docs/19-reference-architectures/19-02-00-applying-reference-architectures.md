@@ -1,6 +1,6 @@
 # 19.2 Applying Reference Architectures
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns architecture families into delivery choices. Use it to see how the same chapter logic changes across low-risk, shared-platform, sovereign, and mixed-method environments.
 

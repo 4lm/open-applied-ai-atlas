@@ -1,6 +1,6 @@
 # 1.1.1 Organizational Scope And Boundaries
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to decide whether the subject in front of you belongs in an applied organizational AI and ML atlas at all. Scope review gets weak when consumer product chatter, research novelty, legal interpretation, and implementation guidance are all treated as if they were the same kind of material.
 

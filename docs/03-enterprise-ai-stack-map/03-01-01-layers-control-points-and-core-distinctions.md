@@ -1,6 +1,6 @@
 # 3.1.1 Layers, Control Points, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to map organizational AI systems by responsibility layer before comparing architectures or products. The goal is not to prove that every system uses every layer. The goal is to stop teams from hiding control obligations inside a single favorite component.
 

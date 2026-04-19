@@ -1,6 +1,6 @@
 # 2. Taxonomy
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter is the atlas control surface for naming things correctly. It keeps tools, vendors, models, standards, controls, and use cases from collapsing into one mixed category and gives later chapters a shared comparison language.
 

@@ -1,6 +1,6 @@
 # 9.2 Operating Gateways And Controls
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns gateway design into operating review. Use it when route ownership, caller identity, and policy scope are already defined and the team now needs to prove that rollout sequencing, break-glass access, audit evidence, fallback behavior, and provider portability still hold under delivery pressure.
 

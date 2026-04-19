@@ -1,6 +1,6 @@
 # 14.2.1 Worked Monitoring Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show what usable runtime evidence looks like in practice. Each one names the monitoring shape, required artifacts, and re-review trigger that should already exist before rollout expands or an incident is treated as understood.
 

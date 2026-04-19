@@ -1,6 +1,6 @@
 # 20.1.1 Standards Families, Coverage, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 The main distinction in this chapter is simple: not every respected external artifact does the same job. Teams make avoidable mistakes when they treat laws, management-system standards, risk frameworks, technical specifications, and standards bodies as interchangeable.
 

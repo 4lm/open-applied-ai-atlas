@@ -1,6 +1,6 @@
 # 18. Build Vs Buy Vs Hybrid
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter makes build-versus-buy-versus-hybrid a layered sourcing decision rather than a single binary choice. It is where organizations should decide what to own, rent, compose, or deliberately keep portable across the AI stack.
 

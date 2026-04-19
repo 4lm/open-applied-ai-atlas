@@ -1,6 +1,6 @@
 # 16.3.1 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page compares the external anchors that matter once the oversight lane, decision rights, and intervention burden are already clear. Read it as an oversight crosswalk: first decide whether the gap is legal accountability, management-system design, case-level human review, or operating-model implementation, then choose the smallest credible starting set instead of treating every named framework as one interchangeable "human in the loop" checklist.
 

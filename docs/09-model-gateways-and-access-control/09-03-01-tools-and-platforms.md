@@ -1,6 +1,6 @@
 # 9.3.1 Tools And Platforms
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the control-plane tools that sit between applications, models, identities, and policies. It includes AI-native gateways, general API gateways adapted to AI traffic, and adjacent access-control layers because gateway value depends on the policy and identity systems around it.
 

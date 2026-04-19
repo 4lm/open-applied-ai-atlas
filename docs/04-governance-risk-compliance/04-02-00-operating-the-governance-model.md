@@ -1,6 +1,6 @@
 # 4.2 Operating The Governance Model
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns governance from principle into operating routine. Use it to test whether ownership, evidence, exceptions, and re-review actually work under delivery pressure.
 

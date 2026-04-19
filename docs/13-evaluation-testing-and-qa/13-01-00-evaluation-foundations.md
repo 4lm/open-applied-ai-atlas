@@ -1,6 +1,6 @@
 # 13.1 Evaluation Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the proof model teams need before they argue about tools, scorecards, or release gates. Use it to separate benchmark signals, regression evidence, scenario tests, adversarial probes, and human review so release decisions reflect actual failure modes instead of demo confidence.
 

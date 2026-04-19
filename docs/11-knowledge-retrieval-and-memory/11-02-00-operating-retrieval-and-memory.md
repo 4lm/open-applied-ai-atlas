@@ -1,6 +1,6 @@
 # 11.2 Operating Retrieval And Memory
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns retrieval design into operating review. Use it when teams need to prove that freshness, permissions, retention, and fallback behavior still hold once retrieval touches real sources, users, and rollout pressure.
 

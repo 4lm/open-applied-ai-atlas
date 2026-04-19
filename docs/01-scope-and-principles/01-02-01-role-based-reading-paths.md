@@ -1,6 +1,6 @@
 # 1.2.1 Role-Based Reading Paths
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page when the atlas fits the problem but different readers still need different chapter entry points before they reconverge on the same system description. The goal is not to give every role a private tour. The goal is to choose the shortest credible path for each reader lane, then force alignment before architecture, vendor, or rollout decisions start drifting apart.
 

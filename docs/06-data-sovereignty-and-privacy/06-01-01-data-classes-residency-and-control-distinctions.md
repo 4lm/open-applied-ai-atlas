@@ -1,6 +1,6 @@
 # 6.1.1 Data Classes, Residency, And Control Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 This page separates the main boundary concepts that are often discussed as if they were interchangeable. They are not. Privacy answers one set of questions; sovereignty, portability, and operational control answer others.
 

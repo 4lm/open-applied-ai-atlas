@@ -1,6 +1,6 @@
 # 17.3.1 Vendors And Projects
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the organizations that concentrate power, shape standards, or broaden optionality across the applied AI stack. The goal is not to list every brand in the market, but to make visible where capability concentration, hardware dependence, platform gravity, and open-ecosystem counterweights actually sit.
 

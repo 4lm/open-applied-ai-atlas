@@ -1,6 +1,6 @@
 # 9.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout, control review, and renewal planning to recognize healthy gateway operating shapes before a shared endpoint turns into an opaque proxy with weak ownership, thin evidence, and no clean exit path.
 

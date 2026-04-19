@@ -1,6 +1,6 @@
 # 7.2.1 Worked Model Selection Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 Use these scenarios to test whether the team has a true model-selection problem, a retrieval or workflow problem wearing a model label, a hard control constraint, or a release-discipline problem. Each scenario is framed around the dominant question, the recommended posture, and the evidence outputs that should exist before rollout widens.
 

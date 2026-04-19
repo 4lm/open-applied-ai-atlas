@@ -1,6 +1,6 @@
 # 12.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the named comparison material that matters after the adaptation path is already framed. Use it to compare prompt-optimization, fine-tuning, and training platforms without collapsing the chapter back into a tool ranking exercise or skipping the evidence needed to justify escalation.
 

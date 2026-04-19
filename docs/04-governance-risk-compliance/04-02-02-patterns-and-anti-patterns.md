@@ -1,6 +1,6 @@
 # 4.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use these patterns to stress-test whether governance is operating as a real management system or only as reassuring language.
 

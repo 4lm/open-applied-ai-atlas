@@ -1,0 +1,10 @@
+{
+  "suite_name": "quality-first",
+  "cases": [
+    {
+      "case_id": "long-running-broad-atlas-closure",
+      "label": "long-running broad atlas closure",
+      "fixture": "fixtures/long-running-broad-atlas-closure.json"
+    }
+  ]
+}

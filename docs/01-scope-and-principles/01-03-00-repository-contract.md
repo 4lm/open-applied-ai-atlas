@@ -1,6 +1,6 @@
 # 1.3 Repository Contract
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this section to understand how the atlas keeps mission, improvement planning, and topical knowledge in the right layers. The goal is not bureaucratic neatness. It is keeping the repository readable, reusable, and durable as both the atlas content and the current improvement plan evolve.
 

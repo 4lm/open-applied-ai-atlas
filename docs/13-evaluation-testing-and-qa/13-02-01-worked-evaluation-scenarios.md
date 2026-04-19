@@ -1,6 +1,6 @@
 # 13.2.1 Worked Evaluation Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show what a credible evidence package looks like in practice. The point is not to name a tool, but to define what must be proven before release.
 

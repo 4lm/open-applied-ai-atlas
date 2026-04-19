@@ -1,6 +1,6 @@
 # 20.2.1 Worked Standards Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show what a usable standards set looks like once the organization has to produce controls, evidence, and review outputs.
 

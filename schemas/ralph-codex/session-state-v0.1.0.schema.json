@@ -13,10 +13,24 @@
     "phase",
     "status",
     "iteration",
+    "same_tranche_repair_count",
+    "consecutive_replans",
+    "consecutive_low_novelty_iterations",
     "seed_confirmed",
     "charter_version",
+    "active_milestone_id",
+    "milestone_iteration_count",
     "pending_feedback",
     "completion_rejections",
+    "iteration_repo_baseline",
+    "iteration_repo_after",
+    "program_memory",
+    "research_memory",
+    "execution_memory",
+    "skill_memory",
+    "evidence_registry",
+    "checkpoint_summaries",
+    "worker_manifests",
     "started_at",
     "updated_at"
   ],
@@ -27,13 +41,147 @@
     "thread_id": { "type": "string" },
     "current_turn_id": { "type": "string" },
     "model": { "type": "string" },
-    "phase": { "type": "string", "enum": ["planning", "planning_review", "executing", "finished"] },
+    "phase": { "type": "string", "enum": ["planning", "planning_review", "executing", "evaluating", "finished"] },
     "status": { "type": "string", "enum": ["active", "finished", "aborted"] },
     "iteration": { "type": "integer", "minimum": 0 },
+    "same_tranche_repair_count": { "type": "integer", "minimum": 0 },
+    "consecutive_replans": { "type": "integer", "minimum": 0 },
+    "consecutive_low_novelty_iterations": { "type": "integer", "minimum": 0 },
     "seed_confirmed": { "type": "boolean" },
     "charter_version": { "type": "integer", "minimum": 0 },
+    "active_milestone_id": { "type": "string" },
+    "milestone_iteration_count": { "type": "integer", "minimum": 0 },
     "pending_feedback": { "type": "string" },
     "completion_rejections": { "type": "array", "items": { "type": "string" } },
+    "iteration_repo_baseline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "index_status", "worktree_status", "operation"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "index_status": { "type": "string", "minLength": 1 },
+          "worktree_status": { "type": "string", "minLength": 1 },
+          "operation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "iteration_repo_after": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "index_status", "worktree_status", "operation"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "index_status": { "type": "string", "minLength": 1 },
+          "worktree_status": { "type": "string", "minLength": 1 },
+          "operation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "program_memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["goal", "milestones", "active_milestone_id", "updated_at"],
+      "properties": {
+        "goal": { "type": "string" },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "status"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "status": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "active_milestone_id": { "type": "string" },
+        "updated_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "research_memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["search_strategy", "open_questions", "last_refreshed_at"],
+      "properties": {
+        "search_strategy": { "type": "string" },
+        "open_questions": { "type": "array", "items": { "type": "string" } },
+        "last_refreshed_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "execution_memory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["iteration", "summary", "novelty_score", "closure_score"],
+        "properties": {
+          "iteration": { "type": "integer", "minimum": 0 },
+          "summary": { "type": "string", "minLength": 1 },
+          "novelty_score": { "type": "number", "minimum": 0 },
+          "closure_score": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "skill_memory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "summary"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "evidence_registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "url", "source_type", "used_for", "status", "updated_at"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "source_type": { "type": "string", "enum": ["primary", "secondary"] },
+          "used_for": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["new", "confirmed", "contradicted", "stale"] },
+          "updated_at": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "checkpoint_summaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "summary", "ts"],
+        "properties": {
+          "phase": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 },
+          "ts": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "worker_manifests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "status", "summary"],
+        "properties": {
+          "role": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "started_at": { "type": "string", "minLength": 1 },
     "updated_at": { "type": "string", "minLength": 1 }
   }

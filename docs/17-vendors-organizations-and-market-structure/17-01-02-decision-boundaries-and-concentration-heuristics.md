@@ -1,6 +1,6 @@
 # 17.1.2 Decision Boundaries And Concentration Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to decide when ecosystem concentration should materially change a technical or sourcing choice instead of being treated as background commentary.
 

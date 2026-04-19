@@ -1,6 +1,6 @@
 # 15.1.1 Threat Surfaces, Trust Boundaries, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate the threat surfaces that are usually collapsed into one vague "AI security" bucket. Security review gets weaker fast when prompt abuse, retrieval poisoning, tool misuse, memory leakage, provider dependence, and software supply-chain risk are treated as one interchangeable problem just because a model sits in the middle.
 

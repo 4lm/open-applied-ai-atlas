@@ -1,6 +1,6 @@
 # 11.1.1 Knowledge State, Provenance, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate governed source content, retrieval structures, bounded memory, derived answer artifacts, and model-internal knowledge before teams decide what should persist. Retrieval work goes wrong when those states are treated as interchangeable just because they all influence the answer.
 

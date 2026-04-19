@@ -1,6 +1,6 @@
 # 12.1 Adaptation Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the decision frame teams need before they argue about fine-tuning or retraining. Use it to separate prompt, retrieval, tuning, and classical retraining paths by failure type, data dependence, rollback friction, and sourcing consequences so heavier adaptation is justified rather than assumed.
 

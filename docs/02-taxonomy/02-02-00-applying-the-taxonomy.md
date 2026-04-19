@@ -1,6 +1,6 @@
 # 2.2 Applying The Taxonomy
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section shows how taxonomy changes actual review and implementation work. Use it when a team already has a proposal, a tool list, or a comparison table and needs to check whether the categories underneath it are sound.
 

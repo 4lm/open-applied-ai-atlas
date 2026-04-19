@@ -1,6 +1,6 @@
 # 15.2.1 Worked Security Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios turn the chapter's threat and control language into concrete operating review. Each one shows what should already exist before rollout widens or an incident is treated as contained.
 

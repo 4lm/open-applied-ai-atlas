@@ -1,6 +1,6 @@
 # 3.1.2 Boundaries, Dependencies, And Reading Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to decide whether the issue in front of you is really a stack-mapping problem, or whether another chapter now owns the decision.
 

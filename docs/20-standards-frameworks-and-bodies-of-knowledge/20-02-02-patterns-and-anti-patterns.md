@@ -1,6 +1,6 @@
 # 20.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during design and renewal review to tell the difference between a real standards operating model and standards theater.
 

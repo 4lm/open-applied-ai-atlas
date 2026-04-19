@@ -5,17 +5,21 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "ralph-codex.py"
-DEFAULT_MAX_EXECUTION_PROMPT_CHARS = 0
 SPEC = importlib.util.spec_from_file_location("ralph_codex", SCRIPT_PATH)
 ralph_codex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 sys.modules[SPEC.name] = ralph_codex
 SPEC.loader.exec_module(ralph_codex)
+DEFAULT_MAX_EXECUTION_PROMPT_CHARS = ralph_codex.load_profile(
+    ralph_codex.SchemaCatalog(ralph_codex.SCHEMA_FILES),
+    None,
+)["execution"]["max_prompt_chars"]
 
 
 class FakeClient:
@@ -77,20 +81,18 @@ class CaptureReporter:
         self.stdout = stdout or io.StringIO()
         self.stderr = stderr or io.StringIO()
 
-    def status(self, message):
-        self.stdout.write(message + "\n")
+    def status(self, message, badge="STARTING", tone="status"):
+        self.stdout.write(f"{badge} {message}\n")
 
     def event(self, message, tone="event"):
         self.stderr.write(message + "\n")
 
-    def wait(self, phase_name, elapsed_seconds, command_rows=None):
-        self.stdout.write(f"wait {phase_name} {elapsed_seconds}\n")
-        for row in command_rows or []:
-            self.stdout.write(f"cmd {row.get('status')}: {row.get('command')}\n")
+    def wait(self, phase_name, elapsed_seconds, command_rows=None, badge="WORKING"):
+        self.stdout.write(f"{badge} {phase_name} {elapsed_seconds}\n")
 
-    def tool(self, action, detail, stream_name="stderr"):
+    def tool(self, detail, stream_name="stderr"):
         stream = self.stdout if stream_name == "stdout" else self.stderr
-        stream.write(f"tool {action}: {detail}\n")
+        stream.write(f"TOOL {detail}\n")
 
     def prompt(self, message):
         self.stderr.write(message + "\n")
@@ -132,8 +134,11 @@ class RalphCodexTests(unittest.TestCase):
     def make_store(self, root):
         return ralph_codex.SessionStore(root / ".codex" / "ralph-codex", self.make_schema_catalog())
 
+    def default_profile(self):
+        return ralph_codex.load_profile(self.make_schema_catalog(), None)
+
     def make_profile(self):
-        profile = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
+        profile = self.default_profile()
         profile["seed_policy"]["require_confirmation"] = False
         profile["seed_policy"]["auto_confirm"] = True
         profile["runtime_limits"]["max_iterations"] = 5
@@ -233,14 +238,7 @@ class RalphCodexTests(unittest.TestCase):
         }
 
     def save_charter(self, controller):
-        planning_result = {
-            "status": "CHARTER_READY",
-            "summary": "ok",
-            "broadening_rationale": "wide",
-            "charter": self.broad_charter(),
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        planning_result = self.planning_result_payload()
         controller.session.state["charter_version"] = 1
         controller.store.save_charter(
             controller.session,
@@ -248,6 +246,136 @@ class RalphCodexTests(unittest.TestCase):
             confirmed=True,
             review_state="approved",
         )
+
+    def planning_result_payload(self, summary="ok", charter=None):
+        charter = charter or self.broad_charter()
+        program_board = ralph_codex.legacy_program_board_from_charter(charter)
+        return {
+            "status": "CHARTER_READY",
+            "summary": summary,
+            "broadening_rationale": "wide",
+            "research": {
+                "status": "completed",
+                "search_strategy": "Compare repo facts with official references and current behavior.",
+                "findings": ["Captured the bounded tranche and supporting sources."],
+                "sources": [
+                    {
+                        "title": "Primary source A",
+                        "url": "https://example.com/a",
+                        "source_type": "primary",
+                        "used_for": "baseline",
+                    },
+                    {
+                        "title": "Primary source B",
+                        "url": "https://example.com/b",
+                        "source_type": "primary",
+                        "used_for": "comparison",
+                    },
+                    {
+                        "title": "Secondary source C",
+                        "url": "https://example.com/c",
+                        "source_type": "secondary",
+                        "used_for": "context",
+                    },
+                ],
+                "open_questions": [],
+            },
+            "program_board": program_board,
+            "active_milestone": {
+                "milestone_id": "legacy-milestone",
+                "rationale": "Focus the next tranche on the current milestone.",
+                "success_checkpoint": "Land the highest-signal milestone slice.",
+                "evidence_focus": ["baseline", "comparison"],
+                "target_files": ["scripts/ralph-codex.py", "RALPH_CONTROLLER.md"],
+                "validation": ["unit", "docs"],
+            },
+            "current_tranche": {
+                "batch_id": "batch-1",
+                "milestone_id": "legacy-milestone",
+                "workstream_ids": ["W1", "W2"],
+                "target_files": ["scripts/ralph-codex.py", "RALPH_CONTROLLER.md"],
+                "intended_outcome": "Land the next bounded tranche without widening scope.",
+                "validation": ["unit", "docs"],
+            },
+            "next_step": "execute",
+            "gate_reasoning": "safe",
+        }
+
+    def execution_result_payload(self, status="IN_PROGRESS", summary="working", remaining_gaps=None, touched_files=None):
+        return {
+            "status": status,
+            "summary": summary,
+            "evidence": ["progress"],
+            "verification": {
+                "status": "completed" if status == "COMPLETE" else "not_needed",
+                "scope": "Verification recorded for the current tranche.",
+                "findings": ["Verified the relevant execution claims."],
+                "sources": [
+                    {
+                        "title": "Verification source A",
+                        "url": "https://example.com/verify-a",
+                        "source_type": "primary",
+                        "used_for": "verification",
+                    },
+                    {
+                        "title": "Verification source B",
+                        "url": "https://example.com/verify-b",
+                        "source_type": "secondary",
+                        "used_for": "verification",
+                    },
+                ] if status == "COMPLETE" else [],
+            },
+            "touched_files": touched_files or ["scripts/ralph-codex.py"],
+            "created_files": [],
+            "off_tranche_justifications": [],
+            "quality_claims": {
+                "tranche_followed": True,
+                "user_facing_outcome": "Improved the current tranche target cleanly.",
+                "avoided_meta_artifacts": True,
+                "repeated_heading_risk": "low",
+            },
+            "milestone_progress": {
+                "milestone_id": "legacy-milestone",
+                "criteria_met": ["controller exists"] if status == "COMPLETE" else [],
+                "criteria_remaining": [] if status == "COMPLETE" else ["docs updated"],
+                "novelty_notes": ["Added net-new milestone progress."] if status != "BLOCKED" else [],
+                "closure_notes": ["Milestone criteria are moving toward closure."],
+            },
+            "acceptance_artifacts": ["scripts/ralph-codex.py"] if status == "COMPLETE" else [],
+            "evidence_updates": [
+                {
+                    "claim": "Execution is moving the milestone forward.",
+                    "url": "https://example.com/evidence",
+                    "source_type": "secondary",
+                    "used_for": "execution progress",
+                    "status": "confirmed",
+                }
+            ],
+            "workstream_updates": [{"id": "W1", "status": "in_progress" if status != "COMPLETE" else "done", "evidence": ["ok"]}],
+            "remaining_gaps": remaining_gaps if remaining_gaps is not None else ["docs"],
+            "validation_completed": ["unit"],
+            "explicit_deferrals": [],
+            "next_step": "continue",
+            "next_tranche_recommendation": "Keep the next tranche bounded.",
+            "gate_reasoning": "more work" if status != "COMPLETE" else "safe",
+        }
+
+    def evaluation_result_payload(self, disposition="repair_same_tranche", summary="tighten the tranche"):
+        return {
+            "disposition": disposition,
+            "milestone_status": "closed" if disposition == "accept" else "open",
+            "acceptance_criteria_met": ["controller exists"] if disposition == "accept" else [],
+            "evidence_sufficiency": "sufficient" if disposition == "accept" else "partial",
+            "novelty_assessment": "The latest tranche added useful novelty." if disposition != "blocked" else "No useful novelty landed.",
+            "recommended_scope_change": "advance_milestone" if disposition == "accept" else "stay_on_tranche",
+            "worker_fanout_recommended": False,
+            "summary": summary,
+            "repair_instructions": ["Tighten the current tranche and verify remaining gaps directly."],
+            "evidence_findings": ["Evidence is still incomplete for the current tranche."],
+            "confidence": "high",
+            "research_refresh_required": False,
+            "gate_reasoning": "Prefer bounded repair before widening scope.",
+        }
 
     def test_parse_command_defaults_to_help(self):
         parser, command = ralph_codex.parse_command([])
@@ -312,7 +440,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(session_id, "20260419T123045123Z_a1b2c3d4e5f6")
         self.assertTrue(ralph_codex.SESSION_ID_RE.match(session_id))
 
-    def test_schema_files_are_v0_1_0_only(self):
+    def test_schema_files_use_expected_versions(self):
         for path in sorted(ralph_codex.SCHEMA_ROOT.rglob("*.schema.json")):
             payload = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(payload["schema_version"], "0.1.0")
@@ -329,15 +457,102 @@ class RalphCodexTests(unittest.TestCase):
         )
 
     def test_default_profile_validates_against_profile_schema(self):
-        self.make_schema_catalog().validate(ralph_codex.PROFILE_SCHEMA_ID, ralph_codex.DEFAULT_PROFILE)
-        self.assertEqual(ralph_codex.DEFAULT_PROFILE["thread_policy"]["access_mode"], "restricted")
-        self.assertEqual(ralph_codex.DEFAULT_PROFILE["runtime_limits"]["max_iterations"], 0)
-        self.assertEqual(ralph_codex.DEFAULT_PROFILE["execution"]["max_prompt_chars"], 0)
+        profile = self.default_profile()
+        self.make_schema_catalog().validate(ralph_codex.PROFILE_SCHEMA_ID, profile)
+        self.assertEqual(profile["profile_name"], "restricted")
+        self.assertEqual(profile["thread_policy"]["access_mode"], "restricted")
+        self.assertEqual(profile["runtime_limits"]["max_iterations"], 0)
+        self.assertEqual(profile["execution"]["max_prompt_chars"], DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+        self.assertEqual(profile["planning"]["reasoning_effort"], "xhigh")
+        self.assertEqual(profile["execution"]["reasoning_effort"], "xhigh")
+        self.assertEqual(profile["planning"]["model"], "gpt-5.4")
+        self.assertEqual(profile["evaluation"]["model"], "gpt-5.4")
+        self.assertEqual(profile["execution"]["model"], "gpt-5.4")
+        self.assertEqual(profile["research_policy"]["mode"], "required")
+        self.assertIn("loop_policy", profile)
+
+    def test_default_profile_loads_from_restricted_profile_path(self):
+        profile = self.default_profile()
+        self.assertEqual(ralph_codex.DEFAULT_PROFILE_PATH.name, "restricted.json")
+        self.assertEqual(profile["profile_name"], "restricted")
+
+    def test_load_profile_backfills_legacy_profile_fields(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "profile.json"
+            legacy = {
+                "schema_id": ralph_codex.PROFILE_SCHEMA_ID,
+                "schema_version": "0.1.0",
+                "profile_name": "legacy",
+                "model": "gpt-5.4",
+                "thread_policy": {"access_mode": "restricted"},
+                "runtime_limits": {"max_iterations": 0},
+                "seed_policy": {"require_confirmation": True, "auto_confirm": False},
+                "prompt_answering": {
+                    "selection_policy": "recommended_or_first",
+                    "reject_secret_questions": True,
+                    "require_selectable_options": True,
+                },
+                "charter_policy": {
+                    "min_workstreams": 3,
+                    "require_adjacent_surfaces": True,
+                    "require_validation_for_each_workstream": True,
+                    "require_validation_categories": True,
+                },
+                "completion_policy": {
+                    "allow_deferred_workstreams": True,
+                    "require_all_workstreams_resolved": True,
+                    "require_no_remaining_gaps": True,
+                    "require_validation_categories_complete": True,
+                },
+                "planning": {
+                    "mode": "plan",
+                    "reasoning_effort": "high",
+                    "output_schema_id": ralph_codex.PLANNING_OUTPUT_SCHEMA_ID,
+                },
+                "execution": {
+                    "mode": "default",
+                    "reasoning_effort": "high",
+                    "output_schema_id": ralph_codex.EXECUTION_OUTPUT_SCHEMA_ID,
+                    "max_prompt_chars": 0,
+                },
+            }
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
+            self.assertEqual(loaded["schema_version"], "0.1.0")
+            self.assertIn("research_policy", loaded)
+            self.assertIn("tranche_policy", loaded)
+            self.assertIn("quality_policy", loaded)
+            self.assertIn("loop_policy", loaded)
+            self.assertEqual(loaded["planning"]["model"], "gpt-5.4")
+            self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4")
+            self.assertEqual(loaded["execution"]["model"], "gpt-5.4")
+
+    def test_load_profile_normalizes_local_v0_2_0_profile_to_v0_1_0(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "profile.json"
+            local_profile = self.default_profile()
+            local_profile["schema_version"] = "0.2.0"
+            path.write_text(json.dumps(local_profile), encoding="utf-8")
+            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
+            self.assertEqual(loaded["schema_version"], "0.1.0")
+
+    def test_load_profile_propagates_legacy_top_level_model_to_phase_models(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "profile.json"
+            legacy = self.default_profile()
+            legacy["model"] = "gpt-5.4-mini"
+            for section_name in ("planning", "evaluation", "execution"):
+                legacy[section_name].pop("model", None)
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
+            self.assertEqual(loaded["planning"]["model"], "gpt-5.4-mini")
+            self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4-mini")
+            self.assertEqual(loaded["execution"]["model"], "gpt-5.4-mini")
 
     def test_custom_profile_invalid_is_rejected(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
-            invalid = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
+            invalid = self.default_profile()
             invalid["planning"]["reasoning_effort"] = "extreme"
             path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ralph_codex.RalphError):
@@ -346,7 +561,7 @@ class RalphCodexTests(unittest.TestCase):
     def test_custom_profile_rejects_invalid_thread_access_mode(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
-            invalid = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
+            invalid = self.default_profile()
             invalid["thread_policy"]["access_mode"] = "unsafe"
             path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ralph_codex.RalphError):
@@ -355,7 +570,7 @@ class RalphCodexTests(unittest.TestCase):
     def test_custom_profile_rejects_negative_execution_prompt_limit(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
-            invalid = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
+            invalid = self.default_profile()
             invalid["execution"]["max_prompt_chars"] = -1
             path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ralph_codex.RalphError):
@@ -510,6 +725,42 @@ class RalphCodexTests(unittest.TestCase):
         with self.assertRaisesRegex(ralph_codex.RalphError, "exited with code 3"):
             client.request("turn/start", {})
 
+    def test_subprocess_app_server_start_enables_search_when_configured(self):
+        runtime_config = ralph_codex.RuntimeConfig(workdir=SCRIPT_PATH.parents[1], state_root=SCRIPT_PATH.parents[1])
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        client = ralph_codex.SubprocessAppServerClient(
+            runtime_config,
+            self.make_event_recorder(store, session),
+            enable_search=True,
+        )
+        popen_calls = []
+
+        class StubPopen:
+            def __init__(self, cmd, **kwargs):
+                popen_calls.append((cmd, kwargs))
+                self.stdin = io.StringIO()
+                self.stdout = io.StringIO()
+                self.stderr = io.StringIO()
+
+            def poll(self):
+                return None
+
+        with mock.patch.object(ralph_codex.shutil, "which", return_value="/usr/bin/codex"), mock.patch.object(
+            ralph_codex.subprocess, "Popen", StubPopen
+        ), mock.patch.object(ralph_codex.threading, "Thread", autospec=True) as thread_mock, mock.patch.object(
+            ralph_codex.SubprocessAppServerClient, "request", return_value={"ok": True}
+        ):
+            client.start()
+
+        self.assertTrue(popen_calls)
+        self.assertEqual(
+            popen_calls[0][0],
+            [ralph_codex.CODEx_BIN, "--search", "app-server", "--listen", "stdio://"],
+        )
+        self.assertEqual(thread_mock.call_count, 2)
+
     def test_event_recorder_normal_notification_trims_large_output(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -540,7 +791,7 @@ class RalphCodexTests(unittest.TestCase):
         recorder.record_client_event({"type": "stderr", "line": "fatal: app-server crashed"})
         console = stderr.getvalue()
         self.assertIn("app-server stderr: fatal: app-server crashed", console)
-        self.assertIn("EVENT", console)
+        self.assertIn("ERROR", console)
         self.assertNotIn('{"line"', console)
 
     def test_event_recorder_verbose_wire_keeps_raw_output(self):
@@ -580,21 +831,19 @@ class RalphCodexTests(unittest.TestCase):
             }
         )
         console = stderr.getvalue()
-        self.assertIn("TRACE", console)
-        self.assertIn("truncated for", console)
-        self.assertLessEqual(max(len(line) for line in console.splitlines()), 120)
+        self.assertEqual(console, "")
         events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
         wire = events[-1]
         self.assertEqual(wire["payload"]["payload"]["params"]["item"]["output"], long_output)
 
-    def test_event_recorder_verbose_traces_to_stderr(self):
+    def test_event_recorder_verbose_keeps_traces_out_of_console(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
         stderr = io.StringIO()
         recorder = self.make_event_recorder(store, session, verbose=True, stderr=stderr)
         recorder.record_rpc_request(3, "turn/start", {"threadId": "thread-1", "input": [], "outputSchema": {}})
-        self.assertIn("rpc-request", stderr.getvalue())
+        self.assertEqual(stderr.getvalue(), "")
 
     def test_terminal_reporter_uses_color_on_tty(self):
         stdout = FakeTTYStream()
@@ -613,6 +862,32 @@ class RalphCodexTests(unittest.TestCase):
             "status": "CHARTER_READY",
             "summary": long_summary.strip(),
             "broadening_rationale": "Wide enough for operator review.",
+            "research": {
+                "status": "completed",
+                "search_strategy": "Review the repo and current contract.",
+                "findings": ["Research captured enough grounding for review."],
+                "sources": [
+                    {
+                        "title": "Primary source A",
+                        "url": "https://example.com/a",
+                        "source_type": "primary",
+                        "used_for": "review",
+                    },
+                    {
+                        "title": "Primary source B",
+                        "url": "https://example.com/b",
+                        "source_type": "primary",
+                        "used_for": "review",
+                    },
+                    {
+                        "title": "Secondary source C",
+                        "url": "https://example.com/c",
+                        "source_type": "secondary",
+                        "used_for": "review",
+                    }
+                ],
+                "open_questions": []
+            },
             "charter": {
                 "goal": "Review the whole charter before unattended execution.",
                 "success_criteria": ["Criterion " + ("x" * 80)],
@@ -628,6 +903,13 @@ class RalphCodexTests(unittest.TestCase):
                         "status": "planned",
                     }
                 ],
+            },
+            "current_tranche": {
+                "batch_id": "batch-1",
+                "workstream_ids": ["WS1"],
+                "target_files": ["scripts/ralph-codex.py"],
+                "intended_outcome": "Keep the next execution turn bounded.",
+                "validation": ["unit tests", "doc review"]
             },
             "next_step": "Ask the operator for approval.",
             "gate_reasoning": "The operator must be able to read the full charter.",
@@ -684,9 +966,11 @@ class RalphCodexTests(unittest.TestCase):
                 {
                     "call_id": "call-1",
                     "command": "/bin/zsh -lc 'echo hi'",
-                    "status": "completed",
+                    "action": "",
+                    "target": "",
                     "output_chars": 17,
-                    "command_actions": 1,
+                    "exit_code": None,
+                    "duration_ms": None,
                     "process_id": "123",
                 }
             ],
@@ -712,10 +996,11 @@ class RalphCodexTests(unittest.TestCase):
         client_instances = []
 
         class InterruptingClient:
-            def __init__(self, runtime_config, event_recorder, session_log=None):
+            def __init__(self, runtime_config, event_recorder, session_log=None, enable_search=False):
                 self.runtime_config = runtime_config
                 self.event_recorder = event_recorder
                 self.closed = False
+                self.enable_search = enable_search
                 client_instances.append(self)
 
             def close(self):
@@ -745,6 +1030,7 @@ class RalphCodexTests(unittest.TestCase):
 
         self.assertEqual(exit_code, ralph_codex.ABORT_EXIT_CODE)
         self.assertTrue(client_instances[0].closed)
+        self.assertTrue(client_instances[0].enable_search)
         state = store.read_json(session.session_dir / "session-state.json", ralph_codex.SESSION_STATE_SCHEMA_ID)
         self.assertEqual(state["status"], "aborted")
         self.assertEqual(state["current_turn_id"], "")
@@ -772,8 +1058,9 @@ class RalphCodexTests(unittest.TestCase):
         client_instances = []
 
         class QuietClient:
-            def __init__(self, runtime_config, event_recorder, session_log=None):
+            def __init__(self, runtime_config, event_recorder, session_log=None, enable_search=False):
                 self.closed = False
+                self.enable_search = enable_search
                 client_instances.append(self)
 
             def close(self):
@@ -801,16 +1088,17 @@ class RalphCodexTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         self.assertTrue(client_instances[0].closed)
+        self.assertTrue(client_instances[0].enable_search)
         log_paths = sorted((session.session_dir / "logs").glob("*.log"))
         self.assertEqual(len(log_paths), 1)
         rendered = log_paths[0].read_text(encoding="utf-8")
         self.assertIn("# Ralph Codex run log", rendered)
         self.assertIn("invocation_mode: message", rendered)
-        self.assertIn("CONSOLE-STDOUT", rendered)
+        self.assertIn("STDOUT", rendered)
         self.assertIn("run started: session=", rendered)
         self.assertIn("run completed: session completed", rendered)
 
-    def test_plain_text_run_log_captures_console_and_app_stdio(self):
+    def test_plain_text_run_log_captures_terminal_streams_only(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
@@ -828,30 +1116,20 @@ class RalphCodexTests(unittest.TestCase):
             stderr=io.StringIO(),
             session_log=session_log,
         )
-        reporter.status("hello status")
+        reporter.status("hello status", badge="STARTING")
         reporter.event("hello event")
         reporter.console_input("approve\n")
-
-        client = ralph_codex.SubprocessAppServerClient(
-            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
-            self.make_event_recorder(store, session, reporter=reporter),
-            session_log=session_log,
-        )
-        client.process = FakeProcess()
-        client._send_json({"id": 7, "method": "ping"})
-        client.session_log.write_app_stdout('{"ok":true}\n')
-        client.session_log.write_app_stderr("warn line\n")
         session_log.close()
 
         rendered = (session.session_dir / "logs" / "run-1.log").read_text(encoding="utf-8")
-        self.assertIn("CONSOLE-STDOUT", rendered)
+        self.assertIn("STDOUT", rendered)
         self.assertIn("hello status", rendered)
-        self.assertIn("CONSOLE-STDERR", rendered)
+        self.assertIn("STDERR", rendered)
         self.assertIn("hello event", rendered)
-        self.assertIn("CONSOLE-STDIN approve", rendered)
-        self.assertIn('APP-STDIN {"id":7,"method":"ping"}', rendered)
-        self.assertIn('APP-STDOUT {"ok":true}', rendered)
-        self.assertIn("APP-STDERR warn line", rendered)
+        self.assertIn("STDIN approve", rendered)
+        self.assertNotIn("APP-STDIN", rendered)
+        self.assertNotIn("APP-STDOUT", rendered)
+        self.assertNotIn("APP-STDERR", rendered)
 
     def test_select_prompt_option_prefers_recommended(self):
         choice = ralph_codex.RalphController.select_prompt_option(
@@ -879,22 +1157,42 @@ class RalphCodexTests(unittest.TestCase):
                 }
             )
 
-    def test_validate_charter_rejects_narrow_charter(self):
+    def test_validate_planning_result_rejects_narrow_charter(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
         narrow = self.broad_charter()
         narrow["workstreams"] = narrow["workstreams"][:2]
-        planning_result = {
-            "status": "CHARTER_READY",
-            "summary": "ok",
-            "broadening_rationale": "too narrow",
-            "charter": narrow,
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        planning_result = self.planning_result_payload(summary="ok", charter=narrow)
         with self.assertRaises(ralph_codex.RalphError):
-            controller.validate_charter(planning_result)
+            controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_rejects_unknown_tranche_workstream(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="ok")
+        planning_result["current_tranche"]["workstream_ids"] = ["W9"]
+        with self.assertRaisesRegex(ralph_codex.RalphError, "unknown workstream id"):
+            controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_rejects_blocked_status(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="blocked")
+        planning_result["status"] = "BLOCKED"
+        with self.assertRaisesRegex(ralph_codex.RalphError, "planner reported BLOCKED"):
+            controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_rejects_blocked_research_when_required(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="blocked research")
+        planning_result["research"]["status"] = "blocked"
+        with self.assertRaisesRegex(ralph_codex.RalphError, "research is blocked"):
+            controller.validate_planning_result(planning_result)
 
     def test_run_turn_handles_request_user_input_and_logs_turn(self):
         tempdir, root = self.make_temp_root()
@@ -903,17 +1201,7 @@ class RalphCodexTests(unittest.TestCase):
         stdout = io.StringIO()
         stderr = io.StringIO()
         reporter = self.make_reporter(stdout=stdout, stderr=stderr)
-        result_payload = {
-            "status": "IN_PROGRESS",
-            "summary": "working",
-            "evidence": ["progress"],
-            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
-            "remaining_gaps": ["docs"],
-            "validation_completed": ["unit"],
-            "explicit_deferrals": [],
-            "next_step": "continue",
-            "gate_reasoning": "more work",
-        }
+        result_payload = self.execution_result_payload()
         client = FakeClient(
             {"turn/start": {"turn": {"id": "turn-1"}}},
             [
@@ -989,8 +1277,8 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(len(turns), 1)
         self.assertIn("prompt request received: 1 question(s)", stderr.getvalue())
         self.assertIn("prompt request answered: 1 answer(s)", stderr.getvalue())
-        self.assertIn("test: turn started turn-1", stdout.getvalue())
-        self.assertIn("test: turn completed turn-1 -> IN_PROGRESS: working", stdout.getvalue())
+        self.assertIn("test started", stdout.getvalue())
+        self.assertIn("test complete: IN_PROGRESS: working", stdout.getvalue())
         self.assertIn("test result", stdout.getvalue())
         self.assertIn("summary:", stdout.getvalue())
 
@@ -1000,17 +1288,7 @@ class RalphCodexTests(unittest.TestCase):
         store, session = self.make_session(root)
         stdout = io.StringIO()
         reporter = self.make_reporter(stdout=stdout)
-        result_payload = {
-            "status": "IN_PROGRESS",
-            "summary": "working",
-            "evidence": ["progress"],
-            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
-            "remaining_gaps": [],
-            "validation_completed": ["unit"],
-            "explicit_deferrals": [],
-            "next_step": "continue",
-            "gate_reasoning": "more work",
-        }
+        result_payload = self.execution_result_payload(remaining_gaps=[])
 
         class DelayedEventClient(FakeClient):
             def __init__(self):
@@ -1071,7 +1349,7 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "IN_PROGRESS")
         self.assertEqual(client.poll_count, 3)
-        self.assertIn("WAIT", stdout.getvalue())
+        self.assertIn("WORKING", stdout.getvalue())
         self.assertIn("test running for 11s", stdout.getvalue())
 
     def test_event_recorder_prints_command_updates_once_as_they_arrive(self):
@@ -1115,9 +1393,8 @@ class RalphCodexTests(unittest.TestCase):
 
         console = stdout.getvalue()
         self.assertIn("TOOL", console)
-        self.assertEqual(console.count("/bin/zsh -lc 'echo hi'"), 2)
-        self.assertIn("inProgress: /bin/zsh -lc 'echo hi' | actions=1 | pid=123", console)
-        self.assertIn("completed: /bin/zsh -lc 'echo hi' | output=17 chars | actions=1 | pid=123", console)
+        self.assertEqual(console.count("echo hi"), 1)
+        self.assertIn("exec /bin/zsh -lc 'echo hi' | output=17 chars", console)
 
     def test_run_turn_wait_stays_thin_while_commands_print_live(self):
         tempdir, root = self.make_temp_root()
@@ -1125,17 +1402,7 @@ class RalphCodexTests(unittest.TestCase):
         store, session = self.make_session(root)
         stdout = io.StringIO()
         reporter = self.make_reporter(stdout=stdout)
-        result_payload = {
-            "status": "IN_PROGRESS",
-            "summary": "working",
-            "evidence": ["progress"],
-            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
-            "remaining_gaps": [],
-            "validation_completed": ["unit"],
-            "explicit_deferrals": [],
-            "next_step": "continue",
-            "gate_reasoning": "more work",
-        }
+        result_payload = self.execution_result_payload(remaining_gaps=[])
 
         class CommandWaitClient(FakeClient):
             def __init__(self):
@@ -1238,11 +1505,10 @@ class RalphCodexTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "IN_PROGRESS")
         console = stdout.getvalue()
-        self.assertIn("inProgress: /bin/zsh -lc 'echo hi' | actions=1 | pid=123", console)
-        self.assertIn("completed: /bin/zsh -lc 'echo hi' | output=17 chars | actions=1 | pid=123", console)
+        self.assertIn("exec /bin/zsh -lc 'echo hi' | output=17 chars", console)
         self.assertIn("execution-1 running for 11s", console)
         self.assertNotIn("commands: ", console)
-        self.assertEqual(console.count("/bin/zsh -lc 'echo hi'"), 2)
+        self.assertEqual(console.count("/bin/zsh -lc 'echo hi'"), 1)
 
     def test_run_turn_verbose_mode_avoids_duplicate_command_console_output(self):
         tempdir, root = self.make_temp_root()
@@ -1251,17 +1517,7 @@ class RalphCodexTests(unittest.TestCase):
         stdout = io.StringIO()
         stderr = io.StringIO()
         reporter = self.make_reporter(verbose=True, stdout=stdout, stderr=stderr)
-        result_payload = {
-            "status": "IN_PROGRESS",
-            "summary": "working",
-            "evidence": ["progress"],
-            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
-            "remaining_gaps": [],
-            "validation_completed": ["unit"],
-            "explicit_deferrals": [],
-            "next_step": "continue",
-            "gate_reasoning": "more work",
-        }
+        result_payload = self.execution_result_payload(remaining_gaps=[])
 
         class VerboseCommandWaitClient(FakeClient):
             def __init__(self):
@@ -1341,7 +1597,7 @@ class RalphCodexTests(unittest.TestCase):
         )
 
         self.assertEqual(result["status"], "IN_PROGRESS")
-        self.assertIn("inProgress: /bin/zsh -lc 'echo verbose' | actions=1 | pid=321", stdout.getvalue())
+        self.assertNotIn("/bin/zsh -lc 'echo verbose'", stdout.getvalue())
         self.assertNotIn("/bin/zsh -lc 'echo verbose'", stderr.getvalue())
 
     def test_run_turn_raises_when_app_server_stream_closes(self):
@@ -1378,14 +1634,7 @@ class RalphCodexTests(unittest.TestCase):
         store, session = self.make_session(root)
         stdout = io.StringIO()
         reporter = self.make_reporter(stdout=stdout)
-        result_payload = {
-            "status": "CHARTER_READY",
-            "summary": "ready",
-            "broadening_rationale": "wide enough",
-            "charter": self.broad_charter(),
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        result_payload = self.planning_result_payload(summary="ready")
         client = FakeClient(
             {"turn/start": {"turn": {"id": "turn-1"}}},
             [
@@ -1453,14 +1702,10 @@ class RalphCodexTests(unittest.TestCase):
         session.profile["seed_policy"]["require_confirmation"] = True
         session.profile["seed_policy"]["auto_confirm"] = False
         long_summary = "Operator review summary " * 18
-        planning_result = {
-            "status": "CHARTER_READY",
-            "summary": long_summary.strip(),
-            "broadening_rationale": "Review before unattended execution.",
-            "charter": self.broad_charter(),
-            "next_step": "Await operator approval.",
-            "gate_reasoning": "The operator must approve the broadened charter.",
-        }
+        planning_result = self.planning_result_payload(summary=long_summary.strip())
+        planning_result["broadening_rationale"] = "Review before unattended execution."
+        planning_result["next_step"] = "Await operator approval."
+        planning_result["gate_reasoning"] = "The operator must approve the broadened charter."
         session.state["charter_version"] = 1
         store.save_charter(session, planning_result, confirmed=False, review_state="draft")
         store.append_turn(session, "initial planning", "turn-1", "CHARTER_READY", "ready")
@@ -1527,14 +1772,7 @@ class RalphCodexTests(unittest.TestCase):
         session.profile["seed_policy"]["require_confirmation"] = True
         session.profile["seed_policy"]["auto_confirm"] = False
         session.state["charter_version"] = 1
-        initial_result = {
-            "status": "CHARTER_READY",
-            "summary": "initial draft",
-            "broadening_rationale": "wide",
-            "charter": self.broad_charter(),
-            "next_step": "review",
-            "gate_reasoning": "safe",
-        }
+        initial_result = self.planning_result_payload(summary="initial draft")
         store.save_charter(session, initial_result, confirmed=False, review_state="draft")
         revised_charter = self.broad_charter()
         revised_charter["validation_categories"] = ["unit", "integration", "gating", "docs"]
@@ -1548,14 +1786,8 @@ class RalphCodexTests(unittest.TestCase):
                 "status": "planned",
             }
         )
-        revised_result = {
-            "status": "CHARTER_READY",
-            "summary": "revised draft",
-            "broadening_rationale": "broader",
-            "charter": revised_charter,
-            "next_step": "review",
-            "gate_reasoning": "safe",
-        }
+        revised_result = self.planning_result_payload(summary="revised draft", charter=revised_charter)
+        revised_result["broadening_rationale"] = "broader"
         prompts = []
         answers = iter(["change", "Add stronger validation coverage", ".", "approve"])
         original_stdin = sys.stdin
@@ -1586,14 +1818,8 @@ class RalphCodexTests(unittest.TestCase):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        planning_result = {
-            "status": "CHARTER_READY",
-            "summary": "first draft",
-            "broadening_rationale": "wide",
-            "charter": self.broad_charter(),
-            "next_step": "review",
-            "gate_reasoning": "safe",
-        }
+        planning_result = self.planning_result_payload(summary="first draft")
+        planning_result["next_step"] = "review"
         controller.session.state["charter_version"] = 1
         controller.store.save_charter(
             controller.session,
@@ -1622,14 +1848,7 @@ class RalphCodexTests(unittest.TestCase):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
-        result_payload = {
-            "status": "CHARTER_READY",
-            "summary": "ready",
-            "broadening_rationale": "wide enough",
-            "charter": self.broad_charter(),
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        result_payload = self.planning_result_payload(summary="ready")
         client = FakeClient(
             {"turn/start": {"turn": {"id": "turn-1"}}},
             [
@@ -1673,6 +1892,19 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "CHARTER_READY")
 
+    def test_turn_search_count_reads_recorded_search_activity(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.store.append_turn(controller.session, "planning", "turn-1", "CHARTER_READY", "ok")
+        controller.store.append_event(
+            controller.session,
+            "turn-search-activity",
+            {"turn_id": "turn-1", "count": 2, "names": ["web_search"]},
+        )
+        self.assertEqual(controller.turn_search_count("turn-1"), 2)
+
     def test_rejected_completion_is_persisted_immediately(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -1683,24 +1915,13 @@ class RalphCodexTests(unittest.TestCase):
         controller.ensure_thread = lambda: None
         controller.review_plan_if_needed = lambda: None
         controller.execute_once = lambda: {
-            "status": "COMPLETE",
-            "summary": "done",
+            **self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[]),
             "workstream_updates": [{"id": "W1", "status": "done", "evidence": ["ok"]}],
-            "remaining_gaps": [],
             "validation_completed": ["unit"],
-            "explicit_deferrals": [],
             "next_step": "none",
-            "evidence": ["ok"],
-            "gate_reasoning": "safe",
         }
-        controller.plan_once = lambda phase_name, feedback: {
-            "status": "CHARTER_READY",
-            "summary": "retry",
-            "broadening_rationale": "keep going",
-            "charter": self.broad_charter(),
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        controller.evaluate_once = lambda execution_result, audit: self.evaluation_result_payload(disposition="replan")
+        controller.plan_once = lambda phase_name, feedback: self.planning_result_payload(summary="retry")
         with self.assertRaisesRegex(ralph_codex.RalphError, "max_iterations=1"):
             controller.run()
         completion = json.loads((controller.session.session_dir / "completion.json").read_text(encoding="utf-8"))
@@ -1714,15 +1935,10 @@ class RalphCodexTests(unittest.TestCase):
         self.save_charter(controller)
         accepted, reason = controller.evaluate_completion(
             {
-                "status": "COMPLETE",
-                "summary": "done",
+                **self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[]),
                 "workstream_updates": [{"id": "W1", "status": "done", "evidence": ["ok"]}],
-                "remaining_gaps": [],
                 "validation_completed": ["unit"],
-                "explicit_deferrals": [],
                 "next_step": "none",
-                "evidence": ["ok"],
-                "gate_reasoning": "safe",
             }
         )
         self.assertFalse(accepted)
@@ -1740,30 +1956,27 @@ class RalphCodexTests(unittest.TestCase):
         ]
         accepted, reason = controller.evaluate_completion(
             {
-                "status": "COMPLETE",
-                "summary": "done",
+                **self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[]),
                 "workstream_updates": updates,
-                "remaining_gaps": [],
                 "validation_completed": ["unit", "integration", "gating"],
-                "explicit_deferrals": [],
                 "next_step": "none",
-                "evidence": ["ok"],
-                "gate_reasoning": "safe",
             }
         )
         self.assertTrue(accepted)
         self.assertEqual(reason, "")
 
-    def test_build_execution_prompt_contains_charter_and_feedback(self):
+    def test_build_execution_prompt_contains_program_summary_and_feedback(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
         self.save_charter(controller)
         prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertIn("Current Charter", prompt)
+        self.assertIn("Current Tranche", prompt)
+        self.assertIn("Program Summary", prompt)
+        self.assertIn("Active Milestone", prompt)
         self.assertIn("Need broader validation", prompt)
 
-    def test_build_execution_prompt_default_cap_is_unlimited(self):
+    def test_build_execution_prompt_uses_profile_prompt_cap(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
@@ -1779,19 +1992,20 @@ class RalphCodexTests(unittest.TestCase):
         controller = self.make_controller(root)
         self.save_charter(controller)
         controller.session.profile["execution"]["max_prompt_chars"] = 100
-        with self.assertRaisesRegex(ralph_codex.RalphError, "charter="):
+        with self.assertRaisesRegex(ralph_codex.RalphError, "tranche="):
             controller.build_execution_prompt("Need broader validation")
 
     def test_build_execution_prompt_allows_unlimited_when_limit_is_zero(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        large_task = "Test message " + ("x" * 5000)
+        large_task = "Test message " + ("x" * (DEFAULT_MAX_EXECUTION_PROMPT_CHARS + 5000))
         controller.session.task["message_text"] = large_task
         controller.session.profile["execution"]["max_prompt_chars"] = 0
+        controller.session.profile["loop_policy"]["execution_max_prompt_chars"] = 0
         self.save_charter(controller)
         prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertGreater(len(prompt), DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+        self.assertGreater(len(prompt), 5000)
 
     def test_run_with_zero_max_iterations_treats_limit_as_unbounded(self):
         tempdir, root = self.make_temp_root()
@@ -1806,34 +2020,219 @@ class RalphCodexTests(unittest.TestCase):
 
         def execute_once():
             calls["execute"] += 1
+            status = "COMPLETE" if calls["execute"] == 2 else "IN_PROGRESS"
             return {
-                "status": "COMPLETE" if calls["execute"] == 2 else "IN_PROGRESS",
-                "summary": "done" if calls["execute"] == 2 else "working",
+                **self.execution_result_payload(
+                    status=status,
+                    summary="done" if status == "COMPLETE" else "working",
+                    remaining_gaps=[],
+                ),
                 "workstream_updates": [
                     {"id": "W1", "status": "done", "evidence": ["ok"]},
                     {"id": "W2", "status": "done", "evidence": ["ok"]},
                     {"id": "W3", "status": "done", "evidence": ["ok"]},
                 ],
-                "remaining_gaps": [],
                 "validation_completed": ["unit", "integration", "gating"],
-                "explicit_deferrals": [],
                 "next_step": "none",
-                "evidence": ["ok"],
-                "gate_reasoning": "safe",
             }
 
         controller.execute_once = execute_once
-        controller.plan_once = lambda phase_name, feedback: {
-            "status": "CHARTER_READY",
-            "summary": "retry",
-            "broadening_rationale": "keep going",
-            "charter": self.broad_charter(),
-            "next_step": "execute",
-            "gate_reasoning": "safe",
-        }
+        controller.evaluate_once = lambda execution_result, audit: self.evaluation_result_payload(
+            disposition="accept" if execution_result["status"] == "COMPLETE" else "repair_same_tranche"
+        )
+        controller.plan_once = lambda phase_name, feedback: self.planning_result_payload(summary="retry")
         result = controller.run()
         self.assertEqual(result, 0)
         self.assertEqual(calls["execute"], 2)
+
+    def test_run_prefers_same_tranche_repair_before_replanning(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.profile["runtime_limits"]["max_iterations"] = 0
+        controller.client.start = lambda: None
+        controller.ensure_thread = lambda: None
+        controller.review_plan_if_needed = lambda: None
+        calls = {"execute": 0, "plan": 0}
+
+        def execute_once():
+            calls["execute"] += 1
+            status = "COMPLETE" if calls["execute"] == 2 else "IN_PROGRESS"
+            return {
+                **self.execution_result_payload(status=status, summary="done" if status == "COMPLETE" else "working", remaining_gaps=[]),
+                "workstream_updates": [
+                    {"id": "W1", "status": "done", "evidence": ["ok"]},
+                    {"id": "W2", "status": "done", "evidence": ["ok"]},
+                    {"id": "W3", "status": "done", "evidence": ["ok"]},
+                ],
+                "validation_completed": ["unit", "integration", "gating"],
+                "next_step": "none",
+            }
+
+        controller.execute_once = execute_once
+        controller.evaluate_once = lambda execution_result, audit: self.evaluation_result_payload(
+            disposition="accept" if execution_result["status"] == "COMPLETE" else "repair_same_tranche"
+        )
+        controller.plan_once = lambda phase_name, feedback: calls.__setitem__("plan", calls["plan"] + 1) or self.planning_result_payload(summary="retry")
+        result = controller.run()
+        self.assertEqual(result, 0)
+        self.assertEqual(calls["execute"], 2)
+        self.assertEqual(calls["plan"], 0)
+
+    def test_run_rejects_blocked_initial_planning_before_execution(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.client.start = lambda: None
+        controller.ensure_thread = lambda: None
+        blocked_result = self.planning_result_payload(summary="blocked")
+        blocked_result["status"] = "BLOCKED"
+        controller.plan_once = lambda phase_name, feedback, render_output=True: blocked_result
+        controller.execute_once = lambda: self.fail("execution should not start from blocked planning")
+        with self.assertRaisesRegex(ralph_codex.RalphError, "planner reported BLOCKED"):
+            controller.run()
+
+    def test_run_persists_pending_feedback_before_progress_checkpoint_abort(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.client.start = lambda: None
+        controller.ensure_thread = lambda: None
+        controller.review_plan_if_needed = lambda: None
+        controller.execute_once = lambda: self.execution_result_payload(status="IN_PROGRESS", summary="working", remaining_gaps=["docs"])
+        controller.audit_execution_result = lambda execution_result: ralph_codex.ExecutionAudit(
+            ok=True,
+            feedback="",
+            total_files_changed=42,
+            repeated_heading_file_count=0,
+            meta_artifact_files=[],
+            requires_checkpoint=True,
+            checkpoint_reason="changed-file checkpoint reached",
+            diff_samples=["scripts/ralph-codex.py"],
+        )
+        controller.evaluate_once = lambda execution_result, audit: self.evaluation_result_payload(disposition="repair_same_tranche")
+        with self.assertRaisesRegex(ralph_codex.RalphError, "progress checkpoint requires operator input"):
+            controller.run()
+        state = controller.store.read_json(
+            controller.session.session_dir / "session-state.json",
+            ralph_codex.SESSION_STATE_SCHEMA_ID,
+        )
+        self.assertIn("Tighten the current tranche", state["pending_feedback"])
+
+    def test_audit_execution_result_rejects_meta_artifact_sprawl(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.changed_repo_entries = lambda: [
+            {"path": "docs/scoreboard.md", "operation": "added"},
+            {"path": "scripts/ralph-codex.py", "operation": "modified"},
+        ]
+        controller.count_repeated_heading_files = lambda touched_files: 0
+        audit = controller.audit_execution_result(
+            self.execution_result_payload(
+                touched_files=["scripts/ralph-codex.py"],
+            )
+        )
+        self.assertFalse(audit.ok)
+        self.assertIn("controller-serving meta artifacts", audit.feedback)
+        self.assertEqual(audit.meta_artifact_files, [])
+
+    def test_audit_execution_result_allows_deleted_meta_artifact_cleanup(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.changed_repo_entries = lambda: [
+            {"path": "docs/scoreboard.md", "operation": "deleted"},
+            {"path": "scripts/ralph-codex.py", "operation": "modified"},
+        ]
+        controller.count_repeated_heading_files = lambda touched_files: 0
+        audit = controller.audit_execution_result(
+            self.execution_result_payload(
+                touched_files=["scripts/ralph-codex.py"],
+            )
+        )
+        self.assertTrue(audit.ok)
+        self.assertEqual(audit.feedback, "")
+
+    def test_audit_execution_result_uses_iteration_repo_baseline(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.state["iteration_repo_baseline"] = [
+            {"path": "docs/scoreboard.md", "index_status": "?", "worktree_status": "?", "operation": "untracked"}
+        ]
+        controller.changed_repo_entries = lambda: [
+            {"path": "docs/scoreboard.md", "index_status": "?", "worktree_status": "?", "operation": "untracked"},
+            {"path": "scripts/ralph-codex.py", "index_status": "M", "worktree_status": " ", "operation": "modified"},
+        ]
+        controller.count_repeated_heading_files = lambda touched_files: 0
+        audit = controller.audit_execution_result(
+            self.execution_result_payload(touched_files=["scripts/ralph-codex.py"])
+        )
+        self.assertTrue(audit.ok)
+        self.assertEqual(audit.total_files_changed, 1)
+
+    def test_audit_execution_result_rejects_unjustified_off_tranche_file(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.state["iteration_repo_baseline"] = []
+        controller.changed_repo_entries = lambda: [
+            {"path": "README.md", "index_status": "M", "worktree_status": " ", "operation": "modified"},
+        ]
+        controller.count_repeated_heading_files = lambda touched_files: 0
+        audit = controller.audit_execution_result(
+            self.execution_result_payload(touched_files=["README.md"])
+        )
+        self.assertFalse(audit.ok)
+        self.assertIn("outside current_tranche.target_files", audit.feedback)
+
+    def test_count_repeated_heading_files_ignores_preexisting_headings_without_added_diff(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.run_repo_command = lambda args: subprocess.CompletedProcess(
+            args,
+            0,
+            stdout="@@ -1,1 +1,1 @@\n unchanged\n+Some other line\n",
+            stderr="",
+        )
+        self.assertEqual(controller.count_repeated_heading_files(["docs/example.md"]), 0)
+
+    def test_count_repeated_heading_files_counts_only_newly_added_headings(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.run_repo_command = lambda args: subprocess.CompletedProcess(
+            args,
+            0,
+            stdout="@@ -1,1 +1,2 @@\n unchanged\n+## Rejected Defaults\n",
+            stderr="",
+        )
+        self.assertEqual(controller.count_repeated_heading_files(["docs/example.md"]), 1)
+
+    def test_review_progress_if_needed_raises_without_tty(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        audit = ralph_codex.ExecutionAudit(
+            ok=True,
+            feedback="",
+            total_files_changed=42,
+            repeated_heading_file_count=0,
+            meta_artifact_files=[],
+            requires_checkpoint=True,
+            checkpoint_reason="changed-file checkpoint reached",
+            diff_samples=["scripts/ralph-codex.py"],
+        )
+        with self.assertRaisesRegex(ralph_codex.RalphError, "progress checkpoint requires operator input"):
+            controller.review_progress_if_needed(audit)
 
     def test_finish_writes_finished_marker(self):
         tempdir, root = self.make_temp_root()

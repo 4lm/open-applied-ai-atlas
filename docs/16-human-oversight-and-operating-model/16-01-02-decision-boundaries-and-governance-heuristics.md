@@ -1,6 +1,6 @@
 # 16.1.2 Decision Boundaries And Governance Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page after the role map is clear enough and the remaining question is what oversight lane should apply by default. The goal is to stop teams from using "human in the loop" as a blanket comfort phrase when the real issue is whether the proposed action is reversible, who can stop it, how much judgment it displaces, and whether the evidence burden has already outgrown the operating model.
 

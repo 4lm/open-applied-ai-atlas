@@ -1,6 +1,6 @@
 # 11.3.1 Tools And Platforms
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the main retrieval and memory building blocks, from composition frameworks through vector, search, graph, and memory layers. The goal is not to crown one store, but to make permissioning, provenance, refresh, and exit posture visible beside raw retrieval capability.
 

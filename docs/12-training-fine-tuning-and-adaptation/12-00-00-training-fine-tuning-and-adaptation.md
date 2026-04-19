@@ -1,6 +1,6 @@
 # 12. Training Fine-Tuning And Adaptation
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter is where teams decide whether behavior change belongs in prompts and workflows, retrieval and knowledge design, parameter-efficient tuning, or full retraining. Its job is to keep adaptation as an escalation ladder: each rung can buy stronger control over system behavior, but it also raises data dependence, evaluation burden, rollback friction, and supplier dependence.
 

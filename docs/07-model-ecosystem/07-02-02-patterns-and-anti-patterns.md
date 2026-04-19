@@ -1,6 +1,6 @@
 # 7.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during shortlist review, rollout planning, and model-refresh approval to recognize healthy model-portfolio shapes before one strong demo, one provider relationship, or one benchmark headline hardens into default policy.
 

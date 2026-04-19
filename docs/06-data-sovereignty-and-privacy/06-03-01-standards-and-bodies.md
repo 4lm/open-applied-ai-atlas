@@ -1,6 +1,6 @@
 # 6.3.1 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page gathers the main legal, standards, and specification anchors that matter for privacy, sovereignty, portability, and data-boundary control. The point is not to imply that one anchor answers everything; it is to show which source helps with which boundary question.
 

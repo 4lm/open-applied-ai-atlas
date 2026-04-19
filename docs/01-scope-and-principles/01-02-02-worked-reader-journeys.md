@@ -1,6 +1,6 @@
 # 1.2.2 Worked Reader Journeys
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how mixed teams should translate chapter `1` into a bounded reading pass. The goal is not to give every reader a long custom tour. The goal is to start from the immediate blocker, choose the shortest credible chapter path, and name the convergence gate that must be cleared before downstream architecture, procurement, or rollout choices harden.
 

@@ -1,6 +1,6 @@
 # 21. Research Open Knowledge And Community
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter turns public research, open knowledge, and community activity into a reusable review surface. Use it when the question is not simply what is popular or newly published, but which external signals are strong enough to shape architecture, sourcing, governance, or operating choices inside an organization.
 

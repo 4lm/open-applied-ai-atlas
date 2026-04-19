@@ -1,6 +1,6 @@
 # 2.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this file during review after the team has named the entity class. The point is to catch recurring taxonomy mistakes quickly enough that later chapter work is still fixable.
 

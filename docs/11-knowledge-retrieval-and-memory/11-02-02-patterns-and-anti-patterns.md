@@ -1,6 +1,6 @@
 # 11.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during design and renewal review to recognize healthy retrieval and memory shapes before convenience state hides provenance, permissions, deletion duties, or escalation into adaptation work.
 

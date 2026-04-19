@@ -1,6 +1,6 @@
 # 15.1 Security Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the boundary model teams need before they argue about scanners, red-team tools, or provider security features. Use it to separate threat surfaces, trust boundaries, privilege lanes, and containment expectations so the later operating and reference pages stay tied to actual abuse paths instead of generic "AI security" language.
 

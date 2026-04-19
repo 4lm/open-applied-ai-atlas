@@ -1,6 +1,6 @@
 # 14.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page when a team needs to prove that observability is operationally usable, not just technically present. A dashboard is not enough if incident responders cannot reconstruct what happened, reviewers cannot see what data was retained, or governance teams cannot tell which telemetry left the platform boundary.
 

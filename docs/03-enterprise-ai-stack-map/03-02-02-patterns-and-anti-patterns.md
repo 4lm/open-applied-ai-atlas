@@ -1,6 +1,6 @@
 # 3.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use these patterns to test whether a proposal is using the stack map as a real design aid or only as explanatory decoration.
 

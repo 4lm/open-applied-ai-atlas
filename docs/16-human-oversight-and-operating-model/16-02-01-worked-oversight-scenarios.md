@@ -1,6 +1,6 @@
 # 16.2.1 Worked Oversight Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios turn oversight language into operating review. Each one shows the human decision rights, evidence, and re-review trigger that should already exist before a team claims people are meaningfully in control.
 

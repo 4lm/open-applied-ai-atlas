@@ -1,6 +1,6 @@
 # 14.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout review, incident readiness checks, and observability redesign work to recognize healthy monitoring operating shapes before teams mistake dashboard presence for reconstructable runtime evidence.
 

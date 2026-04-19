@@ -1,6 +1,6 @@
 # 14.1.1 Signals, Traces, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate the signal families that make AI observability useful: event logs, end-to-end traces, metrics, alerts, and richer investigation artifacts. Teams often say they have "logging" when what they really have is an incomplete mixture of payload dumps, dashboard counters, and vendor-specific traces that cannot answer the review question in front of them.
 

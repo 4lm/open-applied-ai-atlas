@@ -1,6 +1,6 @@
 # 20.1 Standards Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the artifact families and decision boundaries that keep standards work usable. Read it before comparing named anchors or building a control crosswalk.
 

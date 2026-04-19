@@ -1,6 +1,6 @@
 # 4.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the standards, legal anchors, and operating artifacts that governance teams use after the decision logic is clear. Read it as a crosswalk, not a substitute for the chapter's ownership and review guidance.
 

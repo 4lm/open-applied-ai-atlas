@@ -8,7 +8,10 @@
     "status",
     "summary",
     "broadening_rationale",
-    "charter",
+    "research",
+    "program_board",
+    "active_milestone",
+    "current_tranche",
     "next_step",
     "gate_reasoning"
   ],
@@ -16,18 +19,120 @@
     "status": { "type": "string", "enum": ["CHARTER_READY", "BLOCKED"] },
     "summary": { "type": "string", "minLength": 1 },
     "broadening_rationale": { "type": "string", "minLength": 1 },
-    "charter": {
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "search_strategy", "findings", "sources", "open_questions"],
+      "properties": {
+        "status": { "type": "string", "enum": ["completed", "blocked"] },
+        "search_strategy": { "type": "string", "minLength": 1 },
+        "findings": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "url", "source_type", "used_for"],
+            "properties": {
+              "title": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "minLength": 1 },
+              "source_type": { "type": "string", "enum": ["primary", "secondary"] },
+              "used_for": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "open_questions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "program_board": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "goal",
+        "milestones",
         "success_criteria",
         "validation_categories",
-        "explicit_deferrals",
-        "workstreams"
+        "explicit_deferrals"
       ],
       "properties": {
         "goal": { "type": "string", "minLength": 1 },
+        "milestones": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "objective",
+              "acceptance_criteria",
+              "dependencies",
+              "evidence_requirements",
+              "status",
+              "workstreams"
+            ],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "objective": { "type": "string", "minLength": 1 },
+              "acceptance_criteria": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "evidence_requirements": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "status": { "type": "string", "enum": ["planned", "active", "done", "deferred"] },
+              "workstreams": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "title",
+                    "goal",
+                    "required_adjacent_surfaces",
+                    "validation",
+                    "status"
+                  ],
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "title": { "type": "string", "minLength": 1 },
+                    "goal": { "type": "string", "minLength": 1 },
+                    "required_adjacent_surfaces": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "string", "minLength": 1 }
+                    },
+                    "validation": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "string", "minLength": 1 }
+                    },
+                    "status": { "type": "string", "enum": ["planned", "deferred"] }
+                  }
+                }
+              }
+            }
+          }
+        },
         "success_criteria": {
           "type": "array",
           "minItems": 3,
@@ -41,38 +146,62 @@
         "explicit_deferrals": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
-        },
-        "workstreams": {
+        }
+      }
+    },
+    "active_milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "milestone_id",
+        "rationale",
+        "success_checkpoint",
+        "evidence_focus",
+        "target_files",
+        "validation"
+      ],
+      "properties": {
+        "milestone_id": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "success_checkpoint": { "type": "string", "minLength": 1 },
+        "evidence_focus": {
           "type": "array",
-          "minItems": 3,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "title",
-              "goal",
-              "required_adjacent_surfaces",
-              "validation",
-              "status"
-            ],
-            "properties": {
-              "id": { "type": "string", "minLength": 1 },
-              "title": { "type": "string", "minLength": 1 },
-              "goal": { "type": "string", "minLength": 1 },
-              "required_adjacent_surfaces": {
-                "type": "array",
-                "minItems": 1,
-                "items": { "type": "string", "minLength": 1 }
-              },
-              "validation": {
-                "type": "array",
-                "minItems": 1,
-                "items": { "type": "string", "minLength": 1 }
-              },
-              "status": { "type": "string", "enum": ["planned", "deferred"] }
-            }
-          }
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "target_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "validation": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "current_tranche": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch_id", "milestone_id", "workstream_ids", "target_files", "intended_outcome", "validation"],
+      "properties": {
+        "batch_id": { "type": "string", "minLength": 1 },
+        "milestone_id": { "type": "string", "minLength": 1 },
+        "workstream_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "target_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "intended_outcome": { "type": "string", "minLength": 1 },
+        "validation": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     },

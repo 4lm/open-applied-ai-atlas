@@ -1,6 +1,6 @@
 # 13.3.1 Tools And Platforms
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the main tooling used to test, benchmark, and gate AI systems. It spans regression harnesses, RAG and agent evaluators, benchmark suites, and managed evaluation platforms because release evidence is rarely credible if it relies on only one style of test.
 

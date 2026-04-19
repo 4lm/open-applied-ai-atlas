@@ -1,6 +1,6 @@
 # 1.1.4 Atlas Priorities: Openness, Sovereignty, Portability, Privacy, Compliance
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 These priorities are the atlas's recurring review lenses, not optional values statements. Use this page when a discussion about models, platforms, procurement, or delivery is drifting toward convenience, speed, or benchmark performance alone and the team needs to reopen the control, reversibility, and organizational-risk questions that actually shape the decision.
 

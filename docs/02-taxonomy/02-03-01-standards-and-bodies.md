@@ -1,6 +1,6 @@
 # 2.3.1 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file keeps formal standards, public bodies, benchmark consortia, and provenance or supply-chain initiatives in one place so the atlas can classify them before comparing anything else.
 

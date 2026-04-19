@@ -1,6 +1,6 @@
 # 9.1.2 Decision Boundaries And Adoption Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the gateway control-plane elements are already clear and the remaining question is what adoption lane fits by default. The goal is to match gateway scope to the real shared-control burden so teams do not standardize a proxy too early, skip identity and evidence work, or mistake managed mediation for complete policy ownership.
 

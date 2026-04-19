@@ -1,6 +1,6 @@
 # 11.2.1 Worked Retrieval Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 Use these scenarios to test whether the team is solving a retrieval problem, a memory problem, or a governance problem wearing a retrieval label. Each scenario is intentionally framed around the dominant decision, the recommended posture, and the evidence outputs that should exist before rollout.
 

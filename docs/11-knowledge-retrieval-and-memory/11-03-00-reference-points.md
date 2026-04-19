@@ -1,6 +1,6 @@
 # 11.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the reusable comparison and implementation anchors for retrieval and memory work. Use it after the chapter logic is clear and the question becomes “which stack shape, control posture, or checklist should we apply?”
 

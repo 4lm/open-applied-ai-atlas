@@ -1,6 +1,6 @@
 # 21.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named public anchors that matter after the source question and adoption posture are already clear. Use it when the team no longer needs a generic overview of research or community activity, and instead needs to compare stewards, benchmark bodies, public guidance, and open ecosystem projects without letting prestige, activity volume, or brand familiarity replace local review.
 

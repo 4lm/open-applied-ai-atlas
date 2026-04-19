@@ -1,6 +1,6 @@
 # 3.2 Applying The Stack Map
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns the stack map into delivery guidance. Use it when teams need to translate layer reasoning into architecture review, portfolio rationalization, or rollout sequencing.
 

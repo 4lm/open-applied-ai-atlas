@@ -1,6 +1,6 @@
 # 14. Observability Logging And Monitoring
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats observability as the runtime evidence spine for AI systems after release. Its job is to help teams decide what must be visible across prompts, model routing, retrieval, tool use, policy enforcement, and user outcomes so incidents can be reconstructed, drift can be detected, and operational review does not collapse into guesswork or vendor screenshots.
 

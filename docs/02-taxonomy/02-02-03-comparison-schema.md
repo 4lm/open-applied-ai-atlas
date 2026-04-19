@@ -1,8 +1,8 @@
 # 2.2.3 Comparison Schema
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 This schema is the atlas default for comparing tools, vendors, projects, platforms, patterns, and architecture options. It exists to keep chapter-local tables useful without letting every author invent a different comparison logic.
 

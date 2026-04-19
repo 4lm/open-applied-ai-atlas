@@ -1,6 +1,6 @@
 # 10.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout, exception review, and autonomy expansion to recognize healthy agent operating shapes before a promising pilot turns into broad tool access, weak investigation traces, and unowned side effects.
 

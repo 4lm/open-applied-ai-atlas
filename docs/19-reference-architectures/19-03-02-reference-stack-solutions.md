@@ -1,6 +1,6 @@
 # 19.3.2 Reference Stack Solutions
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file groups reusable architecture shapes so readers can move from individual layers to coherent compositions. It separates summary pattern comparison from component anchors so the reference architectures are easier to compare tool by tool.
 

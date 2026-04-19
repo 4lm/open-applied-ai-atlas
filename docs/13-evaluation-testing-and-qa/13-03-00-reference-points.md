@@ -1,6 +1,6 @@
 # 13.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the reusable tools, artifacts, and templates that make evaluation work repeatable. Use it when the chapter logic is clear and the question becomes “what should the team actually run, review, and archive?”
 

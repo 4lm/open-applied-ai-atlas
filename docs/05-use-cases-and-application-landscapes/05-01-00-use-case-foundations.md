@@ -1,6 +1,6 @@
 # 5.1 Use-Case Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section defines the work-pattern language behind the chapter. Read it before tool selection, solution architecture, or portfolio triage so the team does not confuse a fashionable interface with the actual operational problem.
 

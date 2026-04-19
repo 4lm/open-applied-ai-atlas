@@ -1,6 +1,6 @@
 # 17.2.1 Worked Ecosystem Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how ecosystem analysis changes decisions that might otherwise look like routine product selection.
 

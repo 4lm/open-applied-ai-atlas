@@ -1,6 +1,6 @@
 # 15. Security And Abuse Resistance
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats security and abuse resistance as a control-boundary problem across prompts, retrieval, tool use, identity, secrets, model dependencies, and provider egress. Use it to decide which crossings need isolation, which actions need mediation or approval, and which failures should block release before teams mistake "guardrails" for a complete security posture.
 

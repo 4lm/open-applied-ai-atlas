@@ -1,6 +1,6 @@
 # 21.3.2 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page compares the public standards, benchmark bodies, provenance initiatives, and coordination programs that matter once the source class and adoption posture are already clear. Read it as an open-knowledge crosswalk: first decide whether the team needs benchmark literacy, public implementation guidance, provenance and artifact transparency, or standards-tracking context, then choose the smallest credible starting set instead of treating every named body as the same kind of authority.
 

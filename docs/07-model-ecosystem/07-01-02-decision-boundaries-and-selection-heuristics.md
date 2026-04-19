@@ -1,6 +1,6 @@
 # 7.1.2 Decision Boundaries And Selection Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the team understands the model postures well enough and the remaining question is which shortlist lane fits by default. The goal is to stop model choice from collapsing into benchmark chasing, supplier loyalty, or self-hosting theater before the workload, control needs, and lifecycle burden are actually clear.
 

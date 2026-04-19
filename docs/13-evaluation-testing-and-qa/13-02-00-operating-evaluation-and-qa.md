@@ -1,6 +1,6 @@
 # 13.2 Operating Evaluation And QA
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns evaluation design into operating review. Use it when a team already knows the evidence types that matter and now needs to decide how scenario packs, release gates, ownership, and re-evaluation cadence work under real rollout pressure.
 

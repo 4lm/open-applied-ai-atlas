@@ -1,6 +1,6 @@
 # 16.1 Oversight Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section defines what counts as real human oversight before teams debate tooling, standards, or operating details. Use it to name accountable owners, approval rights, escalation lanes, and stop authority so "human in the loop" does not hide unclear responsibility or ceremonial review.
 

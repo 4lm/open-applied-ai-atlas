@@ -1,6 +1,6 @@
 # 17.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects named ecosystem actors after the chapter's concentration logic is clear. Use it to identify where leverage, stewardship, and optionality sit across the market, not to rank brands in isolation.
 

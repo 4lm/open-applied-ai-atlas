@@ -1,6 +1,6 @@
 # 2.1.1 Entity Classes And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page when a proposal, tool list, or policy note sounds plausible but the comparison feels unstable. The taxonomy layer is doing its job only if it separates the kind of thing being discussed before the atlas compares it.
 

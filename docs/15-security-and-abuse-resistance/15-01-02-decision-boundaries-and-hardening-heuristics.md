@@ -1,6 +1,6 @@
 # 15.1.2 Decision Boundaries And Hardening Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the threat surface is clear enough that the team needs a default hardening lane, not another generic promise to "add guardrails." The goal is to match the control posture to the authority boundary so that harmless-looking assistants are not secured like transaction systems and action-capable agents are not released with only prompt filtering and hope.
 

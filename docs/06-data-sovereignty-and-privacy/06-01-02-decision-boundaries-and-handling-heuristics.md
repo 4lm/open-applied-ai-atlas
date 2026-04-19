@@ -1,6 +1,6 @@
 # 6.1.2 Decision Boundaries And Handling Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to decide which boundary question actually dominates before choosing controls or providers.
 

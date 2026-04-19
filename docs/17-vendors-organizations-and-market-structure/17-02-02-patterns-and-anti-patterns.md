@@ -1,6 +1,6 @@
 # 17.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use these patterns to test whether an ecosystem choice preserves real optionality or only the appearance of it.
 

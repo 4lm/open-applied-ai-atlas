@@ -1,6 +1,6 @@
 # 6.2.1 Worked Privacy And Sovereignty Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how the same privacy question can lead to different answers once sovereignty, portability, and support control are considered explicitly.
 

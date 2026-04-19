@@ -1,8 +1,6 @@
 # 2.1.3 Terminology Ledger
 
-_Page Type: Glossary | Maturity: Review-Ready_
-
-_Page Type: Glossary | Maturity: Review-Ready_
+_Page Type: Glossary | Maturity: Draft_
 
 This ledger complements the taxonomy chapter by giving contributors and readers one fast reference for the terms that drift most easily across architecture, governance, sourcing, and delivery conversations.
 

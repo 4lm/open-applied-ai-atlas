@@ -1,6 +1,6 @@
 # 3.3.1 Tooling By Layer
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file maps named tools, platforms, and standards anchors to the enterprise AI stack. It replaces the older bundled-list pattern with one-row-per-anchor comparisons so readers can compare the actual control points more directly.
 

@@ -1,6 +1,6 @@
 # 5.1.2 Portfolio Boundaries And Prioritization Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the chapter has already clarified the work pattern and the remaining question is where the organization should invest, review, or slow down first. The goal is to stop teams from treating every AI proposal as one portfolio and to make consequence, dependence, and operating burden visible before product fashion starts choosing the roadmap.
 

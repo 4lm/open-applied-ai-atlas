@@ -1,6 +1,6 @@
 # 21.2.1 Worked Research-To-Practice Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how outside knowledge becomes usable only after the team translates it into pilot scope, local evidence, ownership, and re-review triggers. The goal is not to reward whichever paper, benchmark, repository, or public guide is newest. The goal is to make the research-to-practice handoff inspectable before outside signals turn into production defaults.
 

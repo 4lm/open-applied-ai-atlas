@@ -1,6 +1,6 @@
 # 10.1.1 Autonomy, Tool Use, And Execution Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate execution posture before a proposal gets flattened into "we need an agent." Agent review becomes sloppy when response-only assistants, workflow steps, human-triggered tool use, bounded action agents, and longer-running delegated execution are all treated as the same thing with different branding.
 

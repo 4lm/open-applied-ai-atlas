@@ -1,6 +1,6 @@
 # 8.2.1 Worked Hosting Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios turn runtime posture into concrete operating review. Each one shows the hosting shape, evidence packet, and re-review trigger that should already exist before rollout widens or a team claims that its runtime is stable, private, or sovereign.
 

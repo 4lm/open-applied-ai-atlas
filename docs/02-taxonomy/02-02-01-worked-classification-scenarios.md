@@ -1,6 +1,6 @@
 # 2.2.1 Worked Classification Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how the taxonomy changes real review work. Each example is intentionally practical: the goal is not only to label the thing correctly, but to stop the wrong downstream comparison before it starts.
 

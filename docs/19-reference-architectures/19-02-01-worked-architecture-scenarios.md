@@ -1,6 +1,6 @@
 # 19.2.1 Worked Architecture Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how reference architectures should change with consequence, platform maturity, and control posture.
 

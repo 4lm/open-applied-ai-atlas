@@ -1,6 +1,6 @@
 # 15.3.3 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page when the team needs reviewable security evidence instead of a generic statement that the system is "hardened." A useful security packet makes trust boundaries, abuse controls, release blockers, and incident-containment responsibilities explicit before a model, agent, or workflow reaches production.
 

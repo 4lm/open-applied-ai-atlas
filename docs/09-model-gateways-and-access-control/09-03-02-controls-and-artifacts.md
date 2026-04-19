@@ -1,6 +1,6 @@
 # 9.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page when a team wants gateway policy to stay reviewable after rollout instead of living as hidden proxy config. A gateway is only a real control plane if reviewers can inspect route rules, caller identity, policy scope, exception handling, and export boundaries without reverse-engineering the running stack.
 

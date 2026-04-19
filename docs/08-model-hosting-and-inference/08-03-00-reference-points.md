@@ -1,6 +1,6 @@
 # 8.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named runtimes, managed services, and reusable stack shapes that make hosting choices comparable. Use it when the runtime-control question is already clear and the remaining issue is which serving layer, provider posture, or stack composition best fits the workload's latency target, sovereignty boundary, hardware dependence, and exit plan.
 

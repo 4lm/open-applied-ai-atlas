@@ -1,6 +1,6 @@
 # 20.3.1 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page compares the main legal, standards, practice, and coordination anchors used across the atlas. Read it as a standards-system crosswalk: first identify the artifact family, then choose the smallest credible starting set for the problem at hand.
 

@@ -1,6 +1,6 @@
 # 15.3.2 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page compares the external security anchors that matter most once the threat boundary is already clear. Read it as a control-planning crosswalk: first decide whether the team needs threat vocabulary, secure-delivery discipline, runtime-evidence structure, or supply-chain assurance, then choose the smallest credible starting set instead of treating every named framework as one interchangeable "AI security" checklist.
 

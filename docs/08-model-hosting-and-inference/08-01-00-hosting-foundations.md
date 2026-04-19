@@ -1,6 +1,6 @@
 # 8.1 Hosting Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the runtime-posture distinctions teams need before they turn hosting into a vendor default or an infrastructure vanity project. Use it to separate provider-managed APIs, dedicated managed deployments, self-hosted runtimes, edge placements, and sovereignty-constrained environments so later comparisons stay anchored to control, evidence, and operating burden instead of to pricing anecdotes alone.
 

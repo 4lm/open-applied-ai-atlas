@@ -1,6 +1,6 @@
 # 12.1.1 Adaptation Paths, Costs, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate the main ways teams change system behavior: prompt and workflow adaptation, retrieval and knowledge adaptation, parameter-efficient tuning, broader fine-tuning, and classical retraining. Those paths are not interchangeable just because they all aim to improve output quality. They modify different system state, demand different evidence, and create different rollback and sourcing obligations.
 

@@ -1,6 +1,6 @@
 # 16.2 Operating The Human Model
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns oversight design into operating review. Use it when roles and decision rights are already plausible on paper and the remaining question is whether approval packets, escalation queues, reviewer capacity, and intervention drills will still hold once the system meets real users, deadlines, and incident pressure.
 

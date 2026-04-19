@@ -1,6 +1,6 @@
 # 5.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout review, portfolio renewal, and platform-standardization debates to recognize healthy operating shapes before assistance, prediction, extraction, and automation work get flattened into one "AI program" with one owner and one control story.
 

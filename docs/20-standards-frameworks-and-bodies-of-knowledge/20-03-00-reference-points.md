@@ -1,6 +1,6 @@
 # 20.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the named anchors that matter after the standards question is already framed. Use it as a curated crosswalk, not as a ranking list or substitute for the earlier decision logic.
 

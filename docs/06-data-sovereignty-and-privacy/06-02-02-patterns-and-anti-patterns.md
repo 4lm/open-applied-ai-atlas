@@ -1,6 +1,6 @@
 # 6.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use these patterns to check whether a data-boundary design still holds once memory, telemetry, support, and exit posture are included.
 

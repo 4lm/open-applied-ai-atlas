@@ -1,6 +1,6 @@
 # 13.3.3 Evaluation Plan And Release Gate Templates
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 This page provides reusable templates for teams that need evaluation and release evidence to be reviewable rather than ad hoc.
 

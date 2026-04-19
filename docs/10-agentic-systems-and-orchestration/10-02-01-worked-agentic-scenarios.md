@@ -1,6 +1,6 @@
 # 10.2.1 Worked Agentic Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios focus on the operating choice, not the marketing label. In each case the question is whether the extra autonomy creates real value after controls are accounted for.
 

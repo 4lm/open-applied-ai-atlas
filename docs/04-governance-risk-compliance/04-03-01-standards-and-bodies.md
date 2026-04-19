@@ -1,6 +1,6 @@
 # 4.3.1 Standards And Bodies
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This page compares the main legal, standards, and coordination anchors used in AI governance. Read it as a governance crosswalk: laws create obligations, standards and frameworks shape management systems, and public programs or committees help teams track implementation and alignment work.
 

@@ -1,6 +1,6 @@
 # 7.3.2 Vendors And Projects
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file separates organizations and stewardship models from the tools and catalogs they influence. That distinction matters because concentration, governance posture, and ecosystem stewardship shape long-term model strategy as much as benchmark results do.
 

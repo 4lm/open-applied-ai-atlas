@@ -1,6 +1,6 @@
 # 1.1 Mission And Scope
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section defines what the atlas is for before later chapters are used as tool catalogs, architecture fragments, or isolated control checklists. Use it when the team still needs to agree on organizational scope, intended readers, the non-LLM system families that stay in frame, and the cross-cutting priorities that should remain visible before design or sourcing work narrows the discussion.
 

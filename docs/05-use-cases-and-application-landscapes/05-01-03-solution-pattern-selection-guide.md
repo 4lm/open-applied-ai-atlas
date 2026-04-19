@@ -1,6 +1,6 @@
 # 5.1.3 Solution Pattern Selection Guide
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this guide when a team knows the business problem but has not yet chosen the solution pattern. The goal is to stop “agent”, “copilot”, “RAG”, and “automation” from becoming default answers before the work pattern is understood.
 

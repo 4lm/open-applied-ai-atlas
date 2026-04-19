@@ -1,6 +1,6 @@
 # 14.1.2 Decision Boundaries And Monitoring Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the signal families are already clear and the remaining question is how much observability the service actually needs by default. The goal is to match instrumentation depth to the incident, privacy, and portability burden so teams do not ship blind services with only uptime graphs or create uncontrolled stores of prompts, traces, and customer data in the name of "better visibility."
 

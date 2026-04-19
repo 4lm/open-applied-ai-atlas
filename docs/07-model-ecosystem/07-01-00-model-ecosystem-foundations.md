@@ -1,6 +1,6 @@
 # 7.1 Model Ecosystem Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the model-selection frame teams need before they argue about benchmarks, provider branding, or leaderboard churn. Use it to separate model family, openness posture, lifecycle burden, and adaptation fit so later choices stay anchored to workload needs instead of turning into implicit sourcing or hosting decisions.
 

@@ -1,6 +1,6 @@
 # 18.2.1 Worked Build-Buy-Hybrid Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how sourcing answers split by layer. Each case is intentionally hybrid enough to avoid the false comfort of one universal build-or-buy rule.
 

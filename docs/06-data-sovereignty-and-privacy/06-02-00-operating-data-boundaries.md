@@ -1,6 +1,6 @@
 # 6.2 Operating Data Boundaries
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns boundary analysis into operating practice. Use it to check whether the chosen posture still holds once telemetry, support, retention, memory, and change management are included.
 

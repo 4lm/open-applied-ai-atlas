@@ -1,6 +1,6 @@
 # 6.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the legal, standards, and operational anchors that matter once the chapter's boundary logic is clear. Use it to connect privacy and sovereignty decisions to named obligations and reusable review artifacts.
 

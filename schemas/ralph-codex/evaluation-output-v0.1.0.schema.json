@@ -1,0 +1,62 @@
+{
+  "schema_id": "ralph-codex/output/evaluation",
+  "schema_version": "0.1.0",
+  "title": "ralph-evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disposition",
+    "milestone_status",
+    "acceptance_criteria_met",
+    "evidence_sufficiency",
+    "novelty_assessment",
+    "recommended_scope_change",
+    "worker_fanout_recommended",
+    "summary",
+    "repair_instructions",
+    "evidence_findings",
+    "confidence",
+    "research_refresh_required",
+    "gate_reasoning"
+  ],
+  "properties": {
+    "disposition": {
+      "type": "string",
+      "enum": ["accept", "repair_same_tranche", "replan", "blocked"]
+    },
+    "milestone_status": {
+      "type": "string",
+      "enum": ["open", "ready_to_close", "closed", "blocked"]
+    },
+    "acceptance_criteria_met": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_sufficiency": {
+      "type": "string",
+      "enum": ["insufficient", "partial", "sufficient"]
+    },
+    "novelty_assessment": { "type": "string", "minLength": 1 },
+    "recommended_scope_change": {
+      "type": "string",
+      "enum": ["stay_on_tranche", "advance_milestone", "replan_milestone", "replan_program"]
+    },
+    "worker_fanout_recommended": { "type": "boolean" },
+    "summary": { "type": "string", "minLength": 1 },
+    "repair_instructions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "research_refresh_required": { "type": "boolean" },
+    "gate_reasoning": { "type": "string", "minLength": 1 }
+  }
+}

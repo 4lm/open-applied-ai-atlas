@@ -1,6 +1,6 @@
 # 9.2.1 Worked Gateway Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 Use these scenarios when the gateway decision needs to survive rollout pressure instead of staying at the level of abstract control-plane language. Each scenario shows the operating posture, evidence packet, and re-review trigger that should exist before the organization treats the gateway as a stable shared path.
 

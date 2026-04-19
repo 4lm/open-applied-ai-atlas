@@ -1,6 +1,6 @@
 # 20.1.2 Decision Boundaries And Combination Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to choose a starting set. The right combination depends on the dominant question, not on which standard is most fashionable.
 

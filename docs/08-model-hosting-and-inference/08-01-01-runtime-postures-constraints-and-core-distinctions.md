@@ -1,6 +1,6 @@
 # 8.1.1 Runtime Postures, Constraints, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate runtime postures before hosting gets reduced to "API versus self-hosted." Hosting review becomes sloppy when shared provider APIs, dedicated managed endpoints, cloud-estate runtimes, self-hosted serving, edge inference, and sovereign private estates are treated as interchangeable just because they all answer the same model call.
 

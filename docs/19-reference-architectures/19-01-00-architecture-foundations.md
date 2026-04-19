@@ -1,6 +1,6 @@
 # 19.1 Architecture Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the architecture families and selection logic that keep reference architectures useful as design starting points rather than decorative diagrams.
 

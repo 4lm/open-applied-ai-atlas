@@ -1,6 +1,6 @@
 # 15.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout review, abuse-response design, and control-model changes to recognize healthy security operating shapes before teams mistake a red-team exercise, a prompt filter, or a vendor safety claim for real containment.
 

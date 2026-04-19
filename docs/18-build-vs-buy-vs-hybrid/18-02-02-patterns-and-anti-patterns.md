@@ -1,6 +1,6 @@
 # 18.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during design and renewal review to recognize good sourcing shapes before local politics or tool preferences flatten the decision.
 

@@ -1,6 +1,6 @@
 # 4.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page to make governance inspectable. A governance model is not operational until the organization can point to the artifacts, owners, and triggers that support approval, exception handling, and re-review.
 

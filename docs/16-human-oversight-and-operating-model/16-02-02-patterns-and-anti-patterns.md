@@ -1,6 +1,6 @@
 # 16.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout review, exception handling, and operating-model changes to recognize healthy oversight shapes before a visible reviewer, a ticket queue, or a vendor dashboard gets mistaken for meaningful human control.
 

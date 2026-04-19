@@ -1,6 +1,6 @@
 # 1.1.2 Audience, Roles, And Reader Modes
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to name who needs to align before a system review fragments into separate product, architecture, governance, sourcing, or operations conversations. The atlas is built for mixed teams, so reader alignment is not a courtesy step; it is how later chapters avoid solving different problems under the same project name.
 

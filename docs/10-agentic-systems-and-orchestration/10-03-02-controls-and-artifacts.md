@@ -1,6 +1,6 @@
 # 10.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 This page turns the chapter into reusable operating material. Use it when an agent proposal has moved past concept discussion and the team needs a review packet that can survive release, incident response, and audit follow-up.
 

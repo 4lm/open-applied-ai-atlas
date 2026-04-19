@@ -1,6 +1,6 @@
 # 16.1.1 Roles, Decision Rights, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate real oversight from ceremonial review. Oversight language breaks down when the accountable owner, approver, operator, platform steward, control function, and vendor are all treated as interchangeable participants in the same vague "human in the loop" story.
 

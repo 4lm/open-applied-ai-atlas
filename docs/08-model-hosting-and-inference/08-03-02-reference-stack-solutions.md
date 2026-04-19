@@ -1,6 +1,6 @@
 # 8.3.2 Reference Stack Solutions
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file turns hosting patterns into reusable solution shapes. The summary table compares the patterns, and the component table breaks bundled tool lists into one anchor per row so readers can compare realistic runtime compositions more directly.
 

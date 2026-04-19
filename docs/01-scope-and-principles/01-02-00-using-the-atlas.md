@@ -1,6 +1,6 @@
 # 1.2 Using The Atlas
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns chapter `1` into a practical reading and coordination surface. Use it when the atlas already fits the problem, but the team still needs to decide where different readers should enter, how they should reconverge before downstream choices diverge, and what a sensible path through later chapters looks like for real organizational situations.
 

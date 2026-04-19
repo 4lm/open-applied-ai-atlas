@@ -1,6 +1,6 @@
 # 12.2 Operating Adaptation Work
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns adaptation choice into delivery review. Use it when a team has picked a likely escalation lane and now needs to prove that the operating burden, evidence pack, rollback path, and re-review triggers still make sense under real rollout pressure.
 

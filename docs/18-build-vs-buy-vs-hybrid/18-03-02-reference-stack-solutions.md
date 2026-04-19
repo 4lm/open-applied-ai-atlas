@@ -1,6 +1,6 @@
 # 18.3.2 Reference Stack Solutions
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file translates sourcing postures into reusable stack shapes. The summary table compares the patterns, and the component table breaks the common anchor choices into one row per entry so trade-offs are easier to compare.
 

@@ -1,6 +1,6 @@
 # 12.1.2 Decision Boundaries And Escalation Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when a team knows system behavior must improve but has not yet earned the right to choose fine-tuning or retraining. The goal is to identify the dominant adaptation lane, keep the lighter options visible, and make sure cost, evaluation burden, data dependence, and lock-in rise only when the evidence justifies them.
 

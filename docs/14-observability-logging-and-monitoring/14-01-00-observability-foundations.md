@@ -1,6 +1,6 @@
 # 14.1 Observability Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the runtime-evidence model teams need before they argue about dashboards, exporters, or alerting stacks. Use it to separate logs, traces, metrics, events, and retention boundaries so telemetry design supports reconstruction, escalation, and review instead of becoming an expensive pile of disconnected signals.
 

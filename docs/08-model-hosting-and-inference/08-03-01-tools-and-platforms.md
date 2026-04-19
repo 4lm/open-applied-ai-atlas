@@ -1,6 +1,6 @@
 # 8.3.1 Tools And Platforms
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the main runtime choices for serving models. It covers self-hosted runtimes, Kubernetes-oriented serving layers, local and edge stacks, and managed inference services because hosting posture is where portability, sovereignty, performance, and support burden become concrete.
 

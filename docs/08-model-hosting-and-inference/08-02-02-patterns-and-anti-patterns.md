@@ -1,6 +1,6 @@
 # 8.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during rollout, capacity review, and renewal planning to recognize healthy hosting operating shapes before labels such as "private," "dedicated," or "self-hosted" hide support access, upgrade dependence, untested fallback, or hardware lock-in.
 

@@ -1,6 +1,6 @@
 # 7.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named model catalogs, ecosystem platforms, vendors, and stewardship actors that matter after the model-selection frame is already clear. Use it to compare access surfaces and ecosystem influence without turning the chapter into a leaderboard or confusing organizations, model programs, hubs, and adjacent control layers as the same kind of decision.
 

@@ -1,6 +1,6 @@
 # 20.2 Applying Standards And Frameworks
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns the standards system into delivery work. Use it to test whether a chosen set produces owners, controls, evidence, and re-review triggers rather than a polished citation list.
 

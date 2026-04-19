@@ -1,6 +1,6 @@
 # 5.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named platforms and product families that matter after the work pattern, autonomy level, and rollout posture are already clear. Use it when the team no longer needs a generic use-case explanation and instead needs a grounded shortlist surface that compares workflow tools, productivity suites, retrieval platforms, governed AI estates, and document-intelligence products without letting vendor gravity replace portfolio design.
 

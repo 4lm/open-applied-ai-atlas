@@ -1,6 +1,6 @@
 # 4.2.1 Worked Governance Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 These scenarios show how governance should change across different consequence profiles. The point is not to make every system heavy; it is to make ownership, evidence, and escalation proportionate.
 

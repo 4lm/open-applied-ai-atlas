@@ -1,6 +1,6 @@
 # 18.1.3 Build Buy And Hosting Decision Tree
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this guide to split sourcing decisions by layer and by hosting posture. The question is rarely only “build or buy”; it is usually “what should we own, what should we rent, and where must control stay local?”
 

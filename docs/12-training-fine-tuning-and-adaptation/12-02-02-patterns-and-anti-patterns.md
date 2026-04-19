@@ -1,6 +1,6 @@
 # 12.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Review-Ready_
+_Page Type: Reference Sheet | Maturity: Draft_
 
 Use this page during design, release, and renewal review to recognize healthy adaptation shapes before teams turn prompt gaps, retrieval gaps, or unmanaged drift into unnecessary tuning programs.
 

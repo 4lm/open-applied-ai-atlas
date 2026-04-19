@@ -1,6 +1,6 @@
 # 3.3 Stack Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the named anchors that help teams compare layers and reusable stack combinations once the layer map is already clear.
 

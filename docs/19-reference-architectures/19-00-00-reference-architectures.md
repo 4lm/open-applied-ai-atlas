@@ -1,6 +1,6 @@
 # 19. Reference Architectures
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter turns the atlas from layer reasoning into reusable architecture families. Use it after chapter `03` when the question is no longer where responsibilities sit in the stack, but which architecture shape best fits the organization's constraints, operating maturity, and sourcing posture.
 

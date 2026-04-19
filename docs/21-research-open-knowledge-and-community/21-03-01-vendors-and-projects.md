@@ -1,6 +1,6 @@
 # 21.3.1 Vendors And Projects
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the organizations, platforms, and community projects that keep applied AI knowledge more open, reusable, and inspectable. The focus is mission-aligned: research-to-practice transfer, open knowledge, benchmark literacy, and reusable public artifacts beyond vendor marketing.
 

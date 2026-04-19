@@ -1,6 +1,6 @@
 # 7.1.1 Model Classes, Openness, And Lifecycle Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate model posture before the discussion collapses into vendor names, benchmark screenshots, or one favored API. Model choice becomes expensive when teams confuse method family, openness, deployment freedom, lifecycle contract, and adaptation need as one decision.
 

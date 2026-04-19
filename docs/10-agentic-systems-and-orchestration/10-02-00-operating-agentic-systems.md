@@ -1,6 +1,6 @@
 # 10.2 Operating Agentic Systems
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns agent design into operating review. Use it when a team already has a plausible autonomy choice and now needs to prove that approval paths, tool boundaries, trace coverage, rollback options, and workflow fallbacks still hold once the system touches real work.
 

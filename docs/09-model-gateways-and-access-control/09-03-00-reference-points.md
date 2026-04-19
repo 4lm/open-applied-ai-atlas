@@ -1,6 +1,6 @@
 # 9.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named gateway tools, adjacent control layers, and review artifacts that matter after the control-plane question is already framed. Use it to compare routing and policy options without reducing the chapter to a provider-switching feature list or hiding the identity, evidence, and portability consequences behind one product choice.
 

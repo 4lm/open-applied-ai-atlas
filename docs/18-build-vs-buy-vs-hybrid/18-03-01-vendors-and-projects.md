@@ -1,6 +1,6 @@
 # 18.3.1 Vendors And Projects
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the vendors and projects that tend to pull decisions toward buy, build, or hybrid sourcing. The same tool can appear in multiple sections because sourcing posture depends on how it is adopted, not only on what the product is.
 

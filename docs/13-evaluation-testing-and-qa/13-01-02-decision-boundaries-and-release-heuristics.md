@@ -1,6 +1,6 @@
 # 13.1.2 Decision Boundaries And Release Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when the evidence types are already clear and the remaining question is what release lane the change belongs in by default. The goal is to match proof depth to the highest-consequence failure so teams do not ship on benchmark optimism alone, over-test low-risk tweaks like full launches, or treat observability as a substitute for pre-release evidence.
 

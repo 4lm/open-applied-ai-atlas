@@ -1,6 +1,6 @@
 # 2.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section gathers the named external anchors that stabilize taxonomy work. It exists to support the chapter, not replace it: use these references after the category logic is clear and the question becomes “which outside standard or body should anchor this distinction?”
 

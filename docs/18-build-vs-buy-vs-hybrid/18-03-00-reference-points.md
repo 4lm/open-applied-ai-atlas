@@ -1,6 +1,6 @@
 # 18.3 Reference Points
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section collects the named comparison material that supports chapter `18` after the sourcing logic is clear. Use it to compare real suppliers and reusable stack shapes without turning the chapter back into a product ranking exercise.
 

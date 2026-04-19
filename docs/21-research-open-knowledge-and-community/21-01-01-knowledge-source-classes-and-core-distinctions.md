@@ -1,6 +1,6 @@
 # 21.1.1 Knowledge Source Classes And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to classify what kind of public knowledge is actually in front of the team before a paper, benchmark, open-source repository, public guide, or community narrative starts carrying more authority than it earned. Chapter `21` only works if readers separate source classes, stewardship postures, and evidence claims before they start arguing about adoption.
 

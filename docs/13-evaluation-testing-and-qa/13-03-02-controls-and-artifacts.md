@@ -1,6 +1,6 @@
 # 13.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 This page turns the chapter into a reusable evidence packet. Use it when the team needs reviewable artifacts rather than a general statement that “we tested it.”
 

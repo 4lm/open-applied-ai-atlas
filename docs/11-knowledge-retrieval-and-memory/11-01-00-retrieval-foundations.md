@@ -1,6 +1,6 @@
 # 11.1 Retrieval Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the retrieval and memory distinctions that keep teams from solving freshness, permission, or adaptation problems with the wrong persistence layer.
 

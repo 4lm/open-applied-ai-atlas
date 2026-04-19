@@ -1,6 +1,6 @@
 # 14.3.1 Tools And Platforms
 
-_Page Type: Comparison Page | Maturity: Review-Ready_
+_Page Type: Comparison Page | Maturity: Draft_
 
 This file compares the main telemetry and monitoring layers relevant to AI systems. It covers open telemetry foundations, general observability backplanes, and AI-specific tracing platforms because a useful observability stack usually combines at least two of those categories.
 

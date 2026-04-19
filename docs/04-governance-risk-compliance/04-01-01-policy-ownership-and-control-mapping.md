@@ -1,6 +1,6 @@
 # 4.1.1 Policy, Ownership, And Control Mapping
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 This page separates the recurring governance concepts that are easy to blur together in review meetings. The distinction work matters because teams often say "governance" when they actually mean policy writing, approval routing, control enforcement, or evidence collection.
 

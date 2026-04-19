@@ -1,6 +1,6 @@
 # 9.1 Gateway Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the control-plane distinctions teams need before they centralize model traffic behind a shared gateway. Use it to separate provider routing, caller identity, policy enforcement, approval boundaries, and audit evidence so gateway adoption does not collapse into a vague "platform standardization" project.
 

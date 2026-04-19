@@ -1,6 +1,6 @@
 # 21.1 Knowledge Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the minimum source-triage discipline for chapter `21`. Read it before a paper, benchmark, project, or community narrative starts steering architecture, policy, or sourcing choices by momentum alone.
 

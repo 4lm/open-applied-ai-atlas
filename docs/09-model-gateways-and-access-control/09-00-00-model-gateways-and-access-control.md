@@ -1,6 +1,6 @@
 # 9. Model Gateways And Access Control
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats the model gateway as the shared control plane between applications, identities, models, providers, and organizational policy. Use it when teams have moved beyond isolated provider integrations and now need consistent routing, approval, quota, logging, and policy enforcement without making every product team reinvent those controls.
 

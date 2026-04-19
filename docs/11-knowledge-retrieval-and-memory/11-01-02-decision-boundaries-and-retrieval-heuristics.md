@@ -1,6 +1,6 @@
 # 11.1.2 Decision Boundaries And Retrieval Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page when a team knows knowledge quality matters but has not yet proved what should be retrieved live, remembered across sessions, or kept out of persistent state altogether. The goal is to name the dominant retrieval lane before convenience, vendor defaults, or model-tuning pressure turn a knowledge-boundary problem into an architecture mistake.
 

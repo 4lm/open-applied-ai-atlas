@@ -1,6 +1,6 @@
 # 6.3.2 Controls And Artifacts
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this page to make privacy and sovereignty claims inspectable. A boundary posture is not real until the team can show how data enters, persists, is reviewed, and is removed.
 

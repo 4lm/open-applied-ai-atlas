@@ -1,6 +1,6 @@
 # 1. Scope And Principles
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter turns the atlas mission into practical boundaries for reading, contribution, and later decision work. Use it when the open question is still whether a topic belongs in the atlas, which roles need to align first, or which cross-cutting priorities should shape every later comparison.
 

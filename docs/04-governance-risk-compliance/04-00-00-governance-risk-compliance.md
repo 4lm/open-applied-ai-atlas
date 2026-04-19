@@ -1,6 +1,6 @@
 # 4. Governance Risk Compliance
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats governance, risk, and compliance as operating design rather than after-the-fact approval. Use it to decide who owns an AI system, which review lane applies, what evidence must exist before release, and when a control problem is actually a privacy, sourcing, security, or standards problem instead.
 

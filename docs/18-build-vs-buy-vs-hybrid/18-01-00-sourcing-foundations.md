@@ -1,6 +1,6 @@
 # 18.1 Sourcing Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section defines the layered sourcing logic behind the chapter. Use it when the team is still asking “should we build or buy?” as if one answer can cover models, data systems, workflows, controls, and operations at the same time.
 

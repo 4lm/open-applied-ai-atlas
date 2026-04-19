@@ -1,6 +1,6 @@
 # 19.1.1 Architecture Shapes, Constraints, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate the major architecture families before choosing named products. A good reference architecture narrows the design space. It does not pretend that one canonical stack fits every organization.
 

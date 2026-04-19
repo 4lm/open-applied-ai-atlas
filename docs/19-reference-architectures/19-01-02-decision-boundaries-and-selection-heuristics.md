@@ -1,6 +1,6 @@
 # 19.1.2 Decision Boundaries And Selection Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to narrow the architecture family before comparing detailed reference stacks or named suppliers.
 

@@ -1,6 +1,6 @@
 # 11.3.2 Retrieval Readiness Checklist
 
-_Page Type: Operational Artifact | Maturity: Review-Ready_
+_Page Type: Operational Artifact | Maturity: Draft_
 
 Use this checklist before calling a retrieval or memory layer production-ready. A retrieval demo is not enough if permissions, freshness, provenance, and deletion behavior are still unclear.
 

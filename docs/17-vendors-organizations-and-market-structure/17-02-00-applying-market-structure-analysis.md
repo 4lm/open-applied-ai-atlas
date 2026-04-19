@@ -1,6 +1,6 @@
 # 17.2 Applying Market Structure Analysis
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns concentration analysis into delivery guidance. Use it to test whether a planned stack still has acceptable optionality once support, skills, control-plane, and infrastructure dependencies are made explicit.
 

@@ -1,6 +1,6 @@
 # 7. Model Ecosystem
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats the model ecosystem as the decision surface that sits between use-case framing and runtime design: which model families are even relevant, how much openness and deployment freedom matter, what lifecycle burden the team is accepting, and where supplier concentration becomes a real architectural constraint.
 

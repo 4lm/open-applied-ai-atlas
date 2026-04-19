@@ -1,6 +1,6 @@
 # 5.2 Applying Use-Case Portfolios
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns use-case framing into rollout review. Use it when the task family and initial solution pattern are already plausible and the remaining question is whether the portfolio still makes sense once staffing, control burden, data boundaries, sourcing posture, and re-review triggers are tested against real delivery conditions.
 

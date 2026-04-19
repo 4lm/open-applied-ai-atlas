@@ -1,6 +1,6 @@
 # 15.2 Operating Security And Abuse Resistance
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns security design into operating review. Use it when trust boundaries are already clear and the team now needs to prove that prompt abuse, tool misuse, secrets exposure, provider egress, and incident containment still hold under real delivery pressure.
 

@@ -1,6 +1,6 @@
 # 13. Evaluation Testing And QA
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter treats evaluation, testing, and QA as the evidence spine for release, review, and continuous improvement. It is where teams should define what they must prove before launch instead of mistaking demos, benchmarks, or anecdotal success for release readiness.
 

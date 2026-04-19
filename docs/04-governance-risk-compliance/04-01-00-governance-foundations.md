@@ -1,6 +1,6 @@
 # 4.1 Governance Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the distinctions that keep governance work from collapsing into generic policy language. Read it before comparing standards or designing release gates.
 

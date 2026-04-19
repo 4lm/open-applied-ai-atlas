@@ -1,6 +1,6 @@
 # 3.1 Stack Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the layer model that keeps enterprise AI design reviews from collapsing into model shopping or tool sprawl.
 

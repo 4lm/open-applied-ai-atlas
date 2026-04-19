@@ -1,6 +1,6 @@
 # 10.1 Agentic Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section sets the minimum conceptual discipline for discussing agents. Use it when a team is mixing up assistants, workflows, planners, tool use, and autonomy levels in the same proposal.
 

@@ -1,6 +1,6 @@
 # 17.1.1 Actor Types, Power, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 This page separates the main ecosystem roles that shape optionality across the AI stack. The distinction matters because the organization that sets prices, distribution rules, hardware availability, or support access is not always the one named on the interface your team uses.
 

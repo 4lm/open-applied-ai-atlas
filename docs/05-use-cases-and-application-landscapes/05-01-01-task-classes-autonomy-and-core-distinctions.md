@@ -1,6 +1,6 @@
 # 5.1.1 Task Classes, Autonomy, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to classify the work pattern before the discussion collapses into "assistant", "agent", or one preferred product suite. Use-case review becomes weak when drafting help, predictive decision support, extraction workflows, optimization engines, action-taking automation, and internal control surfaces are all treated as the same thing with different interfaces.
 

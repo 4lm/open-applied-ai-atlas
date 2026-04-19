@@ -1,6 +1,6 @@
 # 18.1.2 Decision Boundaries And Sourcing Heuristics
 
-_Page Type: Decision Guide | Maturity: Review-Ready_
+_Page Type: Decision Guide | Maturity: Draft_
 
 Use this page to narrow the sourcing posture before comparing vendors or stack shapes. The goal is not to produce one universal answer for the chapter; it is to identify which decision lane dominates and which chapter must be pulled into the review before the sourcing choice hardens.
 

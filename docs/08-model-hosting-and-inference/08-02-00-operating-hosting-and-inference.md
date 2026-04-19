@@ -1,6 +1,6 @@
 # 8.2 Operating Hosting And Inference
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns hosting design into operating review. Use it when the runtime posture is already plausible and the team now needs to prove that rollout sequencing, capacity assumptions, fallback behavior, support access, and runtime evidence still hold under real delivery pressure.
 

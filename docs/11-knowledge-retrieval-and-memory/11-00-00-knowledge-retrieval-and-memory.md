@@ -1,6 +1,6 @@
 # 11. Knowledge Retrieval And Memory
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter explains retrieval, memory, provenance, and knowledge state so teams can decide what should be looked up, remembered, or kept out of persistent system state. It is where many quiet failure modes begin, because persistence, permissions, and freshness are often treated as implementation details until they become incidents.
 

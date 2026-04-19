@@ -1,6 +1,6 @@
 # 12.2.1 Worked Adaptation Scenarios
 
-_Page Type: Worked Example | Maturity: Review-Ready_
+_Page Type: Worked Example | Maturity: Draft_
 
 Use these scenarios to test whether the team has a prompt-and-workflow problem, a retrieval problem, a justified fine-tuning case, or a broader retraining obligation. Each scenario is framed around the escalation decision, the recommended posture, and the evidence outputs that should exist before rollout or re-release.
 

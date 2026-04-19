@@ -1,6 +1,6 @@
 # 6.1 Boundary Foundations
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section establishes the distinctions that keep privacy, sovereignty, and portability questions from being flattened into one vague "data concern."
 

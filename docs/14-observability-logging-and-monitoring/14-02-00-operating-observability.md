@@ -1,6 +1,6 @@
 # 14.2 Operating Observability
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns observability design into operating review. Use it when the telemetry model is already clear and the team now needs to prove that incident reconstruction, alert ownership, retention choices, and evidence export still work under real rollout pressure.
 

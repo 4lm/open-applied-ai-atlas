@@ -1,6 +1,6 @@
 # 16. Human Oversight And Operating Model
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This chapter turns "human oversight" into named authority, staffed intervention, and reviewable evidence. Use it when the real question is not whether a person appears somewhere in the workflow, but whether someone can actually approve, stop, override, or escalate the system once consequences become real.
 

@@ -1,6 +1,6 @@
 # 18.1.1 Layered Sourcing, Control, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Review-Ready_
+_Page Type: Concept Explainer | Maturity: Draft_
 
 Use this page to separate sourcing questions by layer before arguing about named vendors or hosting products. Build-vs-buy only becomes useful when the team can say which part of the stack is being sourced, where real control sits, and which dependence will be hardest to unwind later.
 

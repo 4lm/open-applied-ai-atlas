@@ -1,6 +1,6 @@
 # 18.2 Applying Sourcing Choices
 
-_Page Type: Chapter Index | Maturity: Review-Ready_
+_Page Type: Chapter Index | Maturity: Draft_
 
 This section turns sourcing posture into delivery review. Use it to test whether the chosen build, buy, or hybrid shape still makes sense once rollout sequence, operating ownership, and re-review triggers become concrete.
 
