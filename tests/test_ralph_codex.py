@@ -66,6 +66,45 @@ class FakeProcess:
         return self._exit_code
 
 
+class FakeTTYStream(io.StringIO):
+    def isatty(self):
+        return True
+
+
+class CaptureReporter:
+    def __init__(self, verbose, stdout=None, stderr=None):
+        self.verbose = verbose
+        self.stdout = stdout or io.StringIO()
+        self.stderr = stderr or io.StringIO()
+
+    def status(self, message):
+        self.stdout.write(message + "\n")
+
+    def event(self, message, tone="event"):
+        self.stderr.write(message + "\n")
+
+    def wait(self, phase_name, elapsed_seconds):
+        self.stdout.write(f"wait {phase_name} {elapsed_seconds}\n")
+
+    def tool(self, action, detail):
+        self.stderr.write(f"tool {action}: {detail}\n")
+
+    def prompt(self, message):
+        self.stderr.write(message + "\n")
+
+    def model_result(self, phase_name, payload):
+        self.stdout.write(f"{phase_name} result\n")
+
+    def model_text(self, phase_name, text):
+        self.stdout.write(text + "\n")
+
+    def verbose_trace(self, event_type, payload):
+        return None
+
+    def finish_stdout_line(self):
+        return None
+
+
 class RalphCodexTests(unittest.TestCase):
     def make_temp_root(self):
         tempdir = tempfile.TemporaryDirectory()
@@ -347,6 +386,17 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(rows[1]["outcome"], "running")
         self.assertEqual(rows[1]["session_status"], "resumable")
 
+    def test_list_run_rows_marks_aborted_runs(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        run_1 = ralph_codex.new_run_id(datetime(2026, 4, 19, 12, 0, 0, 0, tzinfo=timezone.utc), "a1b2c3d4e5f6")
+        store.append_run_history(session, run_1, "run_started", "message", "run started")
+        store.append_run_history(session, run_1, "run_aborted", "message", "aborted by operator")
+        rows = store.list_run_rows()
+        self.assertEqual(rows[0]["outcome"], "aborted")
+        self.assertEqual(rows[0]["session_status"], "resumable")
+
     def test_resolve_resume_target_accepts_index_and_id(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -457,10 +507,7 @@ class RalphCodexTests(unittest.TestCase):
             },
         )
         events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
-        notification = events[-1]
-        self.assertEqual(notification["event_type"], "notification")
-        self.assertEqual(notification["payload"]["item"]["output_chars"], 120)
-        self.assertNotIn("output", notification["payload"]["item"])
+        self.assertEqual(events, [])
 
     def test_event_recorder_normal_console_is_human_readable(self):
         tempdir, root = self.make_temp_root()
@@ -472,6 +519,7 @@ class RalphCodexTests(unittest.TestCase):
         recorder.record_client_event({"type": "stderr", "line": "fatal: app-server crashed"})
         console = stderr.getvalue()
         self.assertIn("app-server stderr: fatal: app-server crashed", console)
+        self.assertIn("EVENT", console)
         self.assertNotIn('{"line"', console)
 
     def test_event_recorder_verbose_wire_keeps_raw_output(self):
@@ -511,9 +559,9 @@ class RalphCodexTests(unittest.TestCase):
             }
         )
         console = stderr.getvalue()
-        self.assertIn("[ralph][wire]", console)
-        self.assertIn("(truncated for console)", console)
-        self.assertLessEqual(len(console.splitlines()[-1]), 1100)
+        self.assertIn("TRACE", console)
+        self.assertIn("truncated for", console)
+        self.assertLessEqual(max(len(line) for line in console.splitlines()), 120)
         events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
         wire = events[-1]
         self.assertEqual(wire["payload"]["payload"]["params"]["item"]["output"], long_output)
@@ -525,7 +573,87 @@ class RalphCodexTests(unittest.TestCase):
         stderr = io.StringIO()
         recorder = self.make_event_recorder(store, session, verbose=True, stderr=stderr)
         recorder.record_rpc_request(3, "turn/start", {"threadId": "thread-1", "input": [], "outputSchema": {}})
-        self.assertIn("[ralph][rpc-request]", stderr.getvalue())
+        self.assertIn("rpc-request", stderr.getvalue())
+
+    def test_terminal_reporter_uses_color_on_tty(self):
+        stdout = FakeTTYStream()
+        stderr = FakeTTYStream()
+        reporter = ralph_codex.TerminalReporter(verbose=False, stdout=stdout, stderr=stderr)
+        reporter.status("colored status")
+        reporter.event("colored event")
+        self.assertIn("\x1b[", stdout.getvalue())
+        self.assertIn("\x1b[", stderr.getvalue())
+
+    def test_session_store_deduplicates_identical_events(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        store.append_event(session, "notification", {"method": "turn/started", "turn": {"id": "turn-1", "status": "inProgress"}})
+        store.append_event(session, "notification", {"method": "turn/started", "turn": {"id": "turn-1", "status": "inProgress"}})
+        events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
+        self.assertEqual(len(events), 1)
+
+    def test_execute_run_keyboard_interrupt_marks_session_aborted_and_resumable(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
+        schema_catalog = self.make_schema_catalog()
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        client_instances = []
+
+        class InterruptingClient:
+            def __init__(self, runtime_config, event_recorder):
+                self.runtime_config = runtime_config
+                self.event_recorder = event_recorder
+                self.closed = False
+                client_instances.append(self)
+
+            def close(self):
+                self.closed = True
+
+        class InterruptingController:
+            def __init__(self, runtime_config, client, event_recorder, store, schema_catalog, session, terminal_reporter=None):
+                self.session = session
+
+            def run(self):
+                raise KeyboardInterrupt
+
+        original_ensure = ralph_codex.ensure_codex_available
+        original_client = ralph_codex.SubprocessAppServerClient
+        original_controller = ralph_codex.RalphController
+        original_reporter = ralph_codex.TerminalReporter
+        self.addCleanup(setattr, ralph_codex, "ensure_codex_available", original_ensure)
+        self.addCleanup(setattr, ralph_codex, "SubprocessAppServerClient", original_client)
+        self.addCleanup(setattr, ralph_codex, "RalphController", original_controller)
+        self.addCleanup(setattr, ralph_codex, "TerminalReporter", original_reporter)
+        ralph_codex.ensure_codex_available = lambda: None
+        ralph_codex.SubprocessAppServerClient = InterruptingClient
+        ralph_codex.RalphController = InterruptingController
+        ralph_codex.TerminalReporter = lambda verbose: CaptureReporter(verbose, stdout=stdout, stderr=stderr)
+
+        exit_code = ralph_codex.execute_run(runtime_config, store, schema_catalog, session, "message", verbose=False)
+
+        self.assertEqual(exit_code, ralph_codex.ABORT_EXIT_CODE)
+        self.assertTrue(client_instances[0].closed)
+        state = store.read_json(session.session_dir / "session-state.json", ralph_codex.SESSION_STATE_SCHEMA_ID)
+        self.assertEqual(state["status"], "aborted")
+        self.assertEqual(state["current_turn_id"], "")
+        completion = store.read_json(session.session_dir / "completion.json", ralph_codex.COMPLETION_SCHEMA_ID)
+        self.assertEqual(completion["last_reason"], ralph_codex.ABORT_REASON)
+        controller_state = store.read_json(store.controller_state_path, ralph_codex.CONTROLLER_STATE_SCHEMA_ID)
+        self.assertEqual(controller_state["current_session_id"], session.session_id)
+        self.assertEqual(controller_state["current_run_id"], "")
+        self.assertFalse((session.session_dir / "finished.json").exists())
+        rows = store.list_run_rows()
+        self.assertEqual(rows[-1]["outcome"], "aborted")
+        self.assertEqual(rows[-1]["session_status"], "resumable")
+        events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
+        aborted = [event for event in events if event["event_type"] == "run-aborted"]
+        self.assertEqual(len(aborted), 1)
+        self.assertIn(f"./scripts/ralph-codex.py --resume {session.session_id}", aborted[0]["payload"]["resume_command"])
+        self.assertIn("aborted. resume session with:", stdout.getvalue())
 
     def test_select_prompt_option_prefers_recommended(self):
         choice = ralph_codex.RalphController.select_prompt_option(
@@ -665,6 +793,8 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("prompt request answered: 1 answer(s)", stderr.getvalue())
         self.assertIn("test: turn started turn-1", stdout.getvalue())
         self.assertIn("test: turn completed turn-1 -> IN_PROGRESS: working", stdout.getvalue())
+        self.assertIn("test result", stdout.getvalue())
+        self.assertIn("summary:", stdout.getvalue())
 
     def test_run_turn_waits_through_silence_and_completes(self):
         tempdir, root = self.make_temp_root()
@@ -743,7 +873,8 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "IN_PROGRESS")
         self.assertEqual(client.poll_count, 3)
-        self.assertIn("waiting for model on turn-1 (11s idle)", stdout.getvalue())
+        self.assertIn("WAIT", stdout.getvalue())
+        self.assertIn("test running for 11s", stdout.getvalue())
 
     def test_run_turn_raises_when_app_server_stream_closes(self):
         tempdir, root = self.make_temp_root()
@@ -773,7 +904,7 @@ class RalphCodexTests(unittest.TestCase):
                 collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
             )
 
-    def test_run_turn_keeps_status_lines_readable_after_delta_output(self):
+    def test_run_turn_formats_structured_model_output_instead_of_raw_json(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
@@ -842,7 +973,10 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "CHARTER_READY")
         console = stdout.getvalue()
-        self.assertIn("Working...\n[ralph][status]", console)
+        self.assertIn("planning result", console)
+        self.assertIn("status:", console)
+        self.assertNotIn(json.dumps(result_payload), console)
+        self.assertIn("Working...", console)
 
     def test_run_turn_extracts_plan_thread_item_output(self):
         tempdir, root = self.make_temp_root()
@@ -1086,6 +1220,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("does not use turn inactivity timeouts", readme_text)
         self.assertIn("`max_iterations` uses `0` to mean unlimited", readme_text)
         self.assertIn("events.jsonl", readme_text)
+        self.assertIn("Ctrl+C", readme_text)
         self.assertIn("workspace-write", readme_text)
         self.assertIn("dangerously-unrestricted", readme_text)
         self.assertIn("python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py", readme_text)

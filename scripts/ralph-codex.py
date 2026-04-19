@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from textwrap import dedent
+from textwrap import dedent, wrap
 from typing import Any, Callable, Optional
 
 
@@ -30,7 +30,12 @@ CODEx_BIN = "codex"
 APP_SERVER_REQUEST_TIMEOUT_SECS = 30.0
 STDERR_BUFFER_LINES = 50
 TURN_IDLE_HEARTBEAT_SECS = 10.0
-VERBOSE_CONSOLE_CHAR_LIMIT = 1000
+VERBOSE_CONSOLE_CHAR_LIMIT = 240
+CONSOLE_WRAP_WIDTH = 88
+MODEL_WORKSTREAM_PREVIEW_COUNT = 4
+MODEL_GAP_PREVIEW_COUNT = 4
+ABORT_EXIT_CODE = 130
+ABORT_REASON = "aborted by operator"
 
 PROFILE_SCHEMA_ID = "ralph-codex/profile"
 PLANNING_OUTPUT_SCHEMA_ID = "ralph-codex/output/planning"
@@ -145,23 +150,46 @@ class TerminalReporter:
         self.stderr = stderr
         self._stdout_at_line_start = True
         self._stderr_at_line_start = True
+        self._stdout_color = self._supports_color(stdout)
+        self._stderr_color = self._supports_color(stderr)
 
     def status(self, message: str) -> None:
-        self._write_line("stdout", "status", message)
+        self._emit_record("stdout", "status", message, tone="status")
 
-    def event(self, message: str) -> None:
-        self._write_line("stderr", "event", message)
+    def wait(self, phase_name: str, elapsed_seconds: int) -> None:
+        self._emit_record("stdout", "wait", f"{phase_name} running for {elapsed_seconds}s", tone="wait")
+
+    def event(self, message: str, tone: str = "event") -> None:
+        self._emit_record("stderr", "event", message, tone=tone)
+
+    def tool(self, action: str, detail: str) -> None:
+        self._emit_record("stderr", "tool", f"{action}: {detail}", tone="tool")
+
+    def prompt(self, message: str) -> None:
+        self._emit_record("stderr", "prompt", message, tone="prompt")
+
+    def model_result(self, phase_name: str, payload: dict[str, Any]) -> None:
+        lines = self._render_model_payload_lines(payload)
+        title = f"{phase_name} result"
+        self._emit_block("stdout", "model", title, lines, tone="model")
+
+    def model_text(self, phase_name: str, text: str) -> None:
+        cleaned = " ".join(text.split())
+        if not cleaned:
+            return
+        self._emit_block(
+            "stdout",
+            "model",
+            f"{phase_name} message",
+            self._wrap_detail(cleaned, width=CONSOLE_WRAP_WIDTH - 4),
+            tone="model",
+        )
 
     def verbose_trace(self, event_type: str, payload: dict[str, Any]) -> None:
         if not self.verbose:
             return
-        rendered = self.cap_console_text(self.stringify(payload))
-        self._write_line("stderr", event_type, rendered)
-
-    def delta(self, text: str) -> None:
-        if not text:
-            return
-        self._write("stdout", text)
+        lines = self._render_trace_lines(payload)
+        self._emit_block("stderr", "trace", event_type, lines, tone="trace")
 
     def finish_stdout_line(self) -> None:
         if not self._stdout_at_line_start:
@@ -183,13 +211,39 @@ class TerminalReporter:
         marker = "... (truncated for console)"
         return text[: max(0, limit - len(marker))] + marker
 
-    def _write_line(self, stream_name: str, label: str, message: str) -> None:
+    def _emit_record(self, stream_name: str, label: str, message: str, tone: str) -> None:
+        self._prepare_line(stream_name)
+        timestamp = self._style(stream_name, utc_now().strftime("%H:%M:%SZ"), "meta")
+        badge = self._style(stream_name, label.upper().ljust(6), tone)
+        wrapped = self._wrap_detail(message)
+        if not wrapped:
+            wrapped = [""]
+        first, *rest = wrapped
+        self._write(stream_name, f"{timestamp} {badge} {first}\n")
+        for line in rest:
+            self._write(stream_name, f"{' ' * 9} {' ' * 6} {line}\n")
+
+    def _emit_block(
+        self,
+        stream_name: str,
+        label: str,
+        title: str,
+        detail_lines: list[str],
+        tone: str,
+    ) -> None:
+        self._prepare_line(stream_name)
+        timestamp = self._style(stream_name, utc_now().strftime("%H:%M:%SZ"), "meta")
+        badge = self._style(stream_name, label.upper().ljust(6), tone)
+        header = self._style(stream_name, title, "title")
+        self._write(stream_name, f"{timestamp} {badge} {header}\n")
+        for line in detail_lines:
+            self._write(stream_name, f"{' ' * 9} {' ' * 6} {line}\n")
+
+    def _prepare_line(self, stream_name: str) -> None:
         if stream_name == "stdout":
             self.finish_stdout_line()
         elif not self._stderr_at_line_start:
             self._write("stderr", "\n")
-        timestamp = utc_now().strftime("%H:%M:%SZ")
-        self._write(stream_name, f"[ralph][{label}] {timestamp} {message}\n")
 
     def _write(self, stream_name: str, text: str) -> None:
         stream = self.stdout if stream_name == "stdout" else self.stderr
@@ -199,6 +253,120 @@ class TerminalReporter:
             self._stdout_at_line_start = text.endswith("\n")
         else:
             self._stderr_at_line_start = text.endswith("\n")
+
+    def _style(self, stream_name: str, text: str, tone: str) -> str:
+        if not self._colors_enabled(stream_name):
+            return text
+        color_by_tone = {
+            "meta": "\033[2m",
+            "status": "\033[36m",
+            "wait": "\033[34m",
+            "event": "\033[35m",
+            "tool": "\033[33m",
+            "prompt": "\033[95m",
+            "model": "\033[32m",
+            "trace": "\033[2m",
+            "error": "\033[31m",
+            "warn": "\033[33m",
+            "title": "\033[1m",
+            "key": "\033[36m",
+            "value": "\033[32m",
+        }
+        color = color_by_tone.get(tone)
+        if not color:
+            return text
+        return f"{color}{text}\033[0m"
+
+    def _colors_enabled(self, stream_name: str) -> bool:
+        return self._stdout_color if stream_name == "stdout" else self._stderr_color
+
+    @staticmethod
+    def _supports_color(stream: Any) -> bool:
+        isatty = getattr(stream, "isatty", None)
+        if not callable(isatty):
+            return False
+        try:
+            return bool(isatty())
+        except Exception:
+            return False
+
+    def _wrap_detail(self, text: str, width: int = CONSOLE_WRAP_WIDTH) -> list[str]:
+        normalized = " ".join(text.split())
+        if not normalized:
+            return []
+        return wrap(normalized, width=width) or [normalized]
+
+    def _format_kv(self, stream_name: str, key: str, value: str) -> str:
+        return f"{self._style(stream_name, key + ':', 'key')} {self._style(stream_name, value, 'value')}"
+
+    def _render_model_payload_lines(self, payload: dict[str, Any]) -> list[str]:
+        lines: list[str] = []
+        scalar_keys = ("status", "summary", "next_step", "gate_reasoning", "broadening_rationale")
+        for key in scalar_keys:
+            if isinstance(payload.get(key), str) and payload[key].strip():
+                value = self.cap_console_text(" ".join(payload[key].split()))
+                lines.extend(self._wrap_detail(self._format_kv("stdout", key, value), width=CONSOLE_WRAP_WIDTH - 4))
+        charter = payload.get("charter")
+        if isinstance(charter, dict):
+            workstreams = charter.get("workstreams") or []
+            success_criteria = charter.get("success_criteria") or []
+            if success_criteria:
+                lines.append(self._format_kv("stdout", "success", f"{len(success_criteria)} criteria"))
+            if workstreams:
+                lines.append(self._format_kv("stdout", "workstreams", f"{len(workstreams)} planned"))
+                for workstream in workstreams[:MODEL_WORKSTREAM_PREVIEW_COUNT]:
+                    identifier = workstream.get("id", "?")
+                    title = self.cap_console_text(" ".join(str(workstream.get("title", "")).split()), limit=72)
+                    lines.extend(self._wrap_detail(f"- {identifier}: {title}", width=CONSOLE_WRAP_WIDTH - 6))
+                remaining = len(workstreams) - MODEL_WORKSTREAM_PREVIEW_COUNT
+                if remaining > 0:
+                    lines.append(f"- +{remaining} more")
+        updates = payload.get("workstream_updates")
+        if isinstance(updates, list) and updates:
+            lines.append(self._format_kv("stdout", "updates", f"{len(updates)} workstreams"))
+            for update in updates[:MODEL_WORKSTREAM_PREVIEW_COUNT]:
+                identifier = update.get("id", "?")
+                status = update.get("status", "?")
+                lines.append(f"- {identifier}: {status}")
+        gaps = payload.get("remaining_gaps")
+        if isinstance(gaps, list):
+            lines.append(self._format_kv("stdout", "remaining_gaps", str(len(gaps))))
+            for gap in gaps[:MODEL_GAP_PREVIEW_COUNT]:
+                lines.extend(self._wrap_detail(f"- {self.cap_console_text(' '.join(str(gap).split()), limit=72)}", width=CONSOLE_WRAP_WIDTH - 6))
+            remaining = len(gaps) - MODEL_GAP_PREVIEW_COUNT
+            if remaining > 0:
+                lines.append(f"- +{remaining} more")
+        validation = payload.get("validation_completed")
+        if isinstance(validation, list) and validation:
+            lines.append(self._format_kv("stdout", "validation", ", ".join(map(str, validation[:4]))))
+        return lines or [self._format_kv("stdout", "status", "no structured details")]
+
+    def _render_trace_lines(self, payload: dict[str, Any]) -> list[str]:
+        lines: list[str] = []
+        for key in sorted(payload.keys()):
+            rendered = self._summarize_value(payload[key])
+            lines.extend(
+                self._wrap_detail(
+                    self._format_kv("stderr", key, self.cap_console_text(rendered)),
+                    width=CONSOLE_WRAP_WIDTH - 4,
+                )
+            )
+        return lines or [self._format_kv("stderr", "detail", "empty payload")]
+
+    def _summarize_value(self, value: Any) -> str:
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return str(value)
+        if isinstance(value, list):
+            preview = ", ".join(self.cap_console_text(self.stringify(item), limit=48) for item in value[:3])
+            suffix = "" if len(value) <= 3 else f", +{len(value) - 3} more"
+            return f"[{preview}{suffix}]"
+        if isinstance(value, dict):
+            preview = []
+            for key in sorted(value.keys())[:4]:
+                preview.append(f"{key}={self.cap_console_text(self.stringify(value[key]), limit=40)}")
+            suffix = "" if len(value) <= 4 else f", +{len(value) - 4} more"
+            return "{" + ", ".join(preview) + suffix + "}"
+        return self.stringify(value)
 
 
 @dataclass
@@ -458,6 +626,7 @@ class SessionStore:
         self.controller_state_path = self.root / "controller-state.json"
         self.sessions_log_path = self.root / "sessions.log.jsonl"
         self.schema_catalog = schema_catalog
+        self._event_fingerprint_cache: dict[str, str | None] = {}
         self.root.mkdir(parents=True, exist_ok=True)
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
         self.ensure_top_level_files()
@@ -684,7 +853,29 @@ class SessionStore:
         session.state["status"] = "finished"
         self.save_state(session)
 
+    def mark_active(self, session: SessionContext) -> None:
+        session.state["status"] = "active"
+        self.save_state(session)
+
+    def mark_aborted(self, session: SessionContext, reason: str) -> None:
+        session.state["status"] = "aborted"
+        session.state["current_turn_id"] = ""
+        if session.charter_record and not session.state["seed_confirmed"]:
+            session.state["phase"] = "awaiting_seed_confirmation"
+        else:
+            session.state["phase"] = "planning"
+        self.save_state(session)
+        self.save_completion(
+            session,
+            session.completion_record.get("last_result", {}),
+            False,
+            reason,
+        )
+
     def append_event(self, session: SessionContext, event_type: str, payload: dict[str, Any]) -> None:
+        fingerprint = self.event_fingerprint(event_type, payload)
+        if self.last_event_fingerprint(session) == fingerprint:
+            return
         self.append_jsonl(
             session.session_dir / "events.jsonl",
             EVENT_LOG_LINE_SCHEMA_ID,
@@ -695,6 +886,7 @@ class SessionStore:
                 "payload": payload,
             },
         )
+        self._event_fingerprint_cache[session.session_id] = fingerprint
 
     def append_turn(self, session: SessionContext, phase: str, turn_id: str, status: str, summary: str) -> None:
         self.append_jsonl(
@@ -779,6 +971,9 @@ class SessionStore:
             if record["event"] == "run_completed":
                 row["finished_at"] = record["ts"]
                 row["outcome"] = "completed"
+            elif record["event"] == "run_aborted":
+                row["finished_at"] = record["ts"]
+                row["outcome"] = "aborted"
             elif record["event"] == "run_failed":
                 row["finished_at"] = record["ts"]
                 row["outcome"] = "failed"
@@ -790,6 +985,29 @@ class SessionStore:
         if limit is not None:
             rows = rows[-limit:]
         return rows
+
+    def last_event_fingerprint(self, session: SessionContext) -> str | None:
+        if session.session_id in self._event_fingerprint_cache:
+            return self._event_fingerprint_cache[session.session_id]
+        path = session.session_dir / "events.jsonl"
+        if not path.exists():
+            self._event_fingerprint_cache[session.session_id] = None
+            return None
+        last_record: dict[str, Any] | None = None
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                last_record = json.loads(line)
+        if not last_record:
+            self._event_fingerprint_cache[session.session_id] = None
+            return None
+        fingerprint = self.event_fingerprint(last_record["event_type"], last_record["payload"])
+        self._event_fingerprint_cache[session.session_id] = fingerprint
+        return fingerprint
+
+    @staticmethod
+    def event_fingerprint(event_type: str, payload: dict[str, Any]) -> str:
+        normalized = {"event_type": event_type, "payload": payload}
+        return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
 
 
 class EventRecorder:
@@ -854,12 +1072,13 @@ class EventRecorder:
         self.trace("rpc-response", payload)
         if "error" in payload:
             message = payload["error"].get("message", "unknown error")
-            self.reporter.event(f"{method} failed: {message}")
+            self.reporter.event(f"{method} failed: {message}", tone="error")
 
     def record_notification(self, method: str | None, params: dict[str, Any]) -> None:
         payload = self.summarize_notification(method or "", params)
-        self.append("notification", payload)
-        self.trace("notification", payload)
+        if self.should_persist_notification(payload):
+            self.append("notification", payload)
+            self.trace("notification", payload)
         self.report_notification(payload)
 
     def record_server_request(
@@ -882,33 +1101,39 @@ class EventRecorder:
     def report_client_event(self, event_type: str, payload: dict[str, Any]) -> None:
         if event_type == "stderr":
             line = self.cap_human_text(payload.get("line", ""))
-            self.reporter.event(f"app-server stderr: {line}")
+            self.reporter.event(f"app-server stderr: {line}", tone="error")
             return
         if event_type == "stdout-parse-error":
             line = self.cap_human_text(payload.get("line", ""))
-            self.reporter.event(f"app-server stdout parse error: {line}")
+            self.reporter.event(f"app-server stdout parse error: {line}", tone="warn")
             return
         if event_type == "stream-closed":
             stream = payload.get("stream", "unknown")
-            self.reporter.event(f"app-server stream closed: {stream}")
+            self.reporter.event(f"app-server stream closed: {stream}", tone="warn")
             return
         if event_type == "orphan-response":
             response_id = payload.get("id", "")
-            self.reporter.event(f"orphan app-server response ignored: id={response_id or 'unknown'}")
+            self.reporter.event(f"orphan app-server response ignored: id={response_id or 'unknown'}", tone="warn")
 
     def report_notification(self, payload: dict[str, Any]) -> None:
         method = payload.get("method")
-        if method != "turn/completed":
+        if method in {"item/started", "item/completed"}:
+            item = payload.get("item") or {}
+            if item.get("type") == "commandExecution" and self.verbose:
+                command = self.cap_human_text(item.get("command", "command"))
+                status = item.get("status", "")
+                self.reporter.tool(status or method, command)
+            return
+        if method == "mcpServer/startupStatus/updated" and self.verbose:
+            name = payload.get("name", "server")
+            status = payload.get("status", "")
+            self.reporter.tool(f"mcp {name}", status)
             return
         turn = payload.get("turn") or {}
         turn_id = turn.get("id") or payload.get("turn_id", "")
         status = turn.get("status") or payload.get("status", "")
-        if turn_id and status:
-            self.reporter.event(f"turn completed event: {turn_id} status={status}")
-        elif turn_id:
-            self.reporter.event(f"turn completed event: {turn_id}")
-        else:
-            self.reporter.event("turn completed event received")
+        if method == "turn/completed" and status == "failed":
+            self.reporter.event(f"turn failed: {turn_id or 'unknown'}", tone="error")
 
     def report_server_request(self, record: dict[str, Any]) -> None:
         method = record.get("method", "")
@@ -917,16 +1142,26 @@ class EventRecorder:
         if method == "item/tool/requestUserInput":
             question_count = payload.get("question_count", 0)
             if action == "received":
-                self.reporter.event(f"prompt request received: {question_count} question(s)")
+                self.reporter.prompt(f"prompt request received: {question_count} question(s)")
                 return
             if action == "answered":
                 answer_ids = payload.get("answer_ids") or []
-                self.reporter.event(f"prompt request answered: {len(answer_ids)} answer(s)")
+                self.reporter.prompt(f"prompt request answered: {len(answer_ids)} answer(s)")
                 return
             if action == "rejected":
-                self.reporter.event("prompt request rejected")
+                self.reporter.event("prompt request rejected", tone="warn")
                 return
-        self.reporter.event(f"server request {action}: {method}")
+        if self.verbose:
+            self.reporter.event(f"server request {action}: {method}")
+
+    def should_persist_notification(self, payload: dict[str, Any]) -> bool:
+        method = payload.get("method")
+        if method in {"turn/started", "turn/completed", "thread/status/changed", "mcpServer/startupStatus/updated"}:
+            return True
+        if method in {"item/started", "item/completed"}:
+            item = payload.get("item") or {}
+            return item.get("type") == "commandExecution"
+        return False
 
     @staticmethod
     def cap_human_text(text: str, limit: int = 240) -> str:
@@ -1307,7 +1542,6 @@ class RalphController:
         self.monotonic_func = monotonic_func
 
     def run(self) -> int:
-        self.print_status(f"run starting for session {self.session.session_id}")
         self.print_status("starting Codex app-server")
         self.client.start()
         self.print_status("Codex app-server ready")
@@ -1459,20 +1693,19 @@ class RalphController:
         self.print_status(f"{phase_name}: turn started {turn_id}")
         raw_items: list[dict[str, Any]] = []
         thread_items: list[dict[str, Any]] = []
-        last_activity = self.monotonic_func()
-        next_heartbeat_at = last_activity + TURN_IDLE_HEARTBEAT_SECS
+        buffered_deltas: list[str] = []
+        turn_started_at = self.monotonic_func()
+        next_heartbeat_at = turn_started_at + TURN_IDLE_HEARTBEAT_SECS
         while True:
             event = self.client.next_event(timeout=0.1)
             if event is None:
                 self.client.raise_if_unavailable("while waiting for turn events")
                 current_time = self.monotonic_func()
                 if current_time >= next_heartbeat_at:
-                    idle_seconds = max(1, int(current_time - last_activity))
-                    self.print_status(f"{phase_name}: waiting for model on {turn_id} ({idle_seconds}s idle)")
-                    next_heartbeat_at = current_time + TURN_IDLE_HEARTBEAT_SECS
+                    elapsed_seconds = max(1, int(current_time - turn_started_at))
+                    self.terminal_reporter.wait(phase_name, elapsed_seconds)
+                    next_heartbeat_at += TURN_IDLE_HEARTBEAT_SECS
                 continue
-            last_activity = self.monotonic_func()
-            next_heartbeat_at = last_activity + TURN_IDLE_HEARTBEAT_SECS
             if event["kind"] == "server-request":
                 self.handle_server_request(event["payload"])
                 continue
@@ -1483,7 +1716,9 @@ class RalphController:
             params = payload.get("params", {})
             self.event_recorder.record_notification(method, params)
             if method in {"item/agentMessage/delta", "item/plan/delta"} and params.get("turnId") == turn_id:
-                self.print_stream(params.get("delta", ""))
+                delta = params.get("delta", "")
+                if isinstance(delta, str) and delta:
+                    buffered_deltas.append(delta)
                 continue
             if method == "rawResponseItem/completed" and params.get("turnId") == turn_id:
                 raw_items.append(params.get("item", {}))
@@ -1502,6 +1737,12 @@ class RalphController:
                 break
         self.terminal_reporter.finish_stdout_line()
         final_output = self.extract_final_output(raw_items, thread_items, schema)
+        if buffered_deltas:
+            streamed_text = "".join(buffered_deltas).strip()
+            if streamed_text:
+                self.render_model_output(phase_name, final_output, streamed_text)
+        else:
+            self.render_model_output(phase_name, final_output, "")
         self.store.append_turn(
             self.session,
             phase_name,
@@ -1792,10 +2033,23 @@ class RalphController:
         }
 
     def print_stream(self, text: str) -> None:
-        self.terminal_reporter.delta(text)
+        self.terminal_reporter.model_text(self.session.state.get("phase", "model"), text)
 
     def print_status(self, text: str) -> None:
         self.terminal_reporter.status(text)
+
+    def render_model_output(self, phase_name: str, final_output: dict[str, Any], streamed_text: str) -> None:
+        self.terminal_reporter.model_result(phase_name, final_output)
+        normalized = " ".join(streamed_text.split())
+        if not normalized:
+            return
+        try:
+            parsed = json.loads(normalized)
+        except json.JSONDecodeError:
+            parsed = None
+        if parsed == final_output:
+            return
+        self.terminal_reporter.model_text(phase_name, normalized)
 
 
 def resolve_start_task(command: Command) -> dict[str, str]:
@@ -1857,6 +2111,7 @@ def execute_run(
 ) -> int:
     ensure_codex_available()
     run_id = new_run_id()
+    store.mark_active(session)
     store.update_controller_state(session.session_id, run_id)
     store.append_run_history(session, run_id, "run_started", invocation_mode, "run started")
     client: SubprocessAppServerClient | None = None
@@ -1880,9 +2135,25 @@ def execute_run(
         store.append_run_history(session, run_id, "run_completed", invocation_mode, summary)
         reporter.status(f"run completed: {truncate_label(summary, 120)}")
         return exit_code
+    except KeyboardInterrupt:
+        resume_command = f"./scripts/ralph-codex.py --resume {session.session_id}"
+        store.mark_aborted(session, ABORT_REASON)
+        store.append_event(
+            session,
+            "run-aborted",
+            {
+                "run_id": run_id,
+                "reason": ABORT_REASON,
+                "resume_command": resume_command,
+            },
+        )
+        store.append_run_history(session, run_id, "run_aborted", invocation_mode, ABORT_REASON)
+        reporter.event("run aborted by operator", tone="warn")
+        reporter.status(f"aborted. resume session with: {resume_command}")
+        return ABORT_EXIT_CODE
     except Exception as exc:
         store.append_run_history(session, run_id, "run_failed", invocation_mode, str(exc))
-        reporter.event(f"run failed: {truncate_label(str(exc), 160)}")
+        reporter.event(f"run failed: {truncate_label(str(exc), 160)}", tone="error")
         raise
     finally:
         store.update_controller_state(session.session_id, "")
