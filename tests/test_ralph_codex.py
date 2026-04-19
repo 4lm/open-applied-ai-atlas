@@ -83,11 +83,14 @@ class CaptureReporter:
     def event(self, message, tone="event"):
         self.stderr.write(message + "\n")
 
-    def wait(self, phase_name, elapsed_seconds):
+    def wait(self, phase_name, elapsed_seconds, command_rows=None):
         self.stdout.write(f"wait {phase_name} {elapsed_seconds}\n")
+        for row in command_rows or []:
+            self.stdout.write(f"cmd {row.get('status')}: {row.get('command')}\n")
 
-    def tool(self, action, detail):
-        self.stderr.write(f"tool {action}: {detail}\n")
+    def tool(self, action, detail, stream_name="stderr"):
+        stream = self.stdout if stream_name == "stdout" else self.stderr
+        stream.write(f"tool {action}: {detail}\n")
 
     def prompt(self, message):
         self.stderr.write(message + "\n")
@@ -95,8 +98,14 @@ class CaptureReporter:
     def approval_prompt(self, message):
         self.stdout.write(message + "\n")
 
+    def console_input(self, text):
+        return None
+
     def command_trace_context(self, trace_rows):
         self.stdout.write(f"trace {len(trace_rows)}\n")
+
+    def review_diff(self, title, detail_lines):
+        self.stdout.write(f"{title}: {len(detail_lines)}\n")
 
     def model_result(self, phase_name, payload, full=False):
         self.stdout.write(f"{phase_name} result\n")
@@ -233,7 +242,12 @@ class RalphCodexTests(unittest.TestCase):
             "gate_reasoning": "safe",
         }
         controller.session.state["charter_version"] = 1
-        controller.store.save_charter(controller.session, planning_result, confirmed=True)
+        controller.store.save_charter(
+            controller.session,
+            planning_result,
+            confirmed=True,
+            review_state="approved",
+        )
 
     def test_parse_command_defaults_to_help(self):
         parser, command = ralph_codex.parse_command([])
@@ -358,6 +372,7 @@ class RalphCodexTests(unittest.TestCase):
             "profile.json",
             "session-state.json",
             "completion.json",
+            "charter-history.jsonl",
             "turns.jsonl",
             "server-requests.jsonl",
             "events.jsonl",
@@ -697,7 +712,7 @@ class RalphCodexTests(unittest.TestCase):
         client_instances = []
 
         class InterruptingClient:
-            def __init__(self, runtime_config, event_recorder):
+            def __init__(self, runtime_config, event_recorder, session_log=None):
                 self.runtime_config = runtime_config
                 self.event_recorder = event_recorder
                 self.closed = False
@@ -724,7 +739,7 @@ class RalphCodexTests(unittest.TestCase):
         ralph_codex.ensure_codex_available = lambda: None
         ralph_codex.SubprocessAppServerClient = InterruptingClient
         ralph_codex.RalphController = InterruptingController
-        ralph_codex.TerminalReporter = lambda verbose: CaptureReporter(verbose, stdout=stdout, stderr=stderr)
+        ralph_codex.TerminalReporter = lambda verbose, **kwargs: CaptureReporter(verbose, stdout=stdout, stderr=stderr)
 
         exit_code = ralph_codex.execute_run(runtime_config, store, schema_catalog, session, "message", verbose=False)
 
@@ -747,6 +762,96 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(len(aborted), 1)
         self.assertIn(f"./scripts/ralph-codex.py --resume {session.session_id}", aborted[0]["payload"]["resume_command"])
         self.assertIn("aborted. resume session with:", stdout.getvalue())
+
+    def test_execute_run_creates_per_run_plain_text_log(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
+        schema_catalog = self.make_schema_catalog()
+        client_instances = []
+
+        class QuietClient:
+            def __init__(self, runtime_config, event_recorder, session_log=None):
+                self.closed = False
+                client_instances.append(self)
+
+            def close(self):
+                self.closed = True
+
+        class QuietController:
+            def __init__(self, runtime_config, client, event_recorder, store, schema_catalog, session, terminal_reporter=None):
+                self.session = session
+
+            def run(self):
+                self.session.completion_record["last_result"] = {"summary": "session completed"}
+                return 0
+
+        original_ensure = ralph_codex.ensure_codex_available
+        original_client = ralph_codex.SubprocessAppServerClient
+        original_controller = ralph_codex.RalphController
+        self.addCleanup(setattr, ralph_codex, "ensure_codex_available", original_ensure)
+        self.addCleanup(setattr, ralph_codex, "SubprocessAppServerClient", original_client)
+        self.addCleanup(setattr, ralph_codex, "RalphController", original_controller)
+        ralph_codex.ensure_codex_available = lambda: None
+        ralph_codex.SubprocessAppServerClient = QuietClient
+        ralph_codex.RalphController = QuietController
+
+        exit_code = ralph_codex.execute_run(runtime_config, store, schema_catalog, session, "message", verbose=False)
+
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(client_instances[0].closed)
+        log_paths = sorted((session.session_dir / "logs").glob("*.log"))
+        self.assertEqual(len(log_paths), 1)
+        rendered = log_paths[0].read_text(encoding="utf-8")
+        self.assertIn("# Ralph Codex run log", rendered)
+        self.assertIn("invocation_mode: message", rendered)
+        self.assertIn("CONSOLE-STDOUT", rendered)
+        self.assertIn("run started: session=", rendered)
+        self.assertIn("run completed: session completed", rendered)
+
+    def test_plain_text_run_log_captures_console_and_app_stdio(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        session_log = ralph_codex.PlainTextRunLog(
+            session.session_dir / "logs" / "run-1.log",
+            session.session_id,
+            "run-1",
+            "message",
+            verbose=False,
+        )
+        self.addCleanup(session_log.close)
+        reporter = ralph_codex.TerminalReporter(
+            verbose=False,
+            stdout=io.StringIO(),
+            stderr=io.StringIO(),
+            session_log=session_log,
+        )
+        reporter.status("hello status")
+        reporter.event("hello event")
+        reporter.console_input("approve\n")
+
+        client = ralph_codex.SubprocessAppServerClient(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            self.make_event_recorder(store, session, reporter=reporter),
+            session_log=session_log,
+        )
+        client.process = FakeProcess()
+        client._send_json({"id": 7, "method": "ping"})
+        client.session_log.write_app_stdout('{"ok":true}\n')
+        client.session_log.write_app_stderr("warn line\n")
+        session_log.close()
+
+        rendered = (session.session_dir / "logs" / "run-1.log").read_text(encoding="utf-8")
+        self.assertIn("CONSOLE-STDOUT", rendered)
+        self.assertIn("hello status", rendered)
+        self.assertIn("CONSOLE-STDERR", rendered)
+        self.assertIn("hello event", rendered)
+        self.assertIn("CONSOLE-STDIN approve", rendered)
+        self.assertIn('APP-STDIN {"id":7,"method":"ping"}', rendered)
+        self.assertIn('APP-STDOUT {"ok":true}', rendered)
+        self.assertIn("APP-STDERR warn line", rendered)
 
     def test_select_prompt_option_prefers_recommended(self):
         choice = ralph_codex.RalphController.select_prompt_option(
@@ -969,6 +1074,276 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("WAIT", stdout.getvalue())
         self.assertIn("test running for 11s", stdout.getvalue())
 
+    def test_event_recorder_prints_command_updates_once_as_they_arrive(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stdout = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout)
+        recorder = self.make_event_recorder(store, session, reporter=reporter)
+
+        started_params = {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "item": {
+                "type": "commandExecution",
+                "id": "call-1",
+                "command": "/bin/zsh -lc 'echo hi'",
+                "status": "inProgress",
+                "commandActions": [{"type": "exec"}],
+                "processId": 123,
+            },
+        }
+        completed_params = {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "item": {
+                "type": "commandExecution",
+                "id": "call-1",
+                "command": "/bin/zsh -lc 'echo hi'",
+                "status": "completed",
+                "aggregated_output_chars": 17,
+                "command_actions": 1,
+                "processId": 123,
+            },
+        }
+
+        recorder.record_notification("item/started", started_params)
+        recorder.record_notification("item/started", started_params)
+        recorder.record_notification("item/completed", completed_params)
+        recorder.record_notification("item/completed", completed_params)
+
+        console = stdout.getvalue()
+        self.assertIn("TOOL", console)
+        self.assertEqual(console.count("/bin/zsh -lc 'echo hi'"), 2)
+        self.assertIn("inProgress: /bin/zsh -lc 'echo hi' | actions=1 | pid=123", console)
+        self.assertIn("completed: /bin/zsh -lc 'echo hi' | output=17 chars | actions=1 | pid=123", console)
+
+    def test_run_turn_wait_stays_thin_while_commands_print_live(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stdout = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout)
+        result_payload = {
+            "status": "IN_PROGRESS",
+            "summary": "working",
+            "evidence": ["progress"],
+            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
+            "remaining_gaps": [],
+            "validation_completed": ["unit"],
+            "explicit_deferrals": [],
+            "next_step": "continue",
+            "gate_reasoning": "more work",
+        }
+
+        class CommandWaitClient(FakeClient):
+            def __init__(self):
+                super().__init__({"turn/start": {"turn": {"id": "turn-1"}}}, [])
+                self.poll_count = 0
+
+            def next_event(self, timeout=0.1):
+                self.poll_count += 1
+                if self.poll_count == 1:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "item/started",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "commandExecution",
+                                    "id": "call-1",
+                                    "command": "/bin/zsh -lc 'echo hi'",
+                                    "status": "inProgress",
+                                    "commandActions": [{"type": "exec"}],
+                                    "processId": 123,
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 2:
+                    return None
+                if self.poll_count == 3:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "item/completed",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "commandExecution",
+                                    "id": "call-1",
+                                    "command": "/bin/zsh -lc 'echo hi'",
+                                    "status": "completed",
+                                    "aggregated_output_chars": 17,
+                                    "command_actions": 1,
+                                    "processId": 123,
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 4:
+                    return None
+                if self.poll_count == 5:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "rawResponseItem/completed",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "message",
+                                    "role": "assistant",
+                                    "phase": "final_answer",
+                                    "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 6:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "turn/completed",
+                            "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                        },
+                    }
+                return None
+
+        client = CommandWaitClient()
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session, reporter=reporter),
+            store,
+            self.make_schema_catalog(),
+            session,
+            terminal_reporter=reporter,
+            monotonic_func=iter([0.0, 11.0, 12.0, 21.0, 22.0, 23.0]).__next__,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+
+        result = controller.run_turn(
+            phase_name="execution-1",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.EXECUTION_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
+        )
+
+        self.assertEqual(result["status"], "IN_PROGRESS")
+        console = stdout.getvalue()
+        self.assertIn("inProgress: /bin/zsh -lc 'echo hi' | actions=1 | pid=123", console)
+        self.assertIn("completed: /bin/zsh -lc 'echo hi' | output=17 chars | actions=1 | pid=123", console)
+        self.assertIn("execution-1 running for 11s", console)
+        self.assertNotIn("commands: ", console)
+        self.assertEqual(console.count("/bin/zsh -lc 'echo hi'"), 2)
+
+    def test_run_turn_verbose_mode_avoids_duplicate_command_console_output(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        reporter = self.make_reporter(verbose=True, stdout=stdout, stderr=stderr)
+        result_payload = {
+            "status": "IN_PROGRESS",
+            "summary": "working",
+            "evidence": ["progress"],
+            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
+            "remaining_gaps": [],
+            "validation_completed": ["unit"],
+            "explicit_deferrals": [],
+            "next_step": "continue",
+            "gate_reasoning": "more work",
+        }
+
+        class VerboseCommandWaitClient(FakeClient):
+            def __init__(self):
+                super().__init__({"turn/start": {"turn": {"id": "turn-1"}}}, [])
+                self.poll_count = 0
+
+            def next_event(self, timeout=0.1):
+                self.poll_count += 1
+                if self.poll_count == 1:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "item/started",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "commandExecution",
+                                    "id": "call-1",
+                                    "command": "/bin/zsh -lc 'echo verbose'",
+                                    "status": "inProgress",
+                                    "commandActions": [{"type": "exec"}],
+                                    "processId": 321,
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 2:
+                    return None
+                if self.poll_count == 3:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "rawResponseItem/completed",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "message",
+                                    "role": "assistant",
+                                    "phase": "final_answer",
+                                    "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 4:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "turn/completed",
+                            "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                        },
+                    }
+                return None
+
+        client = VerboseCommandWaitClient()
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session, verbose=True, reporter=reporter),
+            store,
+            self.make_schema_catalog(),
+            session,
+            terminal_reporter=reporter,
+            monotonic_func=iter([0.0, 11.0, 12.0, 13.0]).__next__,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+
+        result = controller.run_turn(
+            phase_name="planning review",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.EXECUTION_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("plan", "high", "instructions"),
+        )
+
+        self.assertEqual(result["status"], "IN_PROGRESS")
+        self.assertIn("inProgress: /bin/zsh -lc 'echo verbose' | actions=1 | pid=321", stdout.getvalue())
+        self.assertNotIn("/bin/zsh -lc 'echo verbose'", stderr.getvalue())
+
     def test_run_turn_raises_when_app_server_stream_closes(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -1071,7 +1446,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertNotIn(json.dumps(result_payload), console)
         self.assertIn("Working...", console)
 
-    def test_confirm_seed_if_needed_renders_full_review_and_exec_context(self):
+    def test_review_plan_if_needed_renders_full_review_and_exec_context(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
@@ -1087,7 +1462,7 @@ class RalphCodexTests(unittest.TestCase):
             "gate_reasoning": "The operator must approve the broadened charter.",
         }
         session.state["charter_version"] = 1
-        store.save_charter(session, planning_result, confirmed=False)
+        store.save_charter(session, planning_result, confirmed=False, review_state="draft")
         store.append_turn(session, "initial planning", "turn-1", "CHARTER_READY", "ready")
         store.append_event(
             session,
@@ -1133,15 +1508,115 @@ class RalphCodexTests(unittest.TestCase):
             input_func=lambda prompt: prompts.append(prompt) or "yes",
             stdout=stdout,
         )
-        controller.confirm_seed_if_needed()
+        controller.review_plan_if_needed()
         console = stdout.getvalue()
         self.assertIn("Operator review summary", console)
         self.assertNotIn("truncated for console", console)
         self.assertIn("exec log context", console)
         self.assertIn("/bin/zsh -lc \"sed -n '1,240p' MISSION.md\"", console)
         self.assertIn("output=2091 chars", console)
-        self.assertIn("Approve broadened Ralph charter and continue unattended? [y/N]", console)
+        self.assertIn("Plan review: [a]pprove, [c]hange, or [x] abort", console)
         self.assertEqual(prompts, [""])
+        self.assertEqual(session.state["phase"], "executing")
+        self.assertTrue(session.state["seed_confirmed"])
+
+    def test_review_plan_if_needed_revises_and_versions_drafts(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        session.profile["seed_policy"]["require_confirmation"] = True
+        session.profile["seed_policy"]["auto_confirm"] = False
+        session.state["charter_version"] = 1
+        initial_result = {
+            "status": "CHARTER_READY",
+            "summary": "initial draft",
+            "broadening_rationale": "wide",
+            "charter": self.broad_charter(),
+            "next_step": "review",
+            "gate_reasoning": "safe",
+        }
+        store.save_charter(session, initial_result, confirmed=False, review_state="draft")
+        revised_charter = self.broad_charter()
+        revised_charter["validation_categories"] = ["unit", "integration", "gating", "docs"]
+        revised_charter["workstreams"].append(
+            {
+                "id": "W4",
+                "title": "Validation",
+                "goal": "Deepen review coverage",
+                "required_adjacent_surfaces": ["tests"],
+                "validation": ["review tests"],
+                "status": "planned",
+            }
+        )
+        revised_result = {
+            "status": "CHARTER_READY",
+            "summary": "revised draft",
+            "broadening_rationale": "broader",
+            "charter": revised_charter,
+            "next_step": "review",
+            "gate_reasoning": "safe",
+        }
+        prompts = []
+        answers = iter(["change", "Add stronger validation coverage", ".", "approve"])
+        original_stdin = sys.stdin
+        self.addCleanup(setattr, sys, "stdin", original_stdin)
+        sys.stdin = FakeTTYStream()
+        controller = self.make_controller(
+            root,
+            session=session,
+            input_func=lambda prompt: prompts.append(prompt) or next(answers),
+        )
+        controller.plan_once = lambda phase_name, feedback, render_output=True: revised_result
+        controller.review_plan_if_needed()
+        history = store.read_jsonl(
+            session.session_dir / "charter-history.jsonl",
+            ralph_codex.CHARTER_HISTORY_LINE_SCHEMA_ID,
+        )
+        self.assertEqual([entry["charter_version"] for entry in history], [1, 2])
+        self.assertEqual(history[0]["review_state"], "superseded")
+        self.assertEqual(history[1]["review_state"], "approved")
+        self.assertEqual(history[1]["operator_feedback"], "Add stronger validation coverage")
+        self.assertEqual(session.state["charter_version"], 2)
+        self.assertTrue(session.state["seed_confirmed"])
+        self.assertEqual(session.charter_record["review_state"], "approved")
+        self.assertTrue(session.charter_record["locked"])
+        self.assertEqual(prompts, ["", "", "", ""])
+
+    def test_build_planning_prompt_includes_plan_mode_contract_and_history(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = {
+            "status": "CHARTER_READY",
+            "summary": "first draft",
+            "broadening_rationale": "wide",
+            "charter": self.broad_charter(),
+            "next_step": "review",
+            "gate_reasoning": "safe",
+        }
+        controller.session.state["charter_version"] = 1
+        controller.store.save_charter(
+            controller.session,
+            planning_result,
+            confirmed=False,
+            review_state="draft",
+            operator_feedback="Need broader validation",
+        )
+        prompt = controller.build_planning_prompt("planning review", "Tighten docs")
+        self.assertIn("## Ralph Plan Mode Contract", prompt)
+        self.assertIn("Do not call update_plan.", prompt)
+        self.assertIn("request_user_input", prompt)
+        self.assertIn("## Review History", prompt)
+        self.assertIn("feedback=Need broader validation", prompt)
+
+    def test_planning_instructions_forbid_update_plan(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        instructions = controller.planning_instructions()
+        self.assertIn("Never call update_plan", instructions)
+        self.assertIn("request_user_input", instructions)
+        self.assertIn("real Codex Plan Mode", instructions)
 
     def test_run_turn_extracts_plan_thread_item_output(self):
         tempdir, root = self.make_temp_root()
@@ -1206,7 +1681,7 @@ class RalphCodexTests(unittest.TestCase):
         controller.session.profile["runtime_limits"]["max_iterations"] = 1
         controller.client.start = lambda: None
         controller.ensure_thread = lambda: None
-        controller.confirm_seed_if_needed = lambda: None
+        controller.review_plan_if_needed = lambda: None
         controller.execute_once = lambda: {
             "status": "COMPLETE",
             "summary": "done",
@@ -1326,7 +1801,7 @@ class RalphCodexTests(unittest.TestCase):
         controller.session.profile["runtime_limits"]["max_iterations"] = 0
         controller.client.start = lambda: None
         controller.ensure_thread = lambda: None
-        controller.confirm_seed_if_needed = lambda: None
+        controller.review_plan_if_needed = lambda: None
         calls = {"execute": 0}
 
         def execute_once():

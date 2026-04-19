@@ -136,6 +136,14 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("max_iterations", ralph_text)
         self.assertIn("execution.max_prompt_chars", ralph_text)
         self.assertIn("events.jsonl", ralph_text)
+        self.assertIn("charter-history.jsonl", ralph_text)
+        self.assertIn("logs/<run-id>.log", ralph_text)
+        self.assertIn("stdin", ralph_text)
+        self.assertIn("stdout", ralph_text)
+        self.assertIn("stderr", ralph_text)
+        self.assertIn("approve/change/abort", ralph_text)
+        self.assertIn("request_user_input", ralph_text)
+        self.assertIn("update_plan", ralph_text)
 
         self.assertIn(
             "python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py",

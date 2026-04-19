@@ -27,7 +27,7 @@
     "thread_id": { "type": "string" },
     "current_turn_id": { "type": "string" },
     "model": { "type": "string" },
-    "phase": { "type": "string", "enum": ["planning", "awaiting_seed_confirmation", "executing", "finished"] },
+    "phase": { "type": "string", "enum": ["planning", "planning_review", "executing", "finished"] },
     "status": { "type": "string", "enum": ["active", "finished", "aborted"] },
     "iteration": { "type": "integer", "minimum": 0 },
     "seed_confirmed": { "type": "boolean" },

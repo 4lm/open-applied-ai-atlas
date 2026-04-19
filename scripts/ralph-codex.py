@@ -45,6 +45,7 @@ SESSION_SCHEMA_ID = "ralph-codex/session"
 TASK_SCHEMA_ID = "ralph-codex/task"
 SESSION_STATE_SCHEMA_ID = "ralph-codex/session-state"
 CHARTER_SCHEMA_ID = "ralph-codex/charter"
+CHARTER_HISTORY_LINE_SCHEMA_ID = "ralph-codex/charter-history-line"
 COMPLETION_SCHEMA_ID = "ralph-codex/completion"
 FINISHED_SCHEMA_ID = "ralph-codex/finished"
 RUN_HISTORY_LINE_SCHEMA_ID = "ralph-codex/run-history-line"
@@ -61,6 +62,7 @@ SCHEMA_FILES = {
     TASK_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "task-v0.1.0.schema.json",
     SESSION_STATE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "session-state-v0.1.0.schema.json",
     CHARTER_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "charter-v0.1.0.schema.json",
+    CHARTER_HISTORY_LINE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "charter-history-line-v0.1.0.schema.json",
     COMPLETION_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "completion-v0.1.0.schema.json",
     FINISHED_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "finished-v0.1.0.schema.json",
     RUN_HISTORY_LINE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "run-history-line-v0.1.0.schema.json",
@@ -124,6 +126,10 @@ class UnsupportedPromptError(RalphError):
     """Raised when Codex asks a prompt Ralph cannot answer automatically."""
 
 
+class PlanReviewAborted(KeyboardInterrupt):
+    """Raised when the operator aborts during plan review."""
+
+
 @dataclass
 class Command:
     kind: str
@@ -138,16 +144,94 @@ class RuntimeConfig:
     state_root: Path
 
 
+class PlainTextRunLog:
+    ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+    def __init__(
+        self,
+        path: Path,
+        session_id: str,
+        run_id: str,
+        invocation_mode: str,
+        verbose: bool,
+    ):
+        self.path = path
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._handle = self.path.open("w", encoding="utf-8")
+        self._closed = False
+        self._lock = threading.Lock()
+        self._buffers: dict[str, str] = {}
+        header_lines = [
+            "# Ralph Codex run log",
+            f"session_id: {session_id}",
+            f"run_id: {run_id}",
+            f"invocation_mode: {invocation_mode}",
+            f"verbose: {str(verbose).lower()}",
+            f"started_at: {utc_timestamp()}",
+            "",
+        ]
+        self._handle.write("\n".join(header_lines))
+        self._handle.flush()
+
+    def write_chunk(self, channel: str, text: str, *, strip_ansi: bool = False) -> None:
+        if not text or self._closed:
+            return
+        rendered = self.ANSI_ESCAPE_RE.sub("", text) if strip_ansi else text
+        with self._lock:
+            buffered = self._buffers.get(channel, "") + rendered
+            while True:
+                newline_index = buffered.find("\n")
+                if newline_index < 0:
+                    break
+                line = buffered[:newline_index]
+                self._write_line(channel, line)
+                buffered = buffered[newline_index + 1 :]
+            self._buffers[channel] = buffered
+
+    def write_console_input(self, text: str) -> None:
+        self.write_chunk("CONSOLE-STDIN", text, strip_ansi=True)
+
+    def write_console_output(self, stream_name: str, text: str) -> None:
+        channel = "CONSOLE-STDOUT" if stream_name == "stdout" else "CONSOLE-STDERR"
+        self.write_chunk(channel, text, strip_ansi=True)
+
+    def write_app_stdin(self, text: str) -> None:
+        self.write_chunk("APP-STDIN", text)
+
+    def write_app_stdout(self, text: str) -> None:
+        self.write_chunk("APP-STDOUT", text)
+
+    def write_app_stderr(self, text: str) -> None:
+        self.write_chunk("APP-STDERR", text)
+
+    def close(self) -> None:
+        with self._lock:
+            if self._closed:
+                return
+            for channel, buffered in list(self._buffers.items()):
+                if buffered:
+                    self._write_line(channel, buffered)
+                    self._buffers[channel] = ""
+            self._handle.flush()
+            self._handle.close()
+            self._closed = True
+
+    def _write_line(self, channel: str, line: str) -> None:
+        self._handle.write(f"{utc_timestamp()} {channel} {line}\n")
+
+
 class TerminalReporter:
     def __init__(
         self,
         verbose: bool,
         stdout: Any = sys.stdout,
         stderr: Any = sys.stderr,
+        session_log: PlainTextRunLog | None = None,
     ):
         self.verbose = verbose
         self.stdout = stdout
         self.stderr = stderr
+        self.session_log = session_log
         self._stdout_at_line_start = True
         self._stderr_at_line_start = True
         self._stdout_color = self._supports_color(stdout)
@@ -156,14 +240,23 @@ class TerminalReporter:
     def status(self, message: str) -> None:
         self._emit_record("stdout", "status", message, tone="status")
 
-    def wait(self, phase_name: str, elapsed_seconds: int) -> None:
-        self._emit_record("stdout", "wait", f"{phase_name} running for {elapsed_seconds}s", tone="wait")
+    def wait(
+        self,
+        phase_name: str,
+        elapsed_seconds: int,
+        command_rows: list[dict[str, Any]] | None = None,
+    ) -> None:
+        title = f"{phase_name} running for {elapsed_seconds}s"
+        if command_rows:
+            self._emit_block("stdout", "wait", title, self._render_command_trace_lines(command_rows), tone="wait")
+            return
+        self._emit_record("stdout", "wait", title, tone="wait")
 
     def event(self, message: str, tone: str = "event") -> None:
         self._emit_record("stderr", "event", message, tone=tone)
 
-    def tool(self, action: str, detail: str) -> None:
-        self._emit_record("stderr", "tool", f"{action}: {detail}", tone="tool")
+    def tool(self, action: str, detail: str, stream_name: str = "stderr") -> None:
+        self._emit_record(stream_name, "tool", f"{action}: {detail}", tone="tool")
 
     def prompt(self, message: str) -> None:
         self._emit_record("stderr", "prompt", message, tone="prompt")
@@ -176,6 +269,11 @@ class TerminalReporter:
             return
         lines = self._render_command_trace_lines(trace_rows)
         self._emit_block("stdout", "trace", "exec log context", lines, tone="tool")
+
+    def review_diff(self, title: str, detail_lines: list[str]) -> None:
+        if not detail_lines:
+            return
+        self._emit_block("stdout", "review", title, detail_lines, tone="tool")
 
     def model_result(self, phase_name: str, payload: dict[str, Any], full: bool = False) -> None:
         lines = self._render_full_model_payload_lines(payload) if full else self._render_model_payload_lines(payload)
@@ -203,6 +301,10 @@ class TerminalReporter:
     def finish_stdout_line(self) -> None:
         if not self._stdout_at_line_start:
             self._write("stdout", "\n")
+
+    def console_input(self, text: str) -> None:
+        if self.session_log is not None:
+            self.session_log.write_console_input(text)
 
     @staticmethod
     def stringify(value: Any) -> str:
@@ -258,6 +360,8 @@ class TerminalReporter:
         stream = self.stdout if stream_name == "stdout" else self.stderr
         stream.write(text)
         stream.flush()
+        if self.session_log is not None:
+            self.session_log.write_console_output(stream_name, text)
         if stream_name == "stdout":
             self._stdout_at_line_start = text.endswith("\n")
         else:
@@ -853,6 +957,7 @@ class SessionStore:
         self.write_json(session_dir / "profile.json", PROFILE_SCHEMA_ID, profile)
         self.write_json(session_dir / "session-state.json", SESSION_STATE_SCHEMA_ID, state)
         self.write_json(session_dir / "completion.json", COMPLETION_SCHEMA_ID, completion)
+        self.ensure_jsonl(session_dir / "charter-history.jsonl", CHARTER_HISTORY_LINE_SCHEMA_ID)
         self.ensure_jsonl(session_dir / "turns.jsonl", TURN_LOG_LINE_SCHEMA_ID)
         self.ensure_jsonl(session_dir / "server-requests.jsonl", SERVER_REQUEST_LOG_LINE_SCHEMA_ID)
         self.ensure_jsonl(session_dir / "events.jsonl", EVENT_LOG_LINE_SCHEMA_ID)
@@ -921,18 +1026,47 @@ class SessionStore:
         session.state["updated_at"] = utc_timestamp()
         self.write_json(session.session_dir / "session-state.json", SESSION_STATE_SCHEMA_ID, session.state)
 
-    def save_charter(self, session: SessionContext, planning_result: dict[str, Any], confirmed: bool) -> None:
+    def save_charter(
+        self,
+        session: SessionContext,
+        planning_result: dict[str, Any],
+        confirmed: bool,
+        review_state: str,
+        operator_feedback: str = "",
+    ) -> None:
+        prior_record = session.charter_record
+        if prior_record and prior_record.get("charter_version") != session.state["charter_version"]:
+            self.update_charter_history_state(
+                session,
+                prior_record["charter_version"],
+                review_state="superseded",
+                confirmed=False,
+                locked=False,
+            )
         record = {
             "session_id": session.session_id,
             "charter_version": session.state["charter_version"],
-            "locked": True,
+            "locked": review_state == "approved",
             "confirmed": confirmed,
+            "review_state": review_state,
+            "operator_feedback": operator_feedback,
             "updated_at": utc_timestamp(),
             "planning_result": planning_result,
             "charter": planning_result["charter"],
         }
         self.write_json(session.session_dir / "charter.json", CHARTER_SCHEMA_ID, record)
+        self.upsert_charter_history(session, record)
         session.charter_record = record
+
+    def approve_charter(self, session: SessionContext) -> None:
+        if not session.charter_record:
+            raise RalphError("cannot approve a missing charter")
+        session.charter_record["confirmed"] = True
+        session.charter_record["locked"] = True
+        session.charter_record["review_state"] = "approved"
+        session.charter_record["updated_at"] = utc_timestamp()
+        self.write_json(session.session_dir / "charter.json", CHARTER_SCHEMA_ID, session.charter_record)
+        self.upsert_charter_history(session, session.charter_record)
 
     def save_completion(self, session: SessionContext, result: dict[str, Any], accepted: bool, reason: str) -> None:
         record = {
@@ -966,7 +1100,7 @@ class SessionStore:
         session.state["status"] = "aborted"
         session.state["current_turn_id"] = ""
         if session.charter_record and not session.state["seed_confirmed"]:
-            session.state["phase"] = "awaiting_seed_confirmation"
+            session.state["phase"] = "planning_review"
         else:
             session.state["phase"] = "planning"
         self.save_state(session)
@@ -1166,6 +1300,70 @@ class SessionStore:
                 row["process_id"] = item["processId"]
         return [rows_by_call_id[call_id] for call_id in ordered_call_ids]
 
+    def charter_history_path(self, session: SessionContext) -> Path:
+        return session.session_dir / "charter-history.jsonl"
+
+    def read_charter_history(self, session: SessionContext) -> list[dict[str, Any]]:
+        return self.read_jsonl(self.charter_history_path(session), CHARTER_HISTORY_LINE_SCHEMA_ID)
+
+    def write_jsonl_records(self, path: Path, schema_id: str, payloads: list[dict[str, Any]]) -> None:
+        schema = self.schema_catalog.load(schema_id)
+        documents = []
+        for payload in payloads:
+            document = {
+                "schema_id": schema["schema_id"],
+                "schema_version": schema["schema_version"],
+                **payload,
+            }
+            self.schema_catalog.validate(schema_id, document)
+            documents.append(document)
+        self.ensure_jsonl(path, schema_id)
+        rendered = "".join(json.dumps(document, sort_keys=True) + "\n" for document in documents)
+        path.write_text(rendered, encoding="utf-8")
+
+    def upsert_charter_history(self, session: SessionContext, record: dict[str, Any]) -> None:
+        history = self.read_charter_history(session)
+        payload = {
+            "session_id": session.session_id,
+            "ts": record["updated_at"],
+            "charter_version": record["charter_version"],
+            "review_state": record["review_state"],
+            "confirmed": record["confirmed"],
+            "locked": record["locked"],
+            "operator_feedback": record.get("operator_feedback", ""),
+            "planning_result": record["planning_result"],
+            "charter": record["charter"],
+        }
+        for index, existing in enumerate(history):
+            if existing["charter_version"] == record["charter_version"]:
+                history[index] = payload
+                break
+        else:
+            history.append(payload)
+        self.write_jsonl_records(self.charter_history_path(session), CHARTER_HISTORY_LINE_SCHEMA_ID, history)
+
+    def update_charter_history_state(
+        self,
+        session: SessionContext,
+        charter_version: int,
+        review_state: str,
+        confirmed: bool,
+        locked: bool,
+    ) -> None:
+        history = self.read_charter_history(session)
+        changed = False
+        for entry in history:
+            if entry["charter_version"] != charter_version:
+                continue
+            entry["review_state"] = review_state
+            entry["confirmed"] = confirmed
+            entry["locked"] = locked
+            entry["ts"] = utc_timestamp()
+            changed = True
+            break
+        if changed:
+            self.write_jsonl_records(self.charter_history_path(session), CHARTER_HISTORY_LINE_SCHEMA_ID, history)
+
 
 class EventRecorder:
     def __init__(
@@ -1181,6 +1379,7 @@ class EventRecorder:
         self.session = session
         self.verbose = verbose
         self.reporter = reporter or TerminalReporter(verbose=verbose, stdout=stdout, stderr=stderr)
+        self._reported_command_updates: dict[str, str] = {}
 
     def append(self, event_type: str, payload: dict[str, Any]) -> None:
         self.store.append_event(self.session, event_type, payload)
@@ -1203,7 +1402,8 @@ class EventRecorder:
         if event_type == "wire":
             if self.verbose:
                 self.append("wire", payload)
-                self.trace("wire", payload)
+                if not self.is_command_execution_wire(payload):
+                    self.trace("wire", payload)
             return
         compact_payload = {key: value for key, value in payload.items() if key != "type"}
         self.append(event_type, compact_payload)
@@ -1235,7 +1435,8 @@ class EventRecorder:
         payload = self.summarize_notification(method or "", params)
         if self.should_persist_notification(payload):
             self.append("notification", payload)
-            self.trace("notification", payload)
+            if not self.is_command_execution_notification(payload):
+                self.trace("notification", payload)
         self.report_notification(payload)
 
     def record_server_request(
@@ -1276,10 +1477,8 @@ class EventRecorder:
         method = payload.get("method")
         if method in {"item/started", "item/completed"}:
             item = payload.get("item") or {}
-            if item.get("type") == "commandExecution" and self.verbose:
-                command = self.cap_human_text(item.get("command", "command"))
-                status = item.get("status", "")
-                self.reporter.tool(status or method, command)
+            if item.get("type") == "commandExecution":
+                self.report_command_notification(payload)
             return
         if method == "mcpServer/startupStatus/updated" and self.verbose:
             name = payload.get("name", "server")
@@ -1289,8 +1488,39 @@ class EventRecorder:
         turn = payload.get("turn") or {}
         turn_id = turn.get("id") or payload.get("turn_id", "")
         status = turn.get("status") or payload.get("status", "")
+        if method == "turn/completed" and turn_id:
+            prefix = f"{turn_id}:"
+            stale_keys = [key for key in self._reported_command_updates if key.startswith(prefix)]
+            for key in stale_keys:
+                self._reported_command_updates.pop(key, None)
         if method == "turn/completed" and status == "failed":
             self.reporter.event(f"turn failed: {turn_id or 'unknown'}", tone="error")
+
+    def report_command_notification(self, payload: dict[str, Any]) -> None:
+        item = payload.get("item") or {}
+        turn_id = str(payload.get("turn_id", "")).strip()
+        call_id = str(item.get("id", "")).strip()
+        command = self.cap_human_text(item.get("command", "command"), limit=160)
+        status = str(item.get("status", "")).strip() or payload.get("method", "command")
+        dedupe_key = f"{turn_id}:{call_id or command or status}"
+        rendered_parts = [command]
+        output_chars = item.get("aggregated_output_chars")
+        if not isinstance(output_chars, int):
+            output_chars = item.get("output_chars")
+        if isinstance(output_chars, int):
+            rendered_parts.append(f"output={output_chars} chars")
+        command_actions = item.get("command_actions")
+        if isinstance(command_actions, int):
+            rendered_parts.append(f"actions={command_actions}")
+        process_id = item.get("processId")
+        if process_id not in {None, ""}:
+            rendered_parts.append(f"pid={process_id}")
+        detail = " | ".join(rendered_parts)
+        signature = json.dumps({"status": status, "detail": detail}, sort_keys=True, separators=(",", ":"))
+        if self._reported_command_updates.get(dedupe_key) == signature:
+            return
+        self._reported_command_updates[dedupe_key] = signature
+        self.reporter.tool(status, detail, stream_name="stdout")
 
     def report_server_request(self, record: dict[str, Any]) -> None:
         method = record.get("method", "")
@@ -1323,6 +1553,22 @@ class EventRecorder:
     @staticmethod
     def cap_human_text(text: str, limit: int = 240) -> str:
         return TerminalReporter.cap_console_text(" ".join(text.split()), limit)
+
+    @staticmethod
+    def is_command_execution_notification(payload: dict[str, Any]) -> bool:
+        if payload.get("method") not in {"item/started", "item/completed"}:
+            return False
+        item = payload.get("item") or {}
+        return item.get("type") == "commandExecution"
+
+    @staticmethod
+    def is_command_execution_wire(payload: dict[str, Any]) -> bool:
+        raw_payload = payload.get("payload") or {}
+        if raw_payload.get("method") not in {"item/started", "item/completed"}:
+            return False
+        params = raw_payload.get("params") or {}
+        item = params.get("item") or {}
+        return item.get("type") == "commandExecution"
 
     @staticmethod
     def summarize_request_params(method: str, params: dict[str, Any]) -> dict[str, Any]:
@@ -1429,7 +1675,7 @@ class EventRecorder:
         if isinstance(item.get("text"), str):
             summary["text_chars"] = len(item["text"])
         if isinstance(item.get("command"), str):
-            summary["command"] = truncate_label(item["command"], 96)
+            summary["command"] = truncate_label(item["command"], 160)
         if isinstance(item.get("content"), list):
             summary["content_items"] = len(item["content"])
             content_text_chars = sum(
@@ -1443,8 +1689,12 @@ class EventRecorder:
             summary["summary_parts"] = len(item["summary"])
         if "output" in item:
             summary["output_chars"] = len(EventRecorder.stringify(item.get("output")))
+        if isinstance(item.get("aggregated_output_chars"), int):
+            summary["aggregated_output_chars"] = item["aggregated_output_chars"]
         if isinstance(item.get("aggregatedOutput"), str):
             summary["aggregated_output_chars"] = len(item["aggregatedOutput"])
+        if isinstance(item.get("command_actions"), int):
+            summary["command_actions"] = item["command_actions"]
         if isinstance(item.get("commandActions"), list):
             summary["command_actions"] = len(item["commandActions"])
         return summary
@@ -1495,9 +1745,15 @@ class EventRecorder:
 
 
 class SubprocessAppServerClient:
-    def __init__(self, runtime_config: RuntimeConfig, event_recorder: EventRecorder):
+    def __init__(
+        self,
+        runtime_config: RuntimeConfig,
+        event_recorder: EventRecorder,
+        session_log: PlainTextRunLog | None = None,
+    ):
         self.runtime_config = runtime_config
         self.event_recorder = event_recorder
+        self.session_log = session_log
         self.process: subprocess.Popen[str] | None = None
         self._reader: threading.Thread | None = None
         self._stderr_reader: threading.Thread | None = None
@@ -1625,12 +1881,17 @@ class SubprocessAppServerClient:
     def _send_json(self, payload: dict[str, Any]) -> None:
         if self.process is None or self.process.stdin is None:
             raise RalphError("codex app-server is not running")
-        self.process.stdin.write(json.dumps(payload, separators=(",", ":")) + "\n")
+        rendered = json.dumps(payload, separators=(",", ":")) + "\n"
+        if self.session_log is not None:
+            self.session_log.write_app_stdin(rendered)
+        self.process.stdin.write(rendered)
         self.process.stdin.flush()
 
     def _read_stdout(self) -> None:
         assert self.process is not None and self.process.stdout is not None
         for line in self.process.stdout:
+            if self.session_log is not None:
+                self.session_log.write_app_stdout(line)
             stripped = line.strip()
             if not stripped:
                 continue
@@ -1662,6 +1923,8 @@ class SubprocessAppServerClient:
     def _read_stderr(self) -> None:
         assert self.process is not None and self.process.stderr is not None
         for line in self.process.stderr:
+            if self.session_log is not None:
+                self.session_log.write_app_stderr(line)
             stripped = line.rstrip("\n")
             if stripped:
                 self._stderr_lines.append(stripped)
@@ -1705,7 +1968,7 @@ class RalphController:
         self.ensure_thread()
         if not self.session.charter_record:
             self.print_status("planning started: initial planning")
-            needs_manual_seed_review = (
+            needs_plan_review = (
                 self.session.profile["seed_policy"]["require_confirmation"]
                 and not self.session.profile["seed_policy"]["auto_confirm"]
                 and not self.session.state["seed_confirmed"]
@@ -1713,17 +1976,24 @@ class RalphController:
             planning_result = self.plan_once(
                 "initial planning",
                 self.session.state["pending_feedback"],
-                render_output=not needs_manual_seed_review,
+                render_output=not needs_plan_review,
             )
             self.validate_charter(planning_result)
             self.session.state["charter_version"] += 1
+            initial_feedback = self.session.state["pending_feedback"]
             self.session.state["pending_feedback"] = ""
-            self.session.state["phase"] = "awaiting_seed_confirmation"
-            self.store.save_charter(self.session, planning_result, confirmed=False)
+            self.session.state["phase"] = "planning_review"
+            self.store.save_charter(
+                self.session,
+                planning_result,
+                confirmed=False,
+                review_state="draft",
+                operator_feedback=initial_feedback,
+            )
             self.store.append_event(self.session, "planning-result", planning_result)
             self.store.save_state(self.session)
             self.print_status(f"planning completed: {truncate_label(planning_result['summary'], 120)}")
-        self.confirm_seed_if_needed()
+        self.review_plan_if_needed()
         max_iterations = self.session.profile["runtime_limits"]["max_iterations"]
         while max_iterations == 0 or self.session.state["iteration"] < max_iterations:
             self.session.state["iteration"] += 1
@@ -1764,10 +2034,14 @@ class RalphController:
             planning_result = self.plan_once("replanning", self.session.state["pending_feedback"])
             self.validate_charter(planning_result)
             self.session.state["charter_version"] += 1
+            replanning_feedback = self.session.state["pending_feedback"]
+            self.session.state["pending_feedback"] = ""
             self.store.save_charter(
                 self.session,
                 planning_result,
                 confirmed=self.session.state["seed_confirmed"],
+                review_state="approved" if self.session.state["seed_confirmed"] else "draft",
+                operator_feedback=replanning_feedback,
             )
             self.store.append_event(self.session, "planning-result", planning_result)
             self.store.save_state(self.session)
@@ -2029,32 +2303,48 @@ class RalphController:
             raise RalphError("planner charter is missing validation categories")
         return charter
 
-    def confirm_seed_if_needed(self) -> None:
+    def review_plan_if_needed(self) -> None:
         if self.session.state["seed_confirmed"]:
             return
         seed_policy = self.session.profile["seed_policy"]
         if not seed_policy["require_confirmation"] or seed_policy["auto_confirm"]:
-            self.session.state["seed_confirmed"] = True
-            self.session.state["phase"] = "executing"
-            if self.session.charter_record:
-                self.store.save_charter(self.session, self.session.charter_record["planning_result"], confirmed=True)
-            self.store.save_state(self.session)
-            self.print_status("seed confirmed by profile; continuing unattended")
+            self.approve_current_plan("plan review skipped by profile; continuing unattended")
             return
         if not sys.stdin.isatty():
-            raise RalphError("seed confirmation is required, but stdin is not interactive")
-        self.print_status("waiting for seed confirmation")
-        self.render_seed_review()
-        self.terminal_reporter.approval_prompt("Approve broadened Ralph charter and continue unattended? [y/N]")
-        response = self.input_func("").strip()
-        if response.lower() not in {"y", "yes"}:
-            raise RalphError("seed confirmation declined by operator")
-        self.session.state["seed_confirmed"] = True
-        self.session.state["phase"] = "executing"
-        if self.session.charter_record:
-            self.store.save_charter(self.session, self.session.charter_record["planning_result"], confirmed=True)
-        self.store.save_state(self.session)
-        self.print_status("seed confirmed by operator; continuing unattended")
+            raise RalphError("plan review is required, but stdin is not interactive")
+        while not self.session.state["seed_confirmed"]:
+            self.session.state["phase"] = "planning_review"
+            self.store.save_state(self.session)
+            self.print_status("waiting for plan review")
+            self.render_plan_review()
+            action = self.prompt_plan_review_action()
+            if action == "approve":
+                self.approve_current_plan("plan approved by operator; continuing unattended")
+                return
+            if action == "abort":
+                raise PlanReviewAborted()
+            feedback = self.collect_plan_change_wishes()
+            if not feedback:
+                self.terminal_reporter.event("plan review change request was empty; draft remains under review", tone="warn")
+                continue
+            self.session.state["pending_feedback"] = feedback
+            self.store.append_event(self.session, "plan-review-change-requested", {"feedback": feedback})
+            self.store.save_state(self.session)
+            self.print_status(f"planning started: review revision v{self.session.state['charter_version'] + 1}")
+            planning_result = self.plan_once("planning review", feedback, render_output=False)
+            self.validate_charter(planning_result)
+            self.session.state["charter_version"] += 1
+            self.store.save_charter(
+                self.session,
+                planning_result,
+                confirmed=False,
+                review_state="draft",
+                operator_feedback=feedback,
+            )
+            self.session.state["pending_feedback"] = ""
+            self.store.append_event(self.session, "planning-result", planning_result)
+            self.store.save_state(self.session)
+            self.print_status(f"planning completed: {truncate_label(planning_result['summary'], 120)}")
 
     @staticmethod
     def charter_summary(charter: dict[str, Any]) -> str:
@@ -2064,16 +2354,55 @@ class RalphController:
             lines.append(f"- {workstream.get('id')}: {workstream.get('title')}")
         return "\n".join(lines)
 
+    def approve_current_plan(self, status_message: str) -> None:
+        self.session.state["seed_confirmed"] = True
+        self.session.state["phase"] = "executing"
+        if self.session.charter_record:
+            self.store.approve_charter(self.session)
+        self.store.append_event(
+            self.session,
+            "plan-approved",
+            {"charter_version": self.session.state["charter_version"]},
+        )
+        self.store.save_state(self.session)
+        self.print_status(status_message)
+
+    def prompt_plan_review_action(self) -> str:
+        self.terminal_reporter.approval_prompt("Plan review: [a]pprove, [c]hange, or [x] abort")
+        response = self.input_func("").strip().lower()
+        self.terminal_reporter.console_input(response + "\n")
+        if response in {"a", "approve", "approved", "y", "yes"}:
+            return "approve"
+        if response in {"x", "abort", "q", "quit", "n", "no"}:
+            return "abort"
+        return "change"
+
+    def collect_plan_change_wishes(self) -> str:
+        self.terminal_reporter.approval_prompt("Enter plan changes. Finish with a single '.' line.")
+        lines: list[str] = []
+        while True:
+            line = self.input_func("")
+            self.terminal_reporter.console_input(line + "\n")
+            if line.strip() == ".":
+                break
+            lines.append(line.rstrip())
+        return "\n".join(lines).strip()
+
     def planning_instructions(self) -> str:
         return dedent(
             """
             You are the planner inside Ralph Codex.
 
             Your job is to broaden the task into a strong execution charter before implementation.
+            You are running in real Codex Plan Mode. The controller may ask you to revise the plan multiple times.
             Widen narrow local fixes into holistic workstreams, adjacent-surface checks, and validation obligations.
             Do not optimize for fast completion. Optimize for the strongest final result.
 
             Rules:
+            - Never call update_plan. That tool is not allowed in this Plan Mode flow.
+            - Use only plan-safe, non-mutating exploration while planning.
+            - If critical intent is missing, use request_user_input rather than ad hoc prose prompts.
+            - Ralph updates the plan by starting another planning turn with feedback, not by using update_plan.
             - Produce multiple meaningful workstreams when the task supports it.
             - Every workstream must name adjacent surfaces and validation obligations.
             - Prefer root-cause and system-level improvements over local patching when the task benefits from them.
@@ -2096,9 +2425,19 @@ class RalphController:
         sections = [
             f"# Ralph Planning Phase: {phase_name}",
             "",
+            "## Ralph Plan Mode Contract",
+            "- You are in real Plan Mode for this turn.",
+            "- Do not call update_plan.",
+            "- Use non-mutating exploration only.",
+            "- If you truly need operator input, request it through request_user_input.",
+            "- Plan revisions happen through repeated Ralph planning turns with controller feedback.",
+            "",
             "## Task",
             self.session.task["message_text"].strip(),
         ]
+        review_history = self.render_review_history()
+        if review_history:
+            sections.extend(["", "## Review History", review_history])
         if self.session.charter_record:
             sections.extend(
                 ["", "## Current Charter", json.dumps(self.session.charter_record["charter"], indent=2, sort_keys=True)]
@@ -2219,15 +2558,99 @@ class RalphController:
             return
         self.terminal_reporter.model_text(phase_name, normalized)
 
-    def render_seed_review(self) -> None:
+    def render_plan_review(self) -> None:
         if not self.session.charter_record:
             return
         planning_result = self.session.charter_record.get("planning_result") or {}
         self.terminal_reporter.model_result("initial planning", planning_result, full=True)
+        diff_lines = self.render_plan_diff_lines()
+        if diff_lines:
+            self.terminal_reporter.review_diff("plan changes since prior draft", diff_lines)
         latest_turn = self.store.latest_turn(self.session)
         if latest_turn:
             trace_rows = self.store.command_trace_for_turn(self.session, latest_turn["turn_id"])
             self.terminal_reporter.command_trace_context(trace_rows)
+
+    def render_plan_diff_lines(self) -> list[str]:
+        if not self.session.charter_record:
+            return []
+        history = self.store.read_charter_history(self.session)
+        current_version = self.session.charter_record["charter_version"]
+        previous = None
+        for entry in reversed(history):
+            if entry["charter_version"] < current_version:
+                previous = entry
+                break
+        if not previous:
+            return []
+        lines: list[str] = []
+        previous_result = previous.get("planning_result") or {}
+        current_result = self.session.charter_record.get("planning_result") or {}
+        previous_summary = " ".join(str(previous_result.get("summary", "")).split())
+        current_summary = " ".join(str(current_result.get("summary", "")).split())
+        if previous_summary != current_summary:
+            lines.extend(
+                self.terminal_reporter._wrap_detail(
+                    f"summary: {truncate_label(previous_summary or '(empty)', 96)} -> "
+                    f"{truncate_label(current_summary or '(empty)', 96)}",
+                    width=CONSOLE_WRAP_WIDTH - 6,
+                )
+            )
+        previous_workstreams = {
+            str(workstream.get("id", "")): str(workstream.get("title", "")).strip()
+            for workstream in (previous.get("charter") or {}).get("workstreams", [])
+            if str(workstream.get("id", "")).strip()
+        }
+        current_workstreams = {
+            str(workstream.get("id", "")): str(workstream.get("title", "")).strip()
+            for workstream in (self.session.charter_record.get("charter") or {}).get("workstreams", [])
+            if str(workstream.get("id", "")).strip()
+        }
+        if len(previous_workstreams) != len(current_workstreams):
+            lines.append(f"workstreams: {len(previous_workstreams)} -> {len(current_workstreams)}")
+        added_workstreams = sorted(set(current_workstreams) - set(previous_workstreams))
+        removed_workstreams = sorted(set(previous_workstreams) - set(current_workstreams))
+        if added_workstreams:
+            lines.append(
+                "added_workstreams: "
+                + ", ".join(
+                    f"{identifier} ({current_workstreams[identifier] or 'untitled'})" for identifier in added_workstreams
+                )
+            )
+        if removed_workstreams:
+            lines.append(
+                "removed_workstreams: "
+                + ", ".join(
+                    f"{identifier} ({previous_workstreams[identifier] or 'untitled'})" for identifier in removed_workstreams
+                )
+            )
+        previous_validation = set((previous.get("charter") or {}).get("validation_categories") or [])
+        current_validation = set((self.session.charter_record.get("charter") or {}).get("validation_categories") or [])
+        added_validation = sorted(current_validation - previous_validation)
+        removed_validation = sorted(previous_validation - current_validation)
+        if added_validation:
+            lines.append(f"added_validation_categories: {', '.join(added_validation)}")
+        if removed_validation:
+            lines.append(f"removed_validation_categories: {', '.join(removed_validation)}")
+        if not lines:
+            lines.append("No structural changes from the prior draft.")
+        return lines
+
+    def render_review_history(self) -> str:
+        history = self.store.read_charter_history(self.session)
+        if not history:
+            return ""
+        lines = []
+        for entry in history:
+            line = (
+                f"- v{entry['charter_version']} | {entry['review_state']} | "
+                f"summary={truncate_label(str((entry.get('planning_result') or {}).get('summary', '')), 96)}"
+            )
+            feedback = str(entry.get("operator_feedback", "")).strip()
+            if feedback:
+                line += f" | feedback={truncate_label(' '.join(feedback.split()), 96)}"
+            lines.append(line)
+        return "\n".join(lines)
 
 
 def resolve_start_task(command: Command) -> dict[str, str]:
@@ -2293,12 +2716,19 @@ def execute_run(
     store.update_controller_state(session.session_id, run_id)
     store.append_run_history(session, run_id, "run_started", invocation_mode, "run started")
     client: SubprocessAppServerClient | None = None
-    reporter = TerminalReporter(verbose=verbose)
+    session_log = PlainTextRunLog(
+        session.session_dir / "logs" / f"{run_id}.log",
+        session.session_id,
+        run_id,
+        invocation_mode,
+        verbose,
+    )
+    reporter = TerminalReporter(verbose=verbose, session_log=session_log)
     event_recorder = EventRecorder(store, session, verbose, reporter=reporter)
-    event_recorder.record_run_config(run_id, invocation_mode, runtime_config.workdir)
-    reporter.status(f"run started: session={session.session_id} mode={invocation_mode}")
     try:
-        client = SubprocessAppServerClient(runtime_config, event_recorder)
+        event_recorder.record_run_config(run_id, invocation_mode, runtime_config.workdir)
+        reporter.status(f"run started: session={session.session_id} mode={invocation_mode}")
+        client = SubprocessAppServerClient(runtime_config, event_recorder, session_log=session_log)
         controller = RalphController(
             runtime_config,
             client,
@@ -2337,6 +2767,7 @@ def execute_run(
         store.update_controller_state(session.session_id, "")
         if client is not None:
             client.close()
+        session_log.close()
 
 
 def main(argv: list[str] | None = None) -> int:
