@@ -138,10 +138,10 @@ Operational defaults:
 
 PIP status conventions:
 
-- Every `pips/PIP_*.md` file carries a frontmatter `status`.
+- Every `pips/PIP_*.md` file carries a frontmatter `pip-status`.
 - Allowed values are `live`, `archived`, and `superseded`.
-- `superseded` PIPs must declare `superseded_by`.
-- `archived` PIPs must declare `retention_reason`.
+- `pip-status: superseded` PIPs must declare `superseded_by`.
+- `pip-status: archived` PIPs must declare `retention_reason`.
 
 Verification:
 

@@ -1,4 +1,3 @@
-import re
 import unittest
 from pathlib import Path
 
@@ -34,20 +33,20 @@ class RepoContractTests(unittest.TestCase):
             self.assertIn(relative_path, readme_text)
             self.assertTrue((ROOT / relative_path).exists(), relative_path)
 
-    def test_all_pips_have_valid_status_frontmatter(self):
+    def test_all_pips_have_valid_pip_status_frontmatter(self):
         pip_paths = sorted(PIPS_DIR.glob("PIP_*.md"))
         self.assertTrue(pip_paths, "expected at least one PIP file")
         for path in pip_paths:
             frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-            self.assertIn("status", frontmatter, f"{path.name} missing status frontmatter")
+            self.assertIn("pip-status", frontmatter, f"{path.name} missing pip-status frontmatter")
             self.assertIn(
-                frontmatter["status"],
+                frontmatter["pip-status"],
                 {"live", "archived", "superseded"},
-                f"{path.name} has invalid status",
+                f"{path.name} has invalid pip-status",
             )
-            if frontmatter["status"] == "superseded":
+            if frontmatter["pip-status"] == "superseded":
                 self.assertIn("superseded_by", frontmatter, f"{path.name} missing superseded_by")
-            if frontmatter["status"] == "archived":
+            if frontmatter["pip-status"] == "archived":
                 self.assertIn("retention_reason", frontmatter, f"{path.name} missing retention_reason")
 
     def test_readme_documents_ralph_access_modes(self):
