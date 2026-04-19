@@ -7,12 +7,13 @@ Use this section to understand how the atlas keeps mission, improvement planning
 ## What This Section Covers
 
 - how root guidance, `pips/`, and `docs/` divide responsibility
+- how the root-document map stays explicit instead of drifting into duplicate guidance
 - why mutable improvement control should not leak into topical chapter content
 - how contributors can decide where a new piece of material belongs
 
 ## Practical Reading Rule
 
-Stay in chapter `1` only long enough to classify the material. Once the placement is clear, move to [README.md](../../README.md), [CONTRIBUTING.md](../../CONTRIBUTING.md), [EDITORIAL_RULES.md](../../EDITORIAL_RULES.md), `pips/`, or the owning numbered chapter instead of mixing repository process and atlas knowledge in the same page.
+Stay in chapter `1` only long enough to classify the material. Once the placement is clear, move to the owning root doc such as [README.md](../../README.md), [MISSION.md](../../MISSION.md), [CONTRIBUTING.md](../../CONTRIBUTING.md), [EDITORIAL_RULES.md](../../EDITORIAL_RULES.md), [RALPH_CONTROLLER.md](../../RALPH_CONTROLLER.md), [AGENTS.md](../../AGENTS.md), [CHANGELOG.md](../../CHANGELOG.md), [CONTRIBUTORS.md](../../CONTRIBUTORS.md), `pips/`, or the owning numbered chapter instead of mixing repository process and atlas knowledge in the same page.
 
 ## Pages In This Section
 

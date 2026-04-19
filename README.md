@@ -1,84 +1,49 @@
 # Open Applied AI Atlas
 
-Open Applied AI Atlas is an open knowledge base for applying AI and ML in business, enterprise, public, nonprofit, and other organizational contexts of all sizes. It is practical, taxonomy-driven, comparison-oriented, and implementation-focused. It is explicitly not limited to LLMs.
+Open Applied AI Atlas is an open knowledge base for applying AI and ML in business, enterprise, public, nonprofit, and other organizational contexts of all sizes.
 
-## Mission
+## What The Atlas Is
 
-The atlas exists to help organizations make better applied AI decisions across architecture, delivery, governance, sourcing, and operations. It treats AI systems as organizational systems rather than as isolated model demos, and it keeps open knowledge, sovereignty, portability, privacy, compliance, and lock-in visible throughout the stack.
+The atlas is practical, taxonomy-driven, comparison-oriented, and implementation-focused. It is designed as a working reference for applied organizational AI and ML, not as a model showcase, vendor brochure, or LLM-only guide.
 
-## Who It Serves
+It covers system design, delivery, governance, sourcing, operations, and control questions across chat systems, copilots, coding systems, agentic systems, retrieval, document intelligence, classical ML, generative AI, and hybrid stacks.
 
-The atlas is written for cross-functional implementers, reviewers, and decision-makers:
+## Why It Exists
 
-- Product, project, and business roles: product managers, project managers, business analysts, domain experts.
-- Architecture and engineering roles: enterprise architects, AI architects, software architects, developers.
-- ML, data, and platform roles: ML engineers, data engineers, platform engineers.
-- Assurance and control roles: QA and test engineers, security professionals, privacy professionals, governance, risk, and compliance professionals.
-- Operations, sourcing, and leadership roles: IT operations, platform operations, procurement and sourcing roles, technical leadership, and organizational decision-makers.
+The atlas exists to help organizations make better applied AI decisions across architecture, delivery, governance, sourcing, and operations. It treats AI systems as organizational systems rather than isolated model demos, and it keeps open knowledge, sovereignty, portability, privacy, compliance, lock-in, and buy-vs-build visible throughout the stack.
 
-## What It Covers
+The goal is to give different functions a shared decision surface: one place to classify the system, understand the stack, compare options, surface control obligations, and make implementation trade-offs without collapsing everything into one generic AI narrative.
 
-The atlas covers broader applied organizational AI and ML, including:
+## Who It Is For
 
-- chat systems, copilots, coding assistants, coding agents, and workflow agents
-- document intelligence, retrieval systems, and memory systems
-- forecasting, recommender systems, anomaly detection, and optimization systems
-- computer vision, speech systems, classical ML, and deep learning
-- generative AI, hybrid systems, fine-tuning, and training systems
-
-## What It Prioritizes
-
-Across those system types, the atlas keeps the same recurring concerns in view:
-
-- open knowledge, open source, open governance, open tooling, open standards, and open research
-- practical implementation guidance rather than abstract principle statements alone
-- comparison through shared taxonomy, selected tables, and explicit trade-off framing
-- direct treatment of sovereignty, portability, privacy, vendor lock-in, and buy-vs-build choices
-- compliance-aware implementation, especially where EU AI Act, EU Data Act, GDPR, ISO/IEC 42001, ISO/IEC 23894, and NIST AI RMF shape design and operating obligations
-
-## How To Use The Atlas
-
-Start with the mission and decision spine, then move sideways into the layers that match your role and problem.
-
-The default decision spine is:
-
-1. mission, scope, and audience
-2. canonical taxonomy
-3. stack and layer boundaries
-4. governance and organizational use cases
-5. data, model, runtime, and control layers
-6. evaluation, observability, security, oversight, sourcing, and ecosystem context
-
-### Role-Based Reading Paths
-
-- Product, project, and business readers: start with [1. Scope And Principles](docs/01-scope-and-principles/01-00-00-scope-and-principles.md), [5. Use Cases And Application Landscapes](docs/05-use-cases-and-application-landscapes/05-00-00-use-cases-and-application-landscapes.md), and [18. Build Vs Buy Vs Hybrid](docs/18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md).
-- Architecture and engineering readers: start with [2. Taxonomy](docs/02-taxonomy/02-00-00-taxonomy.md), [3. Enterprise AI Stack Map](docs/03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md), and the relevant runtime chapters `7` through `15`.
-- Governance, privacy, security, and assurance readers: start with [4. Governance Risk Compliance](docs/04-governance-risk-compliance/04-00-00-governance-risk-compliance.md), [6. Data Sovereignty And Privacy](docs/06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md), [13. Evaluation Testing And QA](docs/13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md), [15. Security And Abuse Resistance](docs/15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md), and [20. Standards Frameworks And Bodies Of Knowledge](docs/20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md).
-- Operations, sourcing, and leadership readers: start with [16. Human Oversight And Operating Model](docs/16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md), [17. Vendors Organizations And Market Structure](docs/17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md), [18. Build Vs Buy Vs Hybrid](docs/18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md), and [19. Reference Architectures](docs/19-reference-architectures/19-00-00-reference-architectures.md).
+- Product, project, and business roles: product managers, project managers, business analysts, service owners, domain leads, and transformation teams who need to decide which use cases are worth pursuing and what organizational change they imply.
+- Architecture, engineering, ML, data, and platform roles: enterprise architects, solution architects, software engineers, ML engineers, data engineers, platform engineers, and technical leads who need reusable distinctions, layer boundaries, and implementation guidance.
+- Governance, privacy, security, QA, and assurance roles: security engineers, privacy professionals, GRC teams, QA and test leads, internal assurance teams, and compliance or legal reviewers who need control, evidence, review, and release-gate surfaces.
+- Operations, sourcing, procurement, and leadership roles: IT operations, platform operations, procurement teams, sourcing leads, program sponsors, heads of engineering, CTOs, CIOs, and other decision-makers who need clarity on ownership, supplier dependence, operating model, and build-vs-buy posture.
 
 ## Chapter Index
 
-- [1. Scope And Principles](docs/01-scope-and-principles/01-00-00-scope-and-principles.md)
-- [2. Taxonomy](docs/02-taxonomy/02-00-00-taxonomy.md)
-- [3. Enterprise AI Stack Map](docs/03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
-- [4. Governance Risk Compliance](docs/04-governance-risk-compliance/04-00-00-governance-risk-compliance.md)
-- [5. Use Cases And Application Landscapes](docs/05-use-cases-and-application-landscapes/05-00-00-use-cases-and-application-landscapes.md)
-- [6. Data Sovereignty And Privacy](docs/06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
-- [7. Model Ecosystem](docs/07-model-ecosystem/07-00-00-model-ecosystem.md)
-- [8. Model Hosting And Inference](docs/08-model-hosting-and-inference/08-00-00-model-hosting-and-inference.md)
-- [9. Model Gateways And Access Control](docs/09-model-gateways-and-access-control/09-00-00-model-gateways-and-access-control.md)
-- [10. Agentic Systems And Orchestration](docs/10-agentic-systems-and-orchestration/10-00-00-agentic-systems-and-orchestration.md)
-- [11. Knowledge Retrieval And Memory](docs/11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md)
-- [12. Training Fine-Tuning And Adaptation](docs/12-training-fine-tuning-and-adaptation/12-00-00-training-fine-tuning-and-adaptation.md)
-- [13. Evaluation Testing And QA](docs/13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md)
-- [14. Observability Logging And Monitoring](docs/14-observability-logging-and-monitoring/14-00-00-observability-logging-and-monitoring.md)
-- [15. Security And Abuse Resistance](docs/15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md)
-- [16. Human Oversight And Operating Model](docs/16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md)
-- [17. Vendors Organizations And Market Structure](docs/17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md)
-- [18. Build Vs Buy Vs Hybrid](docs/18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md)
-- [19. Reference Architectures](docs/19-reference-architectures/19-00-00-reference-architectures.md)
-- [20. Standards Frameworks And Bodies Of Knowledge](docs/20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md)
-- [21. Research Open Knowledge And Community](docs/21-research-open-knowledge-and-community/21-00-00-research-open-knowledge-and-community.md)
+- Foundations: [1. Scope And Principles](docs/01-scope-and-principles/01-00-00-scope-and-principles.md), [2. Taxonomy](docs/02-taxonomy/02-00-00-taxonomy.md), [3. Enterprise AI Stack Map](docs/03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md)
+- Governance and context: [4. Governance Risk Compliance](docs/04-governance-risk-compliance/04-00-00-governance-risk-compliance.md), [5. Use Cases And Application Landscapes](docs/05-use-cases-and-application-landscapes/05-00-00-use-cases-and-application-landscapes.md), [6. Data Sovereignty And Privacy](docs/06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md)
+- Model and runtime layers: [7. Model Ecosystem](docs/07-model-ecosystem/07-00-00-model-ecosystem.md), [8. Model Hosting And Inference](docs/08-model-hosting-and-inference/08-00-00-model-hosting-and-inference.md), [9. Model Gateways And Access Control](docs/09-model-gateways-and-access-control/09-00-00-model-gateways-and-access-control.md), [10. Agentic Systems And Orchestration](docs/10-agentic-systems-and-orchestration/10-00-00-agentic-systems-and-orchestration.md), [11. Knowledge Retrieval And Memory](docs/11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md), [12. Training Fine-Tuning And Adaptation](docs/12-training-fine-tuning-and-adaptation/12-00-00-training-fine-tuning-and-adaptation.md)
+- Assurance and control layers: [13. Evaluation Testing And QA](docs/13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md), [14. Observability Logging And Monitoring](docs/14-observability-logging-and-monitoring/14-00-00-observability-logging-and-monitoring.md), [15. Security And Abuse Resistance](docs/15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md)
+- Operating model and ecosystem decisions: [16. Human Oversight And Operating Model](docs/16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md), [17. Vendors Organizations And Market Structure](docs/17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md), [18. Build Vs Buy Vs Hybrid](docs/18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md), [19. Reference Architectures](docs/19-reference-architectures/19-00-00-reference-architectures.md), [20. Standards Frameworks And Bodies Of Knowledge](docs/20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md), [21. Research Open Knowledge And Community](docs/21-research-open-knowledge-and-community/21-00-00-research-open-knowledge-and-community.md)
+
+## Start Here
+
+The default reading spine is:
+
+1. [MISSION.md](./MISSION.md) for the durable mission, audience, scope, and priorities.
+2. [1. Scope And Principles](docs/01-scope-and-principles/01-00-00-scope-and-principles.md) for repository and atlas orientation.
+3. [2. Taxonomy](docs/02-taxonomy/02-00-00-taxonomy.md) for the canonical classification system.
+4. [3. Enterprise AI Stack Map](docs/03-enterprise-ai-stack-map/03-00-00-enterprise-ai-stack-map.md) for layer boundaries and control points.
+5. The later chapters that match your role, system type, and decision surface.
+
+## Orientation Pages
+
+- Use [1.2.1 Role-Based Reading Paths](docs/01-scope-and-principles/01-02-01-role-based-reading-paths.md) when different readers need different entry paths before they reconverge on one shared system description.
+- Use [1.2.2 Worked Reader Journeys](docs/01-scope-and-principles/01-02-02-worked-reader-journeys.md) when the team needs scenario-led examples rather than a generic reading spine.
+- Use [1.3.1 Root Docs And Topic Chapters](docs/01-scope-and-principles/01-03-01-root-docs-and-topic-chapters.md) when the issue is where material belongs: root guidance, `pips/`, or the numbered atlas chapters.
 
 ## Reading Sequence
 
@@ -91,92 +56,19 @@ flowchart TB
     E --> F[16-21 Oversight, Market, Sourcing, Standards, Community]
 ```
 
-## Contribution Entry Points
+## Repository Guidance
 
-- Read [AGENTS.md](./AGENTS.md) for durable structure and mission guardrails.
-- Read [MISSION.md](./MISSION.md) for durable mission, audience, scope, and priorities.
-- Read a `pips/PIP_*.md` file only when the task explicitly references it as optional prompt context.
-  Live PIPs are current task context only when explicitly referenced; `archived` and `superseded` PIPs are historical.
-- Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
-- Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
+- Read [MISSION.md](./MISSION.md) for the durable mission, audience, scope, and priorities.
+- Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contributor workflow, evidence posture, and review expectations.
+- Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, page structure, page types, and maturity rules.
+- Read [RALPH_CONTROLLER.md](./RALPH_CONTROLLER.md) for `./scripts/ralph-codex.py` operator usage and controller verification.
+- Read [AGENTS.md](./AGENTS.md) for durable operator guidance and mission guardrails.
+- Read [CHANGELOG.md](./CHANGELOG.md) for the completion-only root ledger.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
-
-## Human-Run Ralph Loop
-
-`./scripts/ralph-codex.py` is a human-run outer controller for long-running Codex work. It launches `codex app-server`, stores structured session state under `.codex/ralph-codex/`, starts in Plan mode to build a broadened execution charter, and resumes prior work only through explicit session commands.
-
-The public CLI is intentionally small:
-
-1. `./scripts/ralph-codex.py`
-   Prints help.
-2. `./scripts/ralph-codex.py --message "Refactor the controller deeply"`
-   Starts a new session from inline message text.
-3. `./scripts/ralph-codex.py --file prompts/fix-tests.md`
-   Starts a new session from a message file.
-4. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/cautious.json`
-   Starts a new session from a message file with a restricted custom profile.
-5. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/dangerously-unrestricted.json`
-   Starts a new session from a message file with full-access sandboxing.
-6. `./scripts/ralph-codex.py --message "Refactor the controller deeply" --verbose`
-   Starts a new verbose session with colored human-readable live status and event logging, plus compact structured terminal diagnostics and full wire diagnostics in `events.jsonl`.
-7. `./scripts/ralph-codex.py --sessions 10`
-   Lists the latest ten run-history rows.
-8. `./scripts/ralph-codex.py --resume`
-   Resumes the latest resumable session.
-
-Canonical schemas for Ralph artifacts live under `schemas/ralph-codex/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
-
-Operational defaults:
-
-- Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
-- Ralph always emits human-readable live status to `stdout` and event/error logging to `stderr` so an operator can follow along in the shell.
-- Ralph formats live model output for humans instead of streaming raw schema JSON to the terminal during structured turns.
-- Ralph uses colored terminal layout automatically on interactive TTYs and falls back to plain text when output is redirected.
-- Pressing `Ctrl+C` aborts the current run gracefully, clears the active controller run pointer, closes the app-server, and leaves the session resumable.
-- After an abort, Ralph prints a one-line resume hint such as `./scripts/ralph-codex.py --resume <session-id>`.
-- Ralph keeps `approvalPolicy` set to `never` in every access mode, so it does not ask for permissions during unattended execution after the initial seed confirmation.
-- Ralph defaults to `thread_policy.access_mode: "restricted"`, which uses the `workspace-write` sandbox.
-- `thread_policy.access_mode: "dangerously-unrestricted"` is an opt-in profile mode that uses `danger-full-access`.
-- `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
-- `execution.max_prompt_chars` defaults to `0`, which disables prompt-size caps unless a profile opts into one.
-- `events.jsonl` records semantic event changes and skips ghost duplicates where only the timestamp changed.
-- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping console-rendered verbose payloads aggressively capped for readability.
-
-PIP status conventions:
-
-- Every `pips/PIP_*.md` file carries a frontmatter `pip-status`.
-- Allowed values are `live`, `archived`, and `superseded`.
-- `pip-status: superseded` PIPs must declare `superseded_by`.
-- `pip-status: archived` PIPs must declare `retention_reason`.
-
-Verification:
-
-- When changing `scripts/ralph-codex.py`, its schemas, or its tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py`.
-- Then run `python3 -m unittest discover -s tests`.
+- Read a `pips/PIP_*.md` file only when the task explicitly references it as optional prompt context.
 
 ## Page Signals
 
-Every page under `docs/` carries a visible metadata line directly under the numbered H1:
+Every page under `docs/` carries a visible metadata line directly under the numbered H1 with `Page Type` and `Maturity`.
 
-- `Page Type`: the page's primary job in the atlas
-- `Maturity`: the page's current completeness and trust level
-
-The atlas uses these page types:
-
-- `Chapter Index`
-- `Concept Explainer`
-- `Comparison Page`
-- `Decision Guide`
-- `Worked Example`
-- `Operational Artifact`
-- `Reference Sheet`
-- `Glossary`
-
-The atlas uses these maturity levels:
-
-- `Outline`
-- `Draft`
-- `Review-Ready`
-- `Curated Reference`
-
-Use them as navigation aids. Higher maturity pages should anchor stronger decisions, while lower maturity pages should be treated as developing material rather than hidden scaffolding.
+Use those signals as navigation aids. Higher-maturity pages should anchor stronger decisions, while lower-maturity pages should be treated as developing material rather than hidden scaffolding. For the canonical page-type and maturity definitions, use [EDITORIAL_RULES.md](./EDITORIAL_RULES.md).

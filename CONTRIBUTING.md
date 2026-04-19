@@ -32,23 +32,15 @@ Open Applied AI Atlas is a public documentation project. Good contributions impr
 
 ## Page Types And Maturity
 
-Primary page types:
+Use the canonical page-type and maturity definitions in [EDITORIAL_RULES.md](./EDITORIAL_RULES.md). In contribution work, the important discipline is to make the page type obvious and to assign maturity honestly.
 
-- `Chapter Index`
-- `Concept Explainer`
-- `Comparison Page`
-- `Decision Guide`
-- `Worked Example`
-- `Operational Artifact`
-- `Reference Sheet`
-- `Glossary`
+## Prompt Artifacts
 
-Maturity labels:
+`pips/` is the optional prompt/control layer described in [1.3.1 Root Docs And Topic Chapters](docs/01-scope-and-principles/01-03-01-root-docs-and-topic-chapters.md). Use a `pips/PIP_*.md` file only for explicitly referenced task context that should stay out of durable root guidance and public atlas chapters.
 
-- `Outline`: structure exists but decision value is still limited.
-- `Draft`: useful but incomplete or lightly evidenced.
-- `Review-Ready`: substantial and coherent enough for editorial review.
-- `Curated Reference`: stable, denser, and strongly anchored in primary sources.
+- Every `pips/PIP_*.md` file must declare `pip-status: live`, `pip-status: archived`, or `pip-status: superseded` in frontmatter.
+- `pip-status: superseded` requires `superseded_by`.
+- `pip-status: archived` requires `retention_reason`.
 
 ## Evidence Notes
 
@@ -64,6 +56,11 @@ Use that section to distinguish:
 - atlas synthesis
 - explicit editorial judgment
 
+## Repository Operations
+
+- Read [RALPH_CONTROLLER.md](./RALPH_CONTROLLER.md) for the authoritative `./scripts/ralph-codex.py` operator reference and controller verification commands.
+- Keep operator-facing Ralph details out of reader-facing atlas docs; link to the controller reference instead of duplicating its CLI surface.
+
 ## Anti-Patterns
 
 - drifting toward LLM-only framing when a chapter is supposed to cover broader applied AI/ML
@@ -73,3 +70,5 @@ Use that section to distinguish:
 - removing sovereignty, compliance, or lock-in language from chapters where those concerns materially shape decisions
 - keeping a weak standalone page at a high maturity label
 - reintroducing stock intro paragraphs that could fit almost any chapter
+- burying PIP-only prompt context or frontmatter rules inside public chapter prose
+- duplicating Ralph controller flag-by-flag usage across `README.md`, `CONTRIBUTING.md`, and other root docs instead of linking to the canonical reference

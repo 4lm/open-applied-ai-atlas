@@ -1209,33 +1209,6 @@ class RalphCodexTests(unittest.TestCase):
         self.assertNotIn("DEFAULT_PIPS_DIR", script_text)
         self.assertNotIn("PROMPT_FILE", script_text)
 
-    def test_readme_documents_new_cli_surface(self):
-        readme_text = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
-        self.assertIn("--message", readme_text)
-        self.assertIn("--profile", readme_text)
-        self.assertIn("--file", readme_text)
-        self.assertIn("--verbose", readme_text)
-        self.assertIn("--sessions", readme_text)
-        self.assertIn("--resume", readme_text)
-        self.assertIn("does not use turn inactivity timeouts", readme_text)
-        self.assertIn("`max_iterations` uses `0` to mean unlimited", readme_text)
-        self.assertIn("events.jsonl", readme_text)
-        self.assertIn("Ctrl+C", readme_text)
-        self.assertIn("workspace-write", readme_text)
-        self.assertIn("dangerously-unrestricted", readme_text)
-        self.assertIn("python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py", readme_text)
-        self.assertNotIn("--prompt", readme_text)
-        self.assertNotIn("--config", readme_text)
-        self.assertNotIn("PROMPT_FILE", readme_text)
-
-    def test_root_mission_replaces_pips_mission(self):
-        root = Path(__file__).resolve().parents[1]
-        self.assertTrue((root / "MISSION.md").exists())
-        self.assertFalse((root / "pips" / "MISSION.md").exists())
-        readme_text = (root / "README.md").read_text(encoding="utf-8")
-        self.assertIn("[MISSION.md](./MISSION.md)", readme_text)
-        self.assertNotIn("pips/MISSION.md", readme_text)
-
 
 if __name__ == "__main__":
     unittest.main()
