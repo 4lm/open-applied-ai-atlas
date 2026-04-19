@@ -1,39 +1,61 @@
 # 1.2.2 Worked Reader Journeys
 
-_Page Type: Worked Example | Maturity: Draft_
+_Page Type: Worked Example | Maturity: Review-Ready_
 
-These short journeys show how the atlas should be used by real organizational readers.
+These scenarios show how mixed teams should translate chapter `1` into a bounded reading pass. The goal is not to give every reader a long custom tour. The goal is to start from the immediate blocker, choose the shortest credible chapter path, and name the convergence gate that must be cleared before downstream architecture, procurement, or rollout choices harden.
 
-This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.
+## Public-Sector Service Owner Preparing A Citizen Assistant
 
-## Why This File Matters
+| Field | Decision |
+| --- | --- |
+| Context | A digital-service owner wants to move a citizen-facing assistant from discovery into a bounded pilot without losing track of public-service obligations |
+| Immediate blocker | The team needs to decide whether it is still exploring a low-consequence information service or drifting into advice, triage, eligibility, or case-handling territory |
+| Shortest credible path | `1 -> 5 -> 4 -> 6 -> 13 -> 15 -> 16 -> 20` |
+| Why this path first | The use-case class, governance burden, data handling posture, and release evidence matter more than model novelty or vendor convenience at this stage |
+| Convergence gate | Before any supplier shortlist or public pilot promise, the service owner, privacy lead, security lead, and assurance owner agree on user group, task boundary, data classes, human fallback, and the evidence required for launch |
+| This pass should leave behind | a named use-case class, affected-service boundary, control owner list, initial evidence packet, and explicit statement of which decisions still need specialist approval |
+| Re-review trigger | Reopen chapters `1`, `4`, `6`, `13`, and `16` when the assistant gains workflow execution, starts affecting rights or service access, or moves from FAQ-style support into recommendation or decision support |
 
-The point here is not length for its own sake. The point is to make the surrounding chapter more usable by adding explanation, selective bullets, and a more explicit reading posture around the existing material.
+## Enterprise Platform Team Standardizing Shared AI Infrastructure
 
-## Public-Sector Service Owner
+| Field | Decision |
+| --- | --- |
+| Context | A platform group is being pushed to standardize model access, hosting, and gateway controls across several internal teams that currently use different providers and ad hoc tooling |
+| Immediate blocker | The group needs a shared control-plane view before it commits to one hosting posture, one gateway, or one reference architecture |
+| Shortest credible path | `1 -> 2 -> 3 -> 7 -> 8 -> 9 -> 14 -> 18 -> 19` |
+| Why this path first | The core problem is stack shape, control reuse, and portability posture, not which provider currently has the strongest benchmark or easiest demo |
+| Convergence gate | Before platform standardization begins, architecture, operations, security, and procurement agree on supported system families, control surfaces to centralize, observability burden, and the acceptable exit posture for managed dependencies |
+| This pass should leave behind | a stable system classification, shared-versus-local control map, shortlist of runtime postures, minimum telemetry requirements, and a sourcing note that explains where lock-in is acceptable or not |
+| Re-review trigger | Reopen chapters `1`, `3`, `8`, `9`, `14`, and `18` when a local pilot becomes a shared service, when sovereign-hosting demands appear, or when supplier concentration starts constraining future architecture moves |
 
-A service owner exploring a citizen-facing AI assistant starts with mission and audience in chapter `1`, classifies the system in chapters `2` and `5`, then moves into chapters `4`, `6`, `15`, and `20` because legal exposure and evidence discipline matter more than rapid experimentation.
+## Nonprofit Analytics Lead Choosing Between Forecasting And Document Automation
 
-## Enterprise Platform Team
+| Field | Decision |
+| --- | --- |
+| Context | A small nonprofit analytics team is deciding whether to invest first in a forecasting workflow, a document-intelligence pipeline, or a light internal assistant |
+| Immediate blocker | The team needs to separate task families and operating burden before it buys a broad platform it cannot staff or govern |
+| Shortest credible path | `1 -> 5 -> 2 -> 12 -> 13 -> 18` |
+| Why this path first | The highest-value question is whether the organization needs prediction, extraction, retrieval, or generative assistance, and whether it can support the resulting evaluation and maintenance burden |
+| Convergence gate | Before procurement or implementation starts, program ownership, delivery staff, and budget holders agree on the dominant task family, data readiness, evaluation method, and which operating burden the organization can realistically absorb |
+| This pass should leave behind | one primary use-case lane, a realistic evidence plan, an explicit note on retrieval versus adaptation needs, and a sourcing posture that matches staffing and support capacity |
+| Re-review trigger | Reopen chapters `1`, `5`, `12`, `13`, and `18` when the initial workflow expands into multi-step automation, sensitive-record handling, or shared organizational infrastructure instead of a narrow team tool |
 
-A platform team comparing managed APIs, open-weight serving, and gateway options starts with chapters `2`, `3`, `7`, `8`, `9`, `17`, and `18`. The core question is not just capability; it is where sovereignty, observability, and exit posture sit.
+## Privacy And Compliance Reviewer Challenging A Procurement Narrative
 
-## Nonprofit Analytics Lead
+| Field | Decision |
+| --- | --- |
+| Context | A privacy or compliance reviewer is asked to assess a supplier proposal that describes an AI product as turnkey, compliant, and low-risk |
+| Immediate blocker | The reviewer needs to test whether the procurement narrative matches the actual system boundary, control allocation, and evidence available to the organization |
+| Shortest credible path | `1 -> 4 -> 6 -> 17 -> 18 -> 20 -> 13/15` |
+| Why this path first | Supplier claims are not enough; the review must separate policy obligations, data boundaries, market dependence, standards claims, and release proof before contract language hardens the architecture |
+| Convergence gate | Before sign-off, procurement, legal or privacy, security, and the accountable business owner agree on processing boundaries, control ownership, portability expectations, audit rights, and which assurance artifacts must be delivered |
+| This pass should leave behind | a boundary and ownership summary, list of supplier claims that still need proof, standards and policy anchors that actually apply, and the escalation path if promised controls are unavailable or non-exportable |
+| Re-review trigger | Reopen chapters `1`, `4`, `6`, `13`, `15`, `17`, and `18` when contract scope changes, support access expands, data residency claims weaken, or the supplier starts mediating more of the stack than originally planned |
 
-A small analytics team evaluating forecasting and document-intelligence automation uses chapters `1`, `5`, `12`, and `18` to stay grounded in realistic operating capability. The relevant problem is usually not whether AI exists, but whether the team can run it safely and sustainably.
+## Cross-Journey Review Signals
 
-## Privacy And Compliance Reviewer
-
-A reviewer seeing a new procurement proposal uses chapter `1` to confirm scope, then reads `4`, `6`, `17`, `18`, and `20` to test whether the vendor story aligns with contractual, governance, and boundary claims.
-
-## What To Carry Forward
-
-- Use this file to sharpen decisions, not just to restate the chapter title in smaller pieces.
-- Keep the chapter's cross-cutting priorities visible when applying the local guidance.
-- Revisit the chapter front door if this file starts to feel more detailed than the decision really needs.
-
-## Practical Reading Rule
-
-Read this file as a local clarifier inside the chapter. If it changes nothing about the decision, review, or reading path in front of you, the reader is probably in the wrong place.
+- The shortest credible reading path is only useful if it ends with a named convergence gate and a concrete output such as a boundary map, sourcing note, evidence packet, or ownership decision.
+- A journey is probably wrong if the team is comparing vendors before it agrees on task class, workflow consequence, data boundary, or who will own the resulting controls.
+- Reopen chapter `1` whenever the system crosses into a new consequence class, a broader user group, a different operating model, or a stronger supplier dependence than the journey assumed at the start.
 
 Back to [1.2 Using The Atlas](01-02-00-using-the-atlas.md).

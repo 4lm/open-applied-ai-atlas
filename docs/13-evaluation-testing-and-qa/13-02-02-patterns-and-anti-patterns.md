@@ -1,55 +1,46 @@
 # 13.2.2 Patterns And Anti-Patterns
 
-_Page Type: Reference Sheet | Maturity: Draft_
+_Page Type: Reference Sheet | Maturity: Review-Ready_
 
-This subsection captures reusable good shapes and recurring failure shapes so the chapter remains useful during design review as well as implementation.
+Use this page during release planning, regression review, and post-change re-approval to recognize healthy evaluation operating shapes before polished demos or narrow metrics substitute for real evidence.
 
-Patterns matter here because evaluation testing and qa is easy to discuss in the abstract but much harder to operationalize consistently. Reusable patterns compress judgment: they show teams what a good shape looks like before local naming, tooling, or organizational politics make the design harder to evaluate.
+## Reusable Evaluation Patterns
 
-## Why Pattern Language Helps
+| Pattern | What good looks like | Fit signal | Review warning |
+| --- | --- | --- | --- |
+| Release packet anchored to the real system shape | The team names the dominant system boundary first, then assembles evidence that matches it: retrieval checks for source-backed assistants, routing comparisons for gateway changes, tool misuse tests for action-capable agents, or drift review for predictive services | reviewers can state in one sentence what must be proven before release | the packet is organized around favorite tools or benchmark types rather than the actual release question |
+| Baseline plus bounded-change regression lane | Every proposed change is tested against a stable prior baseline, with explicit attention to what changed and what should remain invariant | model, prompt, routing, policy, retrieval, or tool changes are frequent and often look "small" | the team treats hidden infrastructure or prompt edits as too minor to reopen evaluation |
+| Scenario-led evidence mix with failure-mode coverage | Success cases, edge cases, abuse cases, and rollback checks are all represented in the operating pack instead of only happy-path samples | the system affects policy, customer communication, approvals, or automated actions | evaluation examples look persuasive in demos, but there is no evidence for refusal behavior, error recovery, or harmful drift |
+| Calibrated human review with explicit decision rights | Human reviewers work from rubrics, disagreement thresholds, and escalation rules rather than free-form opinion | quality depends partly on judgment, contextual nuance, or domain interpretation | reviewer sign-off exists, but nobody can explain what counts as disagreement, failure, or release blocking |
+| Re-evaluation tied to rollout, monitoring, and rollback | The evaluation plan already names which live signals, incidents, or operating changes reopen review and what rollback artifact is used if the release fails | the system will expand by geography, audience, action scope, or data sensitivity after launch | the team treats evaluation as a one-time prelaunch event with no defined monitoring handoff |
 
-The goal is not to create slogans. The goal is to make recurring good and bad shapes visible early enough that teams can course-correct before they invest in the wrong architecture, control model, or operating process.
+## Evaluation Anti-Patterns
 
-## Decision Flow
+| Anti-pattern | Why it fails | Early signal | Review action |
+| --- | --- | --- | --- |
+| Benchmark or demo substitution | Offline scores or polished walkthroughs can hide system regressions, permission leaks, or unsafe operating behavior | decks lead with benchmark deltas, but no system-level pack exists | require a release packet tied to the real workflow and dominant failure modes |
+| Change blindness around prompts, routing, or retrieval | Teams miss regressions when they treat non-code changes as invisible or reversible without proof | prompts, gateway policies, index changes, or retrieval settings changed, but evaluation scope stayed static | reopen evaluation and require a bounded-change comparison against the prior live baseline |
+| Human review as taste rather than control | Reviewer confidence does not scale if rubrics, escalation triggers, and disagreement handling are missing | sign-off depends on a few trusted people "looking at samples" | add scoring rules, disagreement thresholds, and named blocking conditions before approval |
+| Release gates with no rollback evidence | A system is not ready if rollback depends on memory, notebooks, or ad hoc console history | the team can describe launch criteria, but not how it will revert safely | require the rollback target, owner, and release artifact before rollout widens |
+| Evaluation isolated from monitoring and abuse review | Pre-release QA cannot stay credible if live incidents, abuse patterns, or telemetry gaps never feed back into the pack | observability and security teams are mentioned only after launch | link the release packet to chapters `14` and `15`, plus the relevant re-review triggers |
 
-```mermaid
-flowchart TD
-    A[Chapter question] --> B[Choose reusable pattern]
-    B --> C[Check boundary conditions]
-    C --> D[Add controls and evidence]
-    D --> E[Watch for anti-pattern signals]
-```
+## Review Prompts
 
-This file captures reusable ways to think about the topic. The point is not to add more categories. The point is to help readers recognize good and bad shapes quickly.
+- Which evaluation pattern best matches the dominant release question: real-system packet, bounded-change regression, scenario-led evidence, calibrated human review, or rollout-linked re-evaluation?
+- What changed since the last approved baseline, and where is that change proven safe rather than assumed harmless?
+- Which failure mode would most damage trust here: wrong answer confidence, tool misuse, permission leakage, silent routing drift, or degraded human review consistency?
+- Which adjacent chapter must re-enter before release: `12`, `14`, `15`, or `16`?
 
-## Patterns To Reuse
+## Re-Review Triggers
 
-- Qa should produce enough evidence for release and rollback decisions
-- System-level testing matters more than isolated benchmark claims
-- Re-evaluation should trigger on model, prompt, routing, retrieval, and tool changes
-
-## Anti-Patterns To Avoid
-
-- Using the chapter as only a taxonomy layer and never translating it into decisions.
-- Keeping comparison tables without explanatory narrative around them.
-- Letting local terminology drift away from the canonical chapter language.
-
-## Review Prompt
-
-| During review ask... | Why |
-| --- | --- |
-| Are the chapter distinctions still visible in the proposal? | Prevents local shortcuts from flattening important trade-offs |
-| Are openness, sovereignty, privacy, compliance, and lock-in visible where they matter? | Keeps the chapter aligned with the atlas mission |
-| Has the team translated the pattern language into an actual design or control decision? | Prevents the section from remaining only descriptive |
-
-## Review Signals
-
-- The reusable pattern should still expose ownership, evidence, and rollback logic.
-- The anti-pattern should describe a real failure shape, not just a stylistic preference.
-- The chapter's cross-cutting priorities should remain visible even when the local implementation looks convenient.
+- a prompt, model, retrieval source, routing policy, tool binding, or approval rule changed after the last approved packet
+- rollout expands to a new audience, geography, language, business process, or action scope
+- production telemetry or incident review exposes failure modes the original evaluation pack never measured
+- reviewer disagreement stays high, but the team keeps widening rollout by narrowing the sample set instead of improving the system
+- rollback depends on artifacts that are not versioned, reproducible, or still available
 
 ## Practical Reading Rule
 
-Use these patterns to stress-test a proposal after the concepts are clear and before the design is treated as settled. If a team cannot explain why its approach avoids the anti-patterns listed here, the review is not finished.
+Use these patterns after the release question is known but before approval is treated as routine. If the team cannot show what changed, what evidence matches that change, what would block launch, and how live incidents reopen review, the evaluation design is not finished.
 
 Back to [13.2 Operating Evaluation And QA](13-02-00-operating-evaluation-and-qa.md).

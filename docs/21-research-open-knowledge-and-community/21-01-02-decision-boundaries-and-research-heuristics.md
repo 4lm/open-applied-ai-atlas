@@ -1,55 +1,57 @@
 # 21.1.2 Decision Boundaries And Research Heuristics
 
-_Page Type: Decision Guide | Maturity: Draft_
+_Page Type: Decision Guide | Maturity: Review-Ready_
 
-This subsection explains how to read the chapter well, where its boundaries sit, and which recurring mistakes distort decisions.
+Use this page when public research, benchmark results, open-source projects, or community guidance are starting to influence a real organizational decision. The goal is to name the dominant review lane before novelty, prestige, or community momentum turns outside knowledge into an unexamined local default.
 
-This file exists because research open knowledge and community usually involves judgment under incomplete information. Heuristics do not replace evidence, but they help teams avoid false certainty and force the most important trade-offs into the open before a local preference hardens into policy or architecture.
+## Decision Lanes
 
-## Why These Heuristics Matter
+| Lane | Use it when the main question is... | Default posture |
+| --- | --- | --- |
+| Signal-triage lane | whether a paper, benchmark, benchmark summary, or public claim should change internal understanding at all | treat the outside signal as orientation material first, write down what it can and cannot change, and block direct adoption until local relevance is named |
+| Pilot-design lane | whether a public project, reference stack, or open method is mature enough for bounded hands-on learning | run a time-boxed pilot with explicit success, failure, maintainer, and exit criteria before the component becomes a shared dependency |
+| Control-refresh lane | whether public guidance, incident writeups, or community practice should update local controls | translate the outside guidance into local control owners, test cases, and review artifacts instead of copying respected language into policy text |
+| Artifact-trust lane | whether an external model, dataset, demo, or media artifact is trustworthy enough to evaluate, mirror, or promote | separate performance interest from provenance, license, integrity, and stewardship checks before the artifact enters the internal path |
+| Standards-tracking lane | whether the team mainly needs to monitor where public research, bodies, and guidance are moving rather than adopt something now | keep the work in a watchlist or tracking rhythm, and do not let landscape awareness masquerade as implementation evidence |
 
-A good heuristic should make a decision safer, faster, and more reviewable. It should also make clear when the team has moved beyond a heuristic and now needs stronger evidence, broader review, or a different chapter entirely.
+## Practical Heuristics
 
-## Decision Flow
+- Start by naming what the outside source is allowed to change: terminology, shortlist inputs, pilot scope, control questions, or standards tracking. If that boundary is missing, the chapter is already being asked to do too much.
+- Treat benchmark wins and paper claims as hypothesis generators, not as release evidence. External performance can justify local evaluation work, but it does not remove the need for representative tasks, runtime proof, and consequence-aware review.
+- Separate community momentum from production readiness. Maintainer activity, conference visibility, or GitHub stars do not answer who will patch, monitor, support, and replace the dependency once internal teams rely on it.
+- Convert public guidance into local review packets. A respected playbook becomes useful only after the team maps it into accountable controls, tests, exceptions, and incident triggers for its own system.
+- Read openness together with dependence. Open weights, open repositories, or public documentation may improve inspectability and portability, but they do not by themselves guarantee staffing capacity, supply-chain trust, or sustainable upgrade paths.
+- Keep artifact trust distinct from artifact quality. A model or dataset can be technically strong while still being a poor candidate for reuse because provenance, license, update history, or integrity checks are weak.
+- Reopen adjacent chapters as soon as the question becomes one of evaluation quality, security posture, sourcing burden, runtime ownership, or formal standards mapping. Chapter `21` is the handoff surface, not the place to settle those decisions in isolation.
 
-```mermaid
-flowchart TD
-    A[Clarify the chapter question] --> B[Identify constraints and non-negotiables]
-    B --> C[Choose the smallest viable option]
-    C --> D[Check adjacent chapter dependencies]
-    D --> E[Set review or escalation triggers]
-```
+## Escalate When
 
-## Reading The Chapter
+- nobody can say whether the outside source is being used for orientation, pilot design, control updates, or release-significant evidence
+- a benchmark, paper, or leaderboard is already being cited as the reason to change the supported model shortlist or production architecture
+- a community project is moving from experiment to shared platform use without a maintainer, release, support, and exit review
+- external guidance is being copied into policy or audit language without local control ownership, tests, or exception handling
+- the team wants to mirror, fine-tune, redistribute, or operationalize an external artifact, but provenance, licensing, integrity, or stewardship checks are still informal
+- the real disagreement is about compliance exposure, vendor dependence, hosting burden, evaluation sufficiency, or human approval, yet the conversation is still framed as a generic "research says" dispute
 
-Use this chapter to anchor the topic before dropping into implementation details, examples, or comparison material. The goal is not to replace the deeper files in the folder. The goal is to make the chapter readable as a front door and to surface the questions that matter most.
+## Research Anti-Patterns
 
-## Reading Heuristics
+- letting prestige substitute for fit by repeating well-known papers, benchmarks, or organizations as if reputation settles the local decision
+- standardizing on a community project because it is visible and open before naming the internal owner, support boundary, or rollback path
+- copying public safety or governance guidance into policy text without converting it into local tests, controls, and accountable exceptions
+- treating "open" as proof of low lock-in even when operational know-how, upgrade burden, or supply-chain verification still depends on a narrow set of maintainers or vendors
+- using chapter `21` to avoid harder work in evaluation, security, sourcing, or standards mapping once the system is already moving toward release
 
-- Start with this front door if you need the chapter's main distinctions and failure modes.
-- Move to the implementation guide when you need rollout, review, or operating advice.
-- Use the examples file when the topic feels too abstract and you need a concrete scenario.
-- Use typed resource files for named tools, standards, or vendor comparison rather than for conceptual orientation.
+## Chapter Handoffs
 
-## Common Reader Mistakes
-
-- Jumping straight to tools before the chapter's core distinctions are clear.
-- Treating one table or one pattern as if it covered the entire topic.
-- Ignoring adjacent chapters that shape the same decision from another angle.
-
-## Open Questions
-
-- Which parts of this chapter deserve deeper worked examples in future passes?
-- Which distinctions are stable enough to stay canonical across future expansions?
-
-## Review Questions
-
-- Which constraint or risk is this heuristic trying to make visible?
-- What would cause the team to escalate beyond a rule of thumb into deeper review?
-- Are the heuristics here still consistent with the taxonomy and chapter boundaries of the atlas?
+- [07. Model Ecosystem](../07-model-ecosystem/07-00-00-model-ecosystem.md) when a public result is influencing model-class choice, openness posture, or lifecycle assumptions.
+- [08. Model Hosting And Inference](../08-model-hosting-and-inference/08-00-00-model-hosting-and-inference.md) when the question is really about deployment burden, runtime constraints, or service ownership.
+- [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md) when benchmark claims or paper results are being treated as proof of local readiness.
+- [15. Security And Abuse Resistance](../15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md) when public artifacts, demos, or guidance need threat, misuse, provenance, or supply-chain review.
+- [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md) when adopting an open project or reference stack creates a real support, staffing, or exit-posture decision.
+- [20. Standards Frameworks And Bodies Of Knowledge](../20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md) when the work shifts from reading the landscape to choosing formal standards anchors or conformance inputs.
 
 ## Practical Reading Rule
 
-Use this file when a team needs a disciplined default, not a permanent shortcut. If the heuristics stop matching the system consequence, scale, or evidence burden, revisit the chapter from the top.
+Choose the lane that best matches what the outside signal is actually allowed to influence, then demand the smallest credible local evidence packet for that lane before adoption widens. If the source starts carrying architecture, control, or supplier weight that the lane cannot justify, return to the top of chapter `21` and hand the decision to the adjacent chapter that owns it.
 
 Back to [21.1 Knowledge Foundations](21-01-00-knowledge-foundations.md).

@@ -1,39 +1,48 @@
 # 12.1.1 Adaptation Paths, Costs, And Core Distinctions
 
-_Page Type: Concept Explainer | Maturity: Draft_
+_Page Type: Concept Explainer | Maturity: Review-Ready_
 
-This subsection isolates the most reusable distinctions in the chapter so later implementation and comparison material stays anchored to the right concepts.
+Use this page to separate the main ways teams change system behavior: prompt and workflow adaptation, retrieval and knowledge adaptation, parameter-efficient tuning, broader fine-tuning, and classical retraining. Those paths are not interchangeable just because they all aim to improve output quality. They modify different system state, demand different evidence, and create different rollback and sourcing obligations.
 
-This distinction layer matters because the chapter on training fine tuning and adaptation is only useful if readers can separate the recurring categories, responsibilities, or evidence types that would otherwise blur together. The atlas uses distinctions like this to keep comparison rigorous and to stop local shorthand from hiding governance, sourcing, or operational consequences.
+## Adaptation-Path Map
 
-## Why These Distinctions Matter
+| Adaptation path | What actually changes | Best fit | Main new burden | Common failure |
+| --- | --- | --- | --- | --- |
+| Prompt and workflow adaptation | instructions, schemas, routing, tool selection, approval steps, or other execution controls | the task is underspecified, unstable, or poorly decomposed even though the underlying model capability is likely sufficient | prompt versioning, eval baselines, reviewer consistency, and release discipline for configuration changes | treating weak task design as proof that model weights must change |
+| Retrieval and knowledge adaptation | source coverage, chunking, metadata, ranking, citation behavior, freshness handling, or permission inheritance | answers depend on governed organizational facts that change faster than a tuning cycle should | source ownership, provenance, refresh cadence, access control, and deletion or revocation handling | encoding changing business facts into training data instead of fixing retrieval quality |
+| Parameter-efficient tuning | narrow trainable deltas such as adapters or low-rank updates attached to a base model | a repetitive task has reached a clear prompt-plus-retrieval ceiling and needs stronger consistency, latency, or task fit | labeled data quality, baseline comparisons, model registry entries, and rollback for tuned variants | approving tuning because it feels more serious, not because lighter paths failed on evidence |
+| Broader fine-tuning or post-training | a larger share of model behavior is updated through supervised or preference-based training | the organization truly needs deeper behavior change and can support the resulting lifecycle cost | higher compute demand, harder release gates, portability loss, and stronger supplier dependence if the method is platform-bound | treating a model-variant program as if it were a routine UX tweak |
+| Classical model retraining | a predictive model is retrained on refreshed features, labels, or training windows | forecasting, ranking, classification, or anomaly-detection systems are degrading under drift or business-change pressure | data-window choice, label quality review, holdout or backtest evidence, and monitoring reset plans | importing LLM tuning language into a classical ML problem and skipping drift discipline |
 
-The practical question is not whether the labels are elegant. The practical question is whether the distinctions change how a team designs, reviews, buys, operates, or audits a system. In this chapter, that means checking whether the topic is being reasoned about in the right layer and with the right cross-cutting lenses still visible.
+## Core Distinctions
 
-## Key Lenses
-
-| Adaptation lens | Why it matters |
+| Distinction | Why it changes the design |
 | --- | --- |
-| Escalation ladder | Keeps teams from overcommitting to invasive adaptation too early |
-| Data demand | Shows how training quality depends on disciplined data and labels |
-| Evaluation burden | Connects adaptation strength to release and regression requirements |
-| Exit posture | Surfaces the dependence created by model-specific training paths |
+| Behavior steering vs. knowledge access | If the model already knows how to do the task but lacks current facts, retrieval work is usually the right fix and tuning is not. |
+| Configuration surface vs. trained artifact | Prompt, routing, and policy changes are usually easier to inspect and roll back than new model variants, checkpoints, or adapters. |
+| Narrow task adaptation vs. broad behavior shift | Parameter-efficient tuning can solve a stable task without automatically justifying the governance burden of broader post-training. |
+| Reversible release change vs. persistent estate change | Once adaptation creates new model artifacts, the organization needs ownership, registry, retirement, and rollback rules, not just experiment notes. |
+| Adaptation method vs. sourcing posture | A managed tuning workflow changes portability, hosting dependence, and audit visibility even if the technical adaptation method looks familiar. |
+| Generative adaptation vs. predictive retraining | LLM behavior work and classical ML drift work use different evidence, failure modes, and operating rhythms, so one vocabulary should not erase the other. |
 
-## What Matters Most
+## What These Distinctions Change In Practice
 
-- Adaptation should follow an escalation ladder
-- Retrieval often solves a knowledge problem more cleanly than fine-tuning
-- Stronger adaptation paths create stronger qa and governance burden
-- Rollback needs to exist for prompts, retrieval, routes, and training choices alike
+- Require the strongest credible prompt and retrieval baseline before approving any weight change.
+- Treat changing organizational knowledge as a retrieval and source-governance problem unless the team can prove the real failure is behavioral rather than factual.
+- Distinguish a narrow tuned variant from a broader post-training program because release burden, rollback friction, and supplier dependence rise sharply once model behavior changes more deeply.
+- Treat hosted tuning and training as sourcing decisions as well as technical ones because data handling, exportability, regional control, and exit posture may change.
+- For classical ML systems, refresh success metrics, drift thresholds, and monitoring plans when retraining is proposed; retraining is not complete when only the model weights changed.
 
-## What Reviewers Should Check
+## Reviewer Checks
 
-- Are the distinctions here still connected to the chapter's real decision surface rather than being treated as abstract categories?
-- Is the proposal using these distinctions to expose trade-offs in control, evidence, ownership, or lock-in?
-- Does the chapter language stay consistent with the atlas taxonomy instead of introducing new local categories without need?
+- Can the team name which failure type it is addressing: task design, knowledge access, stable task fit, deeper model behavior, or predictive-model drift?
+- What is the lightest path that could plausibly fix the problem, and what evidence shows that lighter path has been tried seriously?
+- Which new persistent artifact will exist after the change: prompt version, retrieval index, adapter, tuned checkpoint, or retrained model?
+- How will the team roll back the chosen adaptation path, and is that rollback speed proportionate to business risk?
+- Does the proposal quietly change portability, sovereignty posture, or supplier dependence even if the stated goal is only quality improvement?
 
-## Practical Reading Rule
+## Reading Rule
 
-Use this file to sharpen the chapter, not to replace it. If a proposal still sounds plausible after the distinctions here are applied, it is usually ready to move into heuristics, scenarios, or reference material. If it falls apart, the distinction work has already paid for itself.
+Use this page to classify the adaptation path before choosing it. Then move to [12.1.2 Decision Boundaries And Escalation Heuristics](12-01-02-decision-boundaries-and-escalation-heuristics.md) to decide which lane is proportionate. If the team still cannot say what state changes, what evidence is required, and what new operating burden appears, it has not earned a heavier adaptation choice yet.
 
 Back to [12.1 Adaptation Foundations](12-01-00-adaptation-foundations.md).

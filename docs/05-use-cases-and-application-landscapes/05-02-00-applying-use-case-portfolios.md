@@ -1,23 +1,26 @@
 # 5.2 Applying Use-Case Portfolios
 
-_Page Type: Chapter Index | Maturity: Outline_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
-This section turns the chapter into delivery and review guidance for Use Cases And Application Landscapes. Within the chapter, it organizes applied AI demand into reusable use-case families so portfolios are shaped by real work patterns instead of product fashion, but the emphasis here is narrower: this section turns the chapter into delivery, review, and operating work so the concepts are checked against real organizational situations.
+This section turns use-case framing into rollout review. Use it when the task family and initial solution pattern are already plausible and the remaining question is whether the portfolio still makes sense once staffing, control burden, data boundaries, sourcing posture, and re-review triggers are tested against real delivery conditions.
 
 ## Section Map
 
 - 5.2.1 [Worked Use-Case Scenarios](05-02-01-worked-use-case-scenarios.md)
 - 5.2.2 [Patterns And Anti-Patterns](05-02-02-patterns-and-anti-patterns.md)
 
-This guide turns the chapter into a delivery and operating sequence. It is intentionally practical: what to check first, what to defer, and what should trigger review before wider rollout.
+## What This Section Helps Decide
 
+- which operating posture fits retrieval-backed assistance, regulated decision support, forecasting services, document-intelligence workflows, and shared-control infrastructure when work pattern, consequence, and rollout pressure pull in different directions
+- which recurring portfolio shapes produce coherent adoption versus one-chatbot flattening, autonomy inflation, hidden platform centralization, or under-governed workflow automation
+- which review outputs should exist before expansion, including named owners, bounded rollout lanes, evidence packets, exception paths, portability notes, and triggers for reopening earlier chapter decisions
+- which changes should send the team back to governance, privacy, retrieval, evaluation, observability, oversight, or sourcing review before the portfolio standardizes around convenience
 
-## What To Look For Here
+## Reading Boundaries
 
-- the recommended sequence for applying the chapter in practice
-- the failure modes and re-review triggers that should not be hidden
-- the places where adjacent chapters must be pulled back into the decision
-- where the section should hand the reader off to adjacent chapters instead of trying to answer everything locally
-
+- Use [5.2.1 Worked Use-Case Scenarios](05-02-01-worked-use-case-scenarios.md) when the team needs scenario-led guidance for startup knowledge support, regulated review work, forecasting services, or document-routing operations before rollout widens.
+- Use [5.2.2 Patterns And Anti-Patterns](05-02-02-patterns-and-anti-patterns.md) as a compact review sheet for healthy operating shapes and the failure modes that turn bounded assistance into hidden automation or platform sprawl.
+- Revisit [5.1 Use-Case Foundations](05-01-00-use-case-foundations.md) if the team still cannot name the dominant task family, autonomy level, portfolio lane, or solution pattern before discussing vendors or scaling plans.
+- Move to [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md), [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md), [11. Knowledge Retrieval And Memory](../11-knowledge-retrieval-and-memory/11-00-00-knowledge-retrieval-and-memory.md), [13. Evaluation Testing And QA](../13-evaluation-testing-and-qa/13-00-00-evaluation-testing-and-qa.md), [14. Observability Logging And Monitoring](../14-observability-logging-and-monitoring/14-00-00-observability-logging-and-monitoring.md), [16. Human Oversight And Operating Model](../16-human-oversight-and-operating-model/16-00-00-human-oversight-and-operating-model.md), or [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md) when the unresolved issue is approval authority, sensitive data handling, retrieval quality, release proof, production visibility, human intervention, or supplier dependence rather than use-case application alone.
 
 Back to [5. Use Cases And Application Landscapes](05-00-00-use-cases-and-application-landscapes.md).

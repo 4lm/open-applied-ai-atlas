@@ -1,36 +1,74 @@
 # 1.1.4 Atlas Priorities: Openness, Sovereignty, Portability, Privacy, Compliance
 
-_Page Type: Concept Explainer | Maturity: Draft_
+_Page Type: Concept Explainer | Maturity: Review-Ready_
 
-The atlas is not neutral about whether these concerns matter. It treats them as recurring design lenses because they change architecture, sourcing, operating cost, and organizational risk.
+These priorities are the atlas's recurring review lenses, not optional values statements. Use this page when a discussion about models, platforms, procurement, or delivery is drifting toward convenience, speed, or benchmark performance alone and the team needs to reopen the control, reversibility, and organizational-risk questions that actually shape the decision.
 
-This file matters because the chapter on scope and principles depends on readers being able to move from broad chapter framing to a sharper local distinction, journey, or scope rule. The atlas works only when even small files carry enough narrative framing to tell the reader why the material exists and what it should change in practice.
+The five lenses are linked but not interchangeable. A stack can be open without being sovereign, portable without being privacy-safe, or compliant on paper while still creating heavy operational lock-in. The atlas keeps them visible together so later chapters do not mistake one favorable property for broad implementation safety.
 
-## Why This File Matters
+## What Each Lens Changes
 
-The point here is not length for its own sake. The point is to make the surrounding chapter more usable by adding explanation, selective bullets, and a more explicit reading posture around the existing material.
+| Lens | Ask early | What it changes in practice | Common shortcut to reject |
+| --- | --- | --- | --- |
+| Openness | Which parts of the system are inspectable, reusable, and replaceable without private permission from one supplier? | Whether the team can verify claims, reuse knowledge, benefit from standards and community practice, and avoid treating one vendor roadmap as the only path forward | treating "open" as a synonym for low-risk, low-cost, or sovereign |
+| Sovereignty | Who actually controls hosting location, operator access, support escalation, telemetry, and dependency on foreign legal or commercial control points? | Whether the organization can satisfy residency, sector, public-interest, or strategic-control requirements and still operate during contract, geopolitical, or provider changes | reducing sovereignty to region selection alone |
+| Portability | How hard is it to move the workload, data, interfaces, evaluation assets, and operating procedures to another stack later? | Whether the current choice remains reversible when price, performance, policy, or supplier concentration changes | calling an API wrapper or export feature a complete exit strategy |
+| Privacy | Which data classes, prompts, outputs, logs, traces, memory stores, and human review pathways expose personal, confidential, or sensitive information? | Whether the deployment needs stronger minimization, retention, access control, processor review, or human-handling constraints before rollout | discussing privacy only at source-dataset level while ignoring runtime traces and support access |
+| Compliance | Which laws, regulations, contracts, sector rules, or assurance frameworks shape how the system must be designed, reviewed, documented, and operated? | Whether the team must add approval gates, evidence artifacts, testing discipline, incident handling, or supplier obligations before launch | treating compliance as a final legal sign-off instead of a design constraint |
 
-## Priority Lenses
+## Why Lock-In Stays In Frame
 
-- Openness: open knowledge, open source, open governance, open tooling, open standards, and open research each affect reuse and dependence differently.
-- Sovereignty: region selection alone is not sovereignty; operational control, support pathways, telemetry, and contractual posture also matter.
-- Portability: exit posture, interface portability, and migration burden should be visible before a team is deeply committed.
-- Privacy: prompts, outputs, logs, memory, and evaluation traces all belong to the privacy discussion, not only source data.
-- Compliance: the atlas treats compliance as implementation-relevant, especially where EU AI Act, EU Data Act, GDPR, ISO/IEC 42001, ISO/IEC 23894, and NIST AI RMF shape obligations.
-- Lock-in: data, hardware, control-plane, vendor, and people dependence should all be made explicit.
+The title lists five lenses, but lock-in remains the recurring consequence check across all of them.
 
-## What This Changes In Practice
+- weak openness can create knowledge, tooling, or roadmap dependence
+- weak sovereignty can create dependence on one jurisdiction, operator chain, or support path
+- weak portability can turn switching cost into a strategic constraint
+- weak privacy controls can make one vendor's handling model too risky to replace casually
+- weak compliance design can bind the organization to whichever supplier can satisfy audit and evidence demands fastest
 
-These priorities are why the repository does not stop at “best model” or “best tool” comparisons. The more consequential questions are often about operating burden, evidence quality, procurement constraints, legal exposure, and the reversibility of a decision.
+If a proposal sounds attractive only while its present vendor, hosting model, or workflow suite stays fixed, the atlas treats that as a real architectural and sourcing concern rather than a procurement footnote.
 
-## What To Carry Forward
+## How To Use These Lenses Together
 
-- Use this file to sharpen decisions, not just to restate the chapter title in smaller pieces.
-- Keep the chapter's cross-cutting priorities visible when applying the local guidance.
-- Revisit the chapter front door if this file starts to feel more detailed than the decision really needs.
+### 1. Start With The Dominant Constraint
 
-## Practical Reading Rule
+Name the first constraint that can invalidate the proposal outright:
 
-Read this file as a local clarifier inside the chapter. If it changes nothing about the decision, review, or reading path in front of you, the reader is probably in the wrong place.
+- public-sector and regulated environments often start with sovereignty, privacy, or compliance
+- internal platform decisions often start with portability and lock-in because one internal standard can shape many future use cases
+- open-source-first or research-adjacent teams often start with openness, but they still need to test whether openness is enough to satisfy privacy, support, and operating-model needs
+
+### 2. Check For False Comfort
+
+A favorable answer on one lens does not close the others.
+
+- An open-weight model can still create weak sovereignty if the managed control plane, support route, or evaluation tooling is external.
+- A region-local hosted service can still create heavy lock-in if prompts, policies, orchestration logic, or approval workflows become provider-specific.
+- A compliant procurement package can still be weak on portability if the evidence model only works inside one vendor suite.
+
+### 3. Hand Off To The Owning Chapter
+
+Use this page to reopen the right question, then move the work to the chapter that owns the detailed decision.
+
+| If the unresolved question is mainly about... | Move to... |
+| --- | --- |
+| policy ownership, risk acceptance, or control design | [4. Governance Risk Compliance](../04-governance-risk-compliance/04-00-00-governance-risk-compliance.md) |
+| data classes, residency, retention, or processor posture | [6. Data Sovereignty And Privacy](../06-data-sovereignty-and-privacy/06-00-00-data-sovereignty-and-privacy.md) |
+| model, hosting, gateway, or runtime architecture trade-offs | chapters [7](../07-model-ecosystem/07-00-00-model-ecosystem.md) through [15](../15-security-and-abuse-resistance/15-00-00-security-and-abuse-resistance.md) |
+| market concentration, supplier control, or ecosystem leverage | [17. Vendors Organizations And Market Structure](../17-vendors-organizations-and-market-structure/17-00-00-vendors-organizations-and-market-structure.md) |
+| reversibility, sourcing posture, or exit-path design | [18. Build Vs Buy Vs Hybrid](../18-build-vs-buy-vs-hybrid/18-00-00-build-vs-buy-vs-hybrid.md) |
+| legal texts, standards, or framework combinations | [20. Standards Frameworks And Bodies Of Knowledge](../20-standards-frameworks-and-bodies-of-knowledge/20-00-00-standards-frameworks-and-bodies-of-knowledge.md) |
+
+## Escalate When
+
+- a proposal is being justified mainly by benchmark quality, user delight, or time-to-demo while reversibility and control posture remain vague
+- a team uses "EU hosted", "private", "open", or "compliant" as a complete answer without naming the actual operator, data, evidence, and exit assumptions underneath
+- procurement, architecture, and governance readers are each optimizing a different lens and nobody has named the trade-off explicitly
+- an internal platform standard is about to spread across many use cases before the portability and support consequences are understood
+- the system touches regulated decisions, sensitive records, or cross-border operations but the implementation plan still treats these lenses as downstream review items
+
+## Reading Rule
+
+Use these priorities to expose the constraint that most changes architecture, sourcing, and operating burden. If the discussion still sounds acceptable only because one favorable label is hiding the rest of the trade-off surface, the team is not ready to move past chapter `1`.
 
 Back to [1.1 Mission And Scope](01-01-00-mission-and-scope.md).
