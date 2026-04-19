@@ -46,7 +46,7 @@ TURN_LOG_LINE_SCHEMA_ID = "ralph-codex/turn-log-line"
 SERVER_REQUEST_LOG_LINE_SCHEMA_ID = "ralph-codex/server-request-log-line"
 
 SCHEMA_FILES = {
-    PROFILE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex-profile-v0.1.0.schema.json",
+    PROFILE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "profile-v0.1.0.schema.json",
     PLANNING_OUTPUT_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "planning-output-v0.1.0.schema.json",
     EXECUTION_OUTPUT_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "execution-output-v0.1.0.schema.json",
     CONTROLLER_STATE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "controller-state-v0.1.0.schema.json",

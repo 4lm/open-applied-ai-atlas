@@ -121,7 +121,7 @@ The public CLI is intentionally small:
 7. `./scripts/ralph-codex.py --resume`
    Resumes the latest resumable session.
 
-Canonical schemas for Ralph artifacts live under `schemas/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
+Canonical schemas for Ralph artifacts live under `schemas/ralph-codex/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
 
 Operational defaults:
 

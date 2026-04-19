@@ -232,6 +232,15 @@ class RalphCodexTests(unittest.TestCase):
             self.assertIn("schema_id", payload)
             self.assertIn("-v0.1.0.schema.json", path.name)
 
+    def test_schema_files_all_live_under_ralph_codex_schema_dir(self):
+        expected_root = ralph_codex.SCHEMA_ROOT / "ralph-codex"
+        for path in ralph_codex.SCHEMA_FILES.values():
+            self.assertEqual(path.parent, expected_root)
+        self.assertEqual(
+            ralph_codex.SCHEMA_FILES[ralph_codex.PROFILE_SCHEMA_ID],
+            expected_root / "profile-v0.1.0.schema.json",
+        )
+
     def test_default_profile_validates_against_profile_schema(self):
         self.make_schema_catalog().validate(ralph_codex.PROFILE_SCHEMA_ID, ralph_codex.DEFAULT_PROFILE)
         self.assertEqual(ralph_codex.DEFAULT_PROFILE["runtime_limits"]["max_iterations"], 0)
