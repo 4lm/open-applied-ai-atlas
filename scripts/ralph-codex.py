@@ -15,7 +15,7 @@ import sys
 import tempfile
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from textwrap import dedent, wrap
@@ -176,6 +176,71 @@ class ExecutionAudit:
     off_tranche_file_count: int = 0
 
 
+@dataclass
+class TurnOutputTracker:
+    candidate_texts: list[str] = field(default_factory=list)
+    seen_item_types: list[str] = field(default_factory=list)
+    search_names: list[str] = field(default_factory=list)
+    max_seen_item_types: int = 32
+
+    def record_raw_item(self, item: dict[str, Any]) -> None:
+        self._record_item_type(f"raw:{item.get('type', 'unknown')}")
+        if item.get("type") == "message":
+            if item.get("role") not in {"assistant", "model"}:
+                return
+            if item.get("phase") not in {None, "final_answer"}:
+                return
+            text = "".join(
+                content.get("text", "")
+                for content in item.get("content", [])
+                if content.get("type") == "output_text"
+            ).strip()
+            if text:
+                self.candidate_texts.append(text)
+            return
+        name = str(item.get("name", "")).strip()
+        if str(item.get("type", "")).strip().lower() == "function_call" and "search" in name.lower():
+            self.search_names.append(name)
+
+    def record_thread_item(self, item: dict[str, Any]) -> None:
+        item_type = str(item.get("type", "unknown")).strip()
+        self._record_item_type(f"thread:{item_type}")
+        text_value = item.get("text")
+        text = text_value.strip() if isinstance(text_value, str) else ""
+        if item_type in {"agentMessage", "plan"} and text:
+            self.candidate_texts.append(text)
+        if item_type != "commandExecution":
+            return
+        primary_action = str(item.get("primary_action", "")).strip().lower()
+        if primary_action == "search":
+            self.search_names.append(str(item.get("primary_target", "")).strip() or "search")
+
+    def extract_final_output(self, schema: dict[str, Any]) -> dict[str, Any]:
+        for text in reversed(self.candidate_texts):
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                validate_subset(schema, parsed)
+                return parsed
+        item_summary = ", ".join(self.seen_item_types[-10:]) if self.seen_item_types else "none"
+        raise RalphError(
+            "turn completed without a parseable final structured response "
+            f"(seen items: {item_summary})"
+        )
+
+    def summarize_search_activity(self) -> dict[str, Any]:
+        unique_names = sorted({name for name in self.search_names if name})
+        return {"count": len(self.search_names), "names": unique_names}
+
+    def _record_item_type(self, item_type: str) -> None:
+        self.seen_item_types.append(item_type)
+        overflow = len(self.seen_item_types) - self.max_seen_item_types
+        if overflow > 0:
+            del self.seen_item_types[:overflow]
+
+
 class PlainTextRunLog:
     ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
@@ -189,10 +254,11 @@ class PlainTextRunLog:
     ):
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._handle = self.path.open("w", encoding="utf-8")
+        self._handle = self.path.open("w", encoding="utf-8", buffering=1)
         self._closed = False
         self._lock = threading.Lock()
-        self._buffers: dict[str, str] = {}
+        self._active_channel: str | None = None
+        self._line_open = False
         header_lines = [
             "# Ralph Codex run log",
             f"session_id: {session_id}",
@@ -210,15 +276,27 @@ class PlainTextRunLog:
             return
         rendered = self.ANSI_ESCAPE_RE.sub("", text) if strip_ansi else text
         with self._lock:
-            buffered = self._buffers.get(channel, "") + rendered
-            while True:
-                newline_index = buffered.find("\n")
+            if self._line_open and self._active_channel not in {None, channel}:
+                self._handle.write("\n")
+                self._handle.flush()
+                self._line_open = False
+                self._active_channel = None
+            remaining = rendered
+            while remaining:
+                if not self._line_open:
+                    self._handle.write(f"{utc_timestamp()} {channel} ")
+                    self._active_channel = channel
+                    self._line_open = True
+                newline_index = remaining.find("\n")
                 if newline_index < 0:
+                    self._handle.write(remaining)
+                    self._handle.flush()
                     break
-                line = buffered[:newline_index]
-                self._write_line(channel, line)
-                buffered = buffered[newline_index + 1 :]
-            self._buffers[channel] = buffered
+                self._handle.write(remaining[: newline_index + 1])
+                self._handle.flush()
+                self._line_open = False
+                self._active_channel = None
+                remaining = remaining[newline_index + 1 :]
 
     def write_console_input(self, text: str) -> None:
         self.write_chunk("STDIN", text, strip_ansi=True)
@@ -231,16 +309,11 @@ class PlainTextRunLog:
         with self._lock:
             if self._closed:
                 return
-            for channel, buffered in list(self._buffers.items()):
-                if buffered:
-                    self._write_line(channel, buffered)
-                    self._buffers[channel] = ""
+            if self._line_open:
+                self._handle.write("\n")
             self._handle.flush()
             self._handle.close()
             self._closed = True
-
-    def _write_line(self, channel: str, line: str) -> None:
-        self._handle.write(f"{utc_timestamp()} {channel} {line}\n")
 
 
 class TerminalReporter:
@@ -261,6 +334,8 @@ class TerminalReporter:
         self._stderr_at_line_start = True
         self._stdout_color = self._supports_color(stdout)
         self._stderr_color = self._supports_color(stderr)
+        self._model_stream_active = False
+        self._model_stream_at_line_start = True
 
     def status(self, message: str, badge: str = "STARTING", tone: str = "status") -> None:
         self._emit_record("stdout", badge, message, tone=tone)
@@ -316,10 +391,37 @@ class TerminalReporter:
             tone="model",
         )
 
+    def stream_model_text(self, phase_name: str, text: str) -> bool:
+        if not text:
+            return False
+        if not self._model_stream_active:
+            self._emit_block("stdout", "RESULT", f"{phase_name} message", [], tone="model")
+            self._model_stream_active = True
+            self._model_stream_at_line_start = True
+        indent = f"{' ' * 9} {' ' * self.BADGE_WIDTH} "
+        for chunk in text.splitlines(keepends=True):
+            if self._model_stream_at_line_start:
+                self._write("stdout", indent)
+            self._write("stdout", chunk)
+            self._model_stream_at_line_start = chunk.endswith("\n")
+        if not text.endswith(("\n", "\r")) and self._model_stream_at_line_start:
+            self._write("stdout", indent)
+            self._model_stream_at_line_start = False
+        return True
+
+    def finish_model_text_stream(self) -> None:
+        if not self._model_stream_active:
+            return
+        if not self._model_stream_at_line_start:
+            self._write("stdout", "\n")
+        self._model_stream_active = False
+        self._model_stream_at_line_start = True
+
     def verbose_trace(self, event_type: str, payload: dict[str, Any]) -> None:
         return
 
     def finish_stdout_line(self) -> None:
+        self.finish_model_text_stream()
         if not self._stdout_at_line_start:
             self._write("stdout", "\n")
 
@@ -2676,9 +2778,8 @@ class RalphController:
         self.session.state["current_turn_id"] = turn_id
         self.store.save_state(self.session)
         self.print_status(f"{phase_name} started", badge=self.phase_badge(phase_name))
-        raw_items: list[dict[str, Any]] = []
-        thread_items: list[dict[str, Any]] = []
-        buffered_deltas: list[str] = []
+        tracker = TurnOutputTracker()
+        streamed_live = False
         turn_started_at = self.monotonic_func()
         next_heartbeat_at = turn_started_at + TURN_IDLE_HEARTBEAT_SECS
         while True:
@@ -2703,11 +2804,11 @@ class RalphController:
             if method in {"item/agentMessage/delta", "item/plan/delta"} and params.get("turnId") == turn_id:
                 delta = params.get("delta", "")
                 if isinstance(delta, str) and delta:
-                    buffered_deltas.append(delta)
+                    streamed_live = self.terminal_reporter.stream_model_text(phase_name, delta) or streamed_live
                 continue
             if method == "rawResponseItem/completed" and params.get("turnId") == turn_id:
                 item = params.get("item", {})
-                raw_items.append(item)
+                tracker.record_raw_item(item)
                 if item.get("type") in {"function_call", "function_call_output"}:
                     self.store.append_event(
                         self.session,
@@ -2722,7 +2823,7 @@ class RalphController:
                     )
                 continue
             if method == "item/completed" and params.get("turnId") == turn_id:
-                thread_items.append(params.get("item", {}))
+                tracker.record_thread_item(params.get("item", {}))
                 continue
             if method == "turn/completed" and params.get("turn", {}).get("id") == turn_id:
                 turn = params.get("turn", {})
@@ -2734,17 +2835,12 @@ class RalphController:
                     raise RalphError("Codex turn was interrupted")
                 break
         self.terminal_reporter.finish_stdout_line()
-        final_output = self.extract_final_output(raw_items, thread_items, schema)
-        search_activity = self.summarize_turn_search_activity(raw_items, thread_items)
+        final_output = tracker.extract_final_output(schema)
+        search_activity = tracker.summarize_search_activity()
         if search_activity["count"]:
             self.store.append_event(self.session, "turn-search-activity", {"turn_id": turn_id, **search_activity})
         if render_output:
-            if buffered_deltas:
-                streamed_text = "".join(buffered_deltas).strip()
-                if streamed_text:
-                    self.render_model_output(phase_name, final_output, streamed_text)
-            else:
-                self.render_model_output(phase_name, final_output, "")
+            self.render_model_output(phase_name, final_output, streamed_live)
         self.store.append_turn(
             self.session,
             phase_name,
@@ -2796,69 +2892,6 @@ class RalphController:
             if "(Recommended)" in option.get("label", ""):
                 return option["label"]
         return options[0]["label"]
-
-    @staticmethod
-    def extract_final_output(
-        raw_items: list[dict[str, Any]],
-        thread_items: list[dict[str, Any]],
-        schema: dict[str, Any],
-    ) -> dict[str, Any]:
-        candidate_texts: list[str] = []
-        seen_item_types: list[str] = []
-        for item in raw_items:
-            seen_item_types.append(f"raw:{item.get('type', 'unknown')}")
-            if item.get("type") != "message":
-                continue
-            if item.get("role") not in {"assistant", "model"}:
-                continue
-            if item.get("phase") not in {None, "final_answer"}:
-                continue
-            text = "".join(
-                content.get("text", "")
-                for content in item.get("content", [])
-                if content.get("type") == "output_text"
-            ).strip()
-            if text:
-                candidate_texts.append(text)
-        for item in thread_items:
-            item_type = item.get("type", "unknown")
-            seen_item_types.append(f"thread:{item_type}")
-            if item_type in {"agentMessage", "plan"} and item.get("text"):
-                candidate_texts.append(item["text"].strip())
-        for text in reversed(candidate_texts):
-            try:
-                parsed = json.loads(text)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(parsed, dict):
-                validate_subset(schema, parsed)
-                return parsed
-        item_summary = ", ".join(seen_item_types[-10:]) if seen_item_types else "none"
-        raise RalphError(
-            "turn completed without a parseable final structured response "
-            f"(seen items: {item_summary})"
-        )
-
-    @staticmethod
-    def summarize_turn_search_activity(
-        raw_items: list[dict[str, Any]],
-        thread_items: list[dict[str, Any]],
-    ) -> dict[str, Any]:
-        names: list[str] = []
-        for item in raw_items:
-            item_type = str(item.get("type", "")).strip().lower()
-            name = str(item.get("name", "")).strip()
-            if item_type == "function_call" and "search" in name.lower():
-                names.append(name)
-        for item in thread_items:
-            item_type = str(item.get("type", "")).strip()
-            if item_type != "commandExecution":
-                continue
-            primary_action = str(item.get("primary_action", "")).strip().lower()
-            if primary_action == "search":
-                names.append(str(item.get("primary_target", "")).strip() or "search")
-        unique_names = sorted({name for name in names if name})
-        return {"count": len(names), "names": unique_names}
 
     def validate_planning_result(self, planning_result: dict[str, Any]) -> dict[str, Any]:
         if planning_result.get("status") == "BLOCKED":
@@ -3834,8 +3867,7 @@ class RalphController:
                 },
             )
             turn_id = result["turn"]["id"]
-            raw_items: list[dict[str, Any]] = []
-            thread_items: list[dict[str, Any]] = []
+            tracker = TurnOutputTracker()
             while True:
                 event = client.next_event(timeout=0.1)
                 if event is None:
@@ -3851,10 +3883,10 @@ class RalphController:
                 method = notification.get("method")
                 params = notification.get("params", {})
                 if method == "rawResponseItem/completed" and params.get("turnId") == turn_id:
-                    raw_items.append(params.get("item", {}))
+                    tracker.record_raw_item(params.get("item", {}))
                     continue
                 if method == "item/completed" and params.get("turnId") == turn_id:
-                    thread_items.append(params.get("item", {}))
+                    tracker.record_thread_item(params.get("item", {}))
                     continue
                 if method == "turn/completed" and params.get("turn", {}).get("id") == turn_id:
                     status = params.get("turn", {}).get("status")
@@ -3864,7 +3896,7 @@ class RalphController:
                     if status == "interrupted":
                         raise RalphError("Auxiliary worker turn was interrupted")
                     break
-            worker_output = self.extract_final_output(raw_items, thread_items, WORKER_SUMMARY_SCHEMA)
+            worker_output = tracker.extract_final_output(WORKER_SUMMARY_SCHEMA)
             self.record_worker_manifest(
                 role,
                 "completed",
@@ -4312,18 +4344,10 @@ class RalphController:
     def print_status(self, text: str, badge: str = "STARTING") -> None:
         self.terminal_reporter.status(text, badge=badge)
 
-    def render_model_output(self, phase_name: str, final_output: dict[str, Any], streamed_text: str) -> None:
+    def render_model_output(self, phase_name: str, final_output: dict[str, Any], streamed_live: bool) -> None:
         self.terminal_reporter.model_result(phase_name, final_output)
-        normalized = " ".join(streamed_text.split())
-        if not normalized:
+        if streamed_live:
             return
-        try:
-            parsed = json.loads(normalized)
-        except json.JSONDecodeError:
-            parsed = None
-        if parsed == final_output:
-            return
-        self.terminal_reporter.model_text(phase_name, normalized)
 
     def render_plan_review(self) -> None:
         if not self.session.charter_record:

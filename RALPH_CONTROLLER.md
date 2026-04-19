@@ -39,14 +39,14 @@ The public CLI is intentionally small:
 - Execution outputs now include required `verification`, `touched_files`, `created_files`, `off_tranche_justifications`, `quality_claims`, `milestone_progress`, `acceptance_artifacts`, and `evidence_updates` fields.
 - Ralph also runs a structured evaluation phase after each execution turn and records an `evaluation-result` event.
 - Session state now persists program memory, research memory, execution memory, skill memory, evidence registry entries, checkpoint summaries, and worker manifests for long-running resumability.
-- Each run also writes a plain UTF-8 terminal transcript under `sessions/<session-id>/logs/<run-id>.log`.
+- Each run also writes a plain UTF-8 terminal transcript under `sessions/<session-id>/logs/<run-id>.log`, and that transcript is flushed continuously while the run is live.
 
 ## Operational Defaults
 
 - Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
 - Ralph always emits human-readable live status to `stdout` and event/error logging to `stderr` so an operator can follow along in the shell.
 - Ralph mirrors only the user-facing terminal `stdin`, `stdout`, and `stderr` streams into the current run log under `sessions/<session-id>/logs/<run-id>.log`; raw app-server transport stays out of that file.
-- Ralph formats live model output for humans instead of streaming raw schema JSON to the terminal during structured turns.
+- Ralph streams user-facing model text progressively to the terminal transcript during structured turns instead of buffering the full turn message in controller memory, and it still avoids dumping raw schema JSON to the operator console.
 - Ralph planning runs in actual Plan Mode and explicitly forbids `update_plan`; plan revisions happen through repeated planning turns with controller feedback.
 - Ralph treats live web research as mandatory. Planning and replanning must perform multi-step web search and record sources explicitly.
 - Ralph raises planning and execution reasoning to `xhigh` by default.
@@ -84,7 +84,7 @@ The public CLI is intentionally small:
 - Command activity from `commandExecution` items is rendered as one compact completed-command `TOOL` line rather than separate in-progress and completed lines.
 - `events.jsonl` records semantic event changes and skips ghost duplicates where only the timestamp changed.
 - Plan-review output includes a compact exec-log context reconstructed from semantic `commandExecution` notifications in `events.jsonl` for the reviewed planning turn.
-- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping them out of the operator console. The plain-text run log is the terminal transcript artifact; `events.jsonl` remains the structured debugging artifact.
+- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping them out of the operator console. The plain-text run log is the continuously flushed terminal transcript artifact; `events.jsonl` remains the structured debugging artifact.
 ## Verification
 
 - When changing `scripts/ralph-codex.py`, `RALPH_CONTROLLER.md`, its schemas, or the related Ralph contract tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py`.

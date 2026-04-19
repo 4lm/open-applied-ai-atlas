@@ -115,6 +115,13 @@ class CaptureReporter:
     def model_text(self, phase_name, text):
         self.stdout.write(text + "\n")
 
+    def stream_model_text(self, phase_name, text):
+        self.stdout.write(text)
+        return True
+
+    def finish_model_text_stream(self):
+        return None
+
     def verbose_trace(self, event_type, payload):
         return None
 
@@ -1232,6 +1239,24 @@ class RalphCodexTests(unittest.TestCase):
         self.assertNotIn("APP-STDOUT", rendered)
         self.assertNotIn("APP-STDERR", rendered)
 
+    def test_plain_text_run_log_writes_visible_before_close(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        session_log = ralph_codex.PlainTextRunLog(
+            session.session_dir / "logs" / "run-1.log",
+            session.session_id,
+            "run-1",
+            "message",
+            verbose=False,
+        )
+        self.addCleanup(session_log.close)
+        session_log.write_console_output("stdout", "partial status")
+
+        rendered = (session.session_dir / "logs" / "run-1.log").read_text(encoding="utf-8")
+        self.assertIn("# Ralph Codex run log", rendered)
+        self.assertIn("STDOUT partial status", rendered)
+
     def test_select_prompt_option_prefers_recommended(self):
         choice = ralph_codex.RalphController.select_prompt_option(
             [
@@ -1795,6 +1820,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("status:", console)
         self.assertNotIn(json.dumps(result_payload), console)
         self.assertIn("Working...", console)
+        self.assertEqual(console.count("Working..."), 1)
 
     def test_review_plan_if_needed_renders_full_review_and_exec_context(self):
         tempdir, root = self.make_temp_root()
