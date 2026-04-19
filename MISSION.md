@@ -1,16 +1,16 @@
 ---
-agent-rule: never change the this file without consent
+agent-rule: never change this file without consent
 ---
 
 # Open Applied AI Atlas
 
 ## Mission
 
-Create and maintain **Open Applied AI Atlas** as an open knowledge-base repository for applying AI and ML in business, enterprise, public, nonprofit, and other organizational contexts of all sizes.
+Create and maintain **Open Applied AI Atlas** as an open knowledge base that helps organizations and cross-functional teams understand, decide, plan, build, govern, and run real AI and ML systems.
 
 Build it as a practical, taxonomy-driven, comparison-oriented, implementation-focused atlas. Do not limit scope to LLMs. Treat AI systems as organizational systems, not isolated model demos.
 
-Keep these concerns visible across the stack:
+Keep these concerns visible where they materially shape decisions:
 
 - openness
 - open source
@@ -23,7 +23,7 @@ Keep these concerns visible across the stack:
 
 ## Audience
 
-Serve cross-functional implementers, reviewers, and decision-makers, including product, business, architecture, engineering, ML, data, platform, QA, security, privacy, governance, operations, sourcing, procurement, and leadership roles.
+Serve cross-functional implementers, operators, reviewers, and decision-makers, including product, business, architecture, engineering, ML, data, platform, QA, security, privacy, governance, operations, sourcing, procurement, and leadership roles.
 
 ## Scope
 
@@ -34,9 +34,10 @@ Cover applied organizational AI and ML broadly, including chat systems, copilots
 Keep these visible throughout:
 
 - open knowledge, open source, open governance, open tooling, open standards, open research
-- practical implementation guidance
+- practical guidance for planning, implementation, governance, and operation
 - shared taxonomy
-- comparison tables where they improve decisions
+- comparison tables where they improve understanding or decisions
+- clear language that helps readers move from understanding to action
 - explicit trade-off framing
 - sovereignty, portability, privacy, lock-in, buy-vs-build, and compliance-aware implementation
 
