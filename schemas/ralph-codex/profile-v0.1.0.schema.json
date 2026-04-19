@@ -145,7 +145,8 @@
         "max_total_files_changed_before_checkpoint",
         "max_repeated_heading_additions_per_iteration",
         "max_meta_artifact_files_per_run",
-        "pause_on_stagnation_after_iterations"
+        "pause_on_stagnation_after_iterations",
+        "progress_checkpoint_mode"
       ],
       "properties": {
         "require_post_iteration_audit": { "type": "boolean" },
@@ -154,7 +155,11 @@
         "max_total_files_changed_before_checkpoint": { "type": "integer", "minimum": 1 },
         "max_repeated_heading_additions_per_iteration": { "type": "integer", "minimum": 0 },
         "max_meta_artifact_files_per_run": { "type": "integer", "minimum": 0 },
-        "pause_on_stagnation_after_iterations": { "type": "integer", "minimum": 1 }
+        "pause_on_stagnation_after_iterations": { "type": "integer", "minimum": 1 },
+        "progress_checkpoint_mode": {
+          "type": "string",
+          "enum": ["require_confirmation", "record_only_after_seed"]
+        }
       }
     },
     "memory_policy": {
@@ -165,14 +170,22 @@
         "persist_research_memory",
         "persist_execution_memory",
         "persist_skill_memory",
-        "max_execution_memory_entries"
+        "max_execution_memory_entries",
+        "max_skill_memory_entries",
+        "max_checkpoint_summaries",
+        "max_evidence_registry_entries",
+        "max_worker_manifests"
       ],
       "properties": {
         "persist_program_memory": { "type": "boolean" },
         "persist_research_memory": { "type": "boolean" },
         "persist_execution_memory": { "type": "boolean" },
         "persist_skill_memory": { "type": "boolean" },
-        "max_execution_memory_entries": { "type": "integer", "minimum": 1 }
+        "max_execution_memory_entries": { "type": "integer", "minimum": 1 },
+        "max_skill_memory_entries": { "type": "integer", "minimum": 1 },
+        "max_checkpoint_summaries": { "type": "integer", "minimum": 1 },
+        "max_evidence_registry_entries": { "type": "integer", "minimum": 1 },
+        "max_worker_manifests": { "type": "integer", "minimum": 1 }
       }
     },
     "milestone_policy": {
@@ -209,7 +222,7 @@
           "minItems": 1,
           "items": {
             "type": "string",
-            "enum": ["research", "read_only_repo", "disjoint_execution", "evaluator_vote"]
+            "enum": ["research", "read_only_repo", "evaluator_vote"]
           }
         },
         "require_disjoint_write_sets": { "type": "boolean" },

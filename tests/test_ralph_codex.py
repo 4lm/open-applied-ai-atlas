@@ -277,6 +277,12 @@ class RalphCodexTests(unittest.TestCase):
                         "source_type": "secondary",
                         "used_for": "context",
                     },
+                    {
+                        "title": "Secondary source D",
+                        "url": "https://example.com/d",
+                        "source_type": "secondary",
+                        "used_for": "adjacent context",
+                    },
                 ],
                 "open_questions": [],
             },
@@ -322,6 +328,12 @@ class RalphCodexTests(unittest.TestCase):
                         "url": "https://example.com/verify-b",
                         "source_type": "secondary",
                         "used_for": "verification",
+                    },
+                    {
+                        "title": "Verification source C",
+                        "url": "https://example.com/verify-c",
+                        "source_type": "secondary",
+                        "used_for": "verification corroboration",
                     },
                 ] if status == "COMPLETE" else [],
             },
@@ -476,6 +488,25 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(ralph_codex.DEFAULT_PROFILE_PATH.name, "restricted.json")
         self.assertEqual(profile["profile_name"], "restricted")
 
+    def test_shipped_profiles_use_long_run_quality_defaults(self):
+        schema_catalog = self.make_schema_catalog()
+        restricted = ralph_codex.load_profile(schema_catalog, ralph_codex.REPO_ROOT / "profiles" / "restricted.json")
+        unrestricted = ralph_codex.load_profile(
+            schema_catalog,
+            ralph_codex.REPO_ROOT / "profiles" / "dangerously-unrestricted.json",
+        )
+        self.assertFalse(restricted["completion_policy"]["allow_deferred_workstreams"])
+        self.assertEqual(restricted["quality_policy"]["progress_checkpoint_mode"], "record_only_after_seed")
+        self.assertEqual(restricted["loop_policy"]["planning_max_prompt_chars"], 22000)
+        self.assertEqual(restricted["execution"]["max_prompt_chars"], 16000)
+        self.assertEqual(restricted["memory_policy"]["max_execution_memory_entries"], 16)
+        self.assertEqual(restricted["memory_policy"]["max_evidence_registry_entries"], 128)
+        self.assertEqual(unrestricted["thread_policy"]["access_mode"], "dangerously-unrestricted")
+        self.assertEqual(unrestricted["loop_policy"]["planning_max_prompt_chars"], 24000)
+        self.assertEqual(unrestricted["execution"]["max_prompt_chars"], 18000)
+        self.assertEqual(unrestricted["worker_policy"]["max_parallel_workers"], 3)
+        self.assertNotIn("disjoint_execution", unrestricted["worker_policy"]["allowed_roles"])
+
     def test_load_profile_backfills_legacy_profile_fields(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
@@ -523,9 +554,28 @@ class RalphCodexTests(unittest.TestCase):
             self.assertIn("tranche_policy", loaded)
             self.assertIn("quality_policy", loaded)
             self.assertIn("loop_policy", loaded)
+            self.assertEqual(loaded["quality_policy"]["progress_checkpoint_mode"], "record_only_after_seed")
+            self.assertEqual(loaded["memory_policy"]["max_skill_memory_entries"], 24)
             self.assertEqual(loaded["planning"]["model"], "gpt-5.4")
             self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4")
             self.assertEqual(loaded["execution"]["model"], "gpt-5.4")
+
+    def test_load_profile_removes_legacy_disjoint_execution_role(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "profile.json"
+            legacy = self.default_profile()
+            legacy["worker_policy"]["allowed_roles"] = [
+                "research",
+                "read_only_repo",
+                "disjoint_execution",
+                "evaluator_vote",
+            ]
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
+            self.assertEqual(
+                loaded["worker_policy"]["allowed_roles"],
+                ["research", "read_only_repo", "evaluator_vote"],
+            )
 
     def test_load_profile_normalizes_local_v0_2_0_profile_to_v0_1_0(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1886,6 +1936,32 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("## Review History", prompt)
         self.assertIn("feedback=Need broader validation", prompt)
 
+    def test_build_planning_prompt_drops_optional_sections_before_failing_cap(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.profile["loop_policy"]["planning_max_prompt_chars"] = 6000
+        controller.session.task["message_text"] = "Task " + ("x" * 3500)
+        controller.session.state["research_memory"] = {
+            "search_strategy": "widen",
+            "open_questions": ["q1", "q2", "q3"],
+            "last_refreshed_at": "2026-04-20T00:00:00Z",
+        }
+        controller.session.state["execution_memory"] = [
+            {"iteration": index, "summary": f"Iteration {index}", "novelty_score": 1.0, "acceptance_progress_score": 0.2}
+            for index in range(1, 10)
+        ]
+        controller.store.append_event(
+            controller.session,
+            "evaluation-result",
+            self.evaluation_result_payload(summary="Need more tranche work"),
+        )
+        self.save_charter(controller)
+        prompt = controller.build_planning_prompt("replanning", "Keep pushing")
+        self.assertLessEqual(len(prompt), 6000)
+        self.assertIn("## Program Memory", prompt)
+        self.assertIn("## Task", prompt)
+
     def test_planning_instructions_forbid_update_plan(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -2036,6 +2112,30 @@ class RalphCodexTests(unittest.TestCase):
         prompt = controller.build_execution_prompt("Need broader validation")
         self.assertGreater(len(prompt), 4000)
         self.assertEqual(controller.session.profile["execution"]["max_prompt_chars"], DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+
+    def test_build_execution_prompt_drops_optional_sections_before_failing_cap(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.profile["execution"]["max_prompt_chars"] = 5000
+        controller.session.profile["loop_policy"]["execution_max_prompt_chars"] = 5000
+        controller.session.state["evidence_registry"] = [
+            {
+                "claim": f"claim {index}",
+                "url": f"https://example.com/{index}",
+                "source_type": "secondary",
+                "used_for": "execution update",
+                "status": "confirmed",
+                "updated_at": "2026-04-20T00:00:00Z",
+            }
+            for index in range(12)
+        ]
+        controller.session.task["message_text"] = "Task " + ("x" * 3500)
+        prompt = controller.build_execution_prompt("Need broader validation")
+        self.assertLessEqual(len(prompt), 5000)
+        self.assertIn("## Current Tranche", prompt)
+        self.assertIn("## Task", prompt)
 
     def test_build_execution_prompt_rejects_when_over_custom_limit(self):
         tempdir, root = self.make_temp_root()
@@ -2302,6 +2402,120 @@ class RalphCodexTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ralph_codex.RalphError, "progress checkpoint requires operator input"):
             controller.review_progress_if_needed(audit)
+
+    def test_review_progress_if_needed_auto_continues_after_seed_when_profile_allows(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.state["seed_confirmed"] = True
+        controller.session.profile["quality_policy"]["progress_checkpoint_mode"] = "record_only_after_seed"
+        audit = ralph_codex.ExecutionAudit(
+            ok=True,
+            feedback="",
+            total_files_changed=42,
+            repeated_heading_file_count=0,
+            meta_artifact_files=[],
+            requires_checkpoint=True,
+            checkpoint_reason="changed-file checkpoint reached",
+            diff_samples=["scripts/ralph-codex.py"],
+        )
+        controller.review_progress_if_needed(audit)
+        events = controller.store.read_jsonl(
+            controller.session.session_dir / "events.jsonl",
+            ralph_codex.EVENT_LOG_LINE_SCHEMA_ID,
+        )
+        progress_events = [entry for entry in events if entry["event_type"] == "progress-checkpoint-continued"]
+        self.assertEqual(len(progress_events), 1)
+        self.assertTrue(progress_events[0]["payload"]["auto_continued"])
+
+    def test_review_progress_if_needed_still_requires_input_before_seed(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.state["seed_confirmed"] = False
+        controller.session.profile["quality_policy"]["progress_checkpoint_mode"] = "record_only_after_seed"
+        audit = ralph_codex.ExecutionAudit(
+            ok=True,
+            feedback="",
+            total_files_changed=42,
+            repeated_heading_file_count=0,
+            meta_artifact_files=[],
+            requires_checkpoint=True,
+            checkpoint_reason="changed-file checkpoint reached",
+            diff_samples=["scripts/ralph-codex.py"],
+        )
+        with self.assertRaisesRegex(ralph_codex.RalphError, "progress checkpoint requires operator input"):
+            controller.review_progress_if_needed(audit)
+
+    def test_memory_retention_uses_profile_caps(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.profile["memory_policy"]["max_checkpoint_summaries"] = 3
+        controller.session.profile["memory_policy"]["max_worker_manifests"] = 2
+        controller.session.profile["memory_policy"]["max_evidence_registry_entries"] = 4
+        controller.session.profile["memory_policy"]["max_skill_memory_entries"] = 2
+        for index in range(5):
+            controller.refresh_evaluation_memory(
+                {
+                    **self.evaluation_result_payload(summary=f"Evaluation {index}"),
+                    "worker_fanout_recommended": True,
+                },
+                ralph_codex.ExecutionAudit(
+                    ok=True,
+                    feedback="",
+                    total_files_changed=0,
+                    repeated_heading_file_count=0,
+                    meta_artifact_files=[],
+                    requires_checkpoint=False,
+                    checkpoint_reason="",
+                    diff_samples=[],
+                ),
+            )
+        controller.register_evidence_sources(
+            [
+                {
+                    "title": f"Source {index}",
+                    "url": f"https://example.com/source-{index}",
+                    "source_type": "primary" if index % 2 == 0 else "secondary",
+                    "used_for": "planning",
+                }
+                for index in range(6)
+            ],
+            used_for_prefix="planning",
+        )
+        for index in range(4):
+            controller.refresh_skill_memory(
+                {
+                    "touched_files": [f"docs/{index}.md"],
+                    "validation_completed": ["unit"],
+                }
+            )
+        self.assertEqual(len(controller.session.state["checkpoint_summaries"]), 3)
+        self.assertEqual(len(controller.session.state["worker_manifests"]), 2)
+        self.assertEqual(len(controller.session.state["evidence_registry"]), 4)
+        self.assertEqual(len(controller.session.state["skill_memory"]), 2)
+
+    def test_collect_auxiliary_worker_summaries_respects_max_parallel_workers(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.profile["worker_policy"]["max_parallel_workers"] = 2
+        seen = []
+
+        def fake_worker(role, payload, *, model, reasoning_effort):
+            seen.append((role, model, reasoning_effort))
+            return {"role": role, "summary": f"{role} ok", "findings": ["ok"], "confidence": "high"}
+
+        controller.run_auxiliary_worker = fake_worker
+        summaries = controller.collect_auxiliary_worker_summaries(
+            ["research", "read_only_repo", "evaluator_vote"],
+            {"task": "inspect"},
+            model="gpt-5.4",
+            reasoning_effort="xhigh",
+        )
+        self.assertEqual([entry["role"] for entry in summaries], ["research", "read_only_repo"])
+        self.assertEqual([role for role, _, _ in seen], ["research", "read_only_repo"])
 
     def test_finish_writes_finished_marker(self):
         tempdir, root = self.make_temp_root()

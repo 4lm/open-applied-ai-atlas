@@ -50,21 +50,25 @@ The public CLI is intentionally small:
 - Ralph planning runs in actual Plan Mode and explicitly forbids `update_plan`; plan revisions happen through repeated planning turns with controller feedback.
 - Ralph treats live web research as mandatory. Planning and replanning must perform multi-step web search and record sources explicitly.
 - Ralph raises planning and execution reasoning to `xhigh` by default.
+- The shipped `restricted` profile is now tuned for long-running quality-first work after the initial plan approval, with larger prompt budgets, deeper retained memory, stricter completion rules, and less frequent progress interruptions.
+- The shipped `dangerously-unrestricted` profile keeps the same quality-first loop shape and mostly differs by sandbox access mode plus modest extra prompt and tranche headroom.
 - Ralph also runs an evaluator phase with its own model/instructions and uses that result to choose between `accept`, `repair_same_tranche`, and `replan`.
 - Ralph enables the native search tool through `codex --search app-server` when `research_policy.mode` is `required`.
 - Ralph uses a three-layer contract: a broad `program_board` for overall scope, one `active_milestone` for the current milestone, and a bounded `current_tranche` for the next execution turn.
 - Ralph execution prompts send the tranche plus compact memory blocks, evidence registry slices, and milestone context rather than replaying the entire result history each turn.
+- Ralph planning and execution prompts now degrade by trimming lower-priority history or evidence blocks before failing their configured prompt budgets.
 - Ralph prefers same-tranche repair before broad replanning when the current tranche is still sound.
 - Ralph rejects execution turns that exceed the tranche budget, spread repeated stock headings broadly, or create controller-serving meta artifacts such as ledgers or scoreboards unless the task explicitly asks for them.
 - Ralph runs a post-iteration audit using an iteration-scoped repo baseline, model-reported touched files, milestone acceptance progress, repeated-heading heuristics, novelty plus milestone-completion scoring, and representative diff samples.
 - Ralph records compact non-command tool activity relevant to research in `events.jsonl`.
 - Ralph checks observed search activity against claimed planning research and execution verification before accepting those blocks as complete.
 - Ralph uses milestone checkpoints and long-run memory state to keep super-long runs bounded and resumable.
-- Ralph carries selective worker fan-out policy in profiles, but the main controller remains authoritative over planning, acceptance, and synthesis.
+- Ralph now honors profile-driven memory retention limits for execution memory, skill memory, checkpoint summaries, evidence registry entries, and worker manifests.
+- Ralph supports bounded auxiliary worker fan-out for `research`, `read_only_repo`, and `evaluator_vote` roles only; shipped profiles do not advertise write-capable worker execution, and the main controller remains authoritative over planning, acceptance, and synthesis.
 - When the initial planning charter requires operator review, Ralph prints that review block in full without console truncation in both normal and verbose mode, then offers an approve/change/abort loop instead of a one-shot `Y/n`.
 - Operator-requested plan changes are fed back into another planning turn on the same thread until the operator approves the charter.
 - If the planner needs material operator intent during planning, Ralph supports `request_user_input` and auto-selects the recommended option when answering those prompts.
-- Ralph forces a progress checkpoint after repeated iterations, high file churn, or stagnating remaining-gap reports; the operator must continue or abort explicitly.
+- Ralph still forces a progress checkpoint after repeated iterations, high file churn, or stagnating remaining-gap reports, but shipped long-run profiles can switch post-seed checkpoints into record-only mode so unattended runs continue after the initial plan approval.
 - Ralph uses colored terminal layout automatically on interactive TTYs and falls back to plain text when output is redirected.
 - Pressing `Ctrl+C` aborts the current run gracefully, clears the active controller run pointer, closes the app-server, and leaves the session resumable.
 - After an abort, Ralph prints a one-line resume hint such as `./scripts/ralph-codex.py --resume <session-id>`.
@@ -74,6 +78,7 @@ The public CLI is intentionally small:
 - Search enablement is independent of sandbox access mode. The default restricted mode still uses live web search.
 - `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
 - `execution.max_prompt_chars` is profile-controlled; the shipped profiles now use non-zero planning and execution prompt budgets.
+- `quality_policy.progress_checkpoint_mode` controls whether post-seed progress checkpoints require confirmation or are just recorded before automatic continuation.
 - `research_policy`, `tranche_policy`, `quality_policy`, `memory_policy`, `milestone_policy`, `worker_policy`, `evidence_policy`, `eval_policy`, and `loop_policy` define the mandatory research contract, per-iteration tranche budget, long-run memory behavior, milestone acceptance checks, selective worker fan-out rules, evidence freshness, and prompt-compaction thresholds.
 - Ralph uses semantic live badges such as `STARTING`, `PLANNING`, `WORKING`, `REVIEW`, `RESULT`, `DONE`, and `ABORTED` instead of generic `STATUS` and `WAIT`.
 - Command activity from `commandExecution` items is rendered as one compact completed-command `TOOL` line rather than separate in-progress and completed lines.
