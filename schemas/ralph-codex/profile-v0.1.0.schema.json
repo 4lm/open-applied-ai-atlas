@@ -8,6 +8,7 @@
     "schema_version",
     "profile_name",
     "model",
+    "thread_policy",
     "runtime_limits",
     "seed_policy",
     "prompt_answering",
@@ -21,6 +22,14 @@
     "schema_version": { "type": "string", "enum": ["0.1.0"] },
     "profile_name": { "type": "string", "minLength": 1 },
     "model": { "type": "string", "minLength": 1 },
+    "thread_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["access_mode"],
+      "properties": {
+        "access_mode": { "type": "string", "enum": ["restricted", "dangerously-unrestricted"] }
+      }
+    },
     "runtime_limits": {
       "type": "object",
       "additionalProperties": false,

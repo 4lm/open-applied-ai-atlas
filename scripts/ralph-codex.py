@@ -70,6 +70,7 @@ DEFAULT_PROFILE = {
     "schema_version": "0.1.0",
     "profile_name": "default",
     "model": "gpt-5.4",
+    "thread_policy": {"access_mode": "restricted"},
     "runtime_limits": {"max_iterations": 0},
     "seed_policy": {"require_confirmation": True, "auto_confirm": False},
     "prompt_answering": {
@@ -100,6 +101,11 @@ DEFAULT_PROFILE = {
         "output_schema_id": EXECUTION_OUTPUT_SCHEMA_ID,
         "max_prompt_chars": 0,
     },
+}
+
+SANDBOX_BY_ACCESS_MODE = {
+    "restricted": "workspace-write",
+    "dangerously-unrestricted": "danger-full-access",
 }
 
 
@@ -1213,6 +1219,7 @@ class RalphController:
 
     def ensure_thread(self) -> None:
         model = self.session.profile["model"]
+        sandbox_mode = SANDBOX_BY_ACCESS_MODE[self.session.profile["thread_policy"]["access_mode"]]
         if self.session.state["thread_id"]:
             result = self.client.request(
                 "thread/resume",
@@ -1220,7 +1227,7 @@ class RalphController:
                     "threadId": self.session.state["thread_id"],
                     "cwd": str(self.runtime_config.workdir),
                     "approvalPolicy": "never",
-                    "sandbox": "danger-full-access",
+                    "sandbox": sandbox_mode,
                     "persistExtendedHistory": True,
                 },
             )
@@ -1234,7 +1241,7 @@ class RalphController:
             {
                 "cwd": str(self.runtime_config.workdir),
                 "approvalPolicy": "never",
-                "sandbox": "danger-full-access",
+                "sandbox": sandbox_mode,
                 "experimentalRawEvents": True,
                 "persistExtendedHistory": True,
                 "model": model,

@@ -243,6 +243,7 @@ class RalphCodexTests(unittest.TestCase):
 
     def test_default_profile_validates_against_profile_schema(self):
         self.make_schema_catalog().validate(ralph_codex.PROFILE_SCHEMA_ID, ralph_codex.DEFAULT_PROFILE)
+        self.assertEqual(ralph_codex.DEFAULT_PROFILE["thread_policy"]["access_mode"], "restricted")
         self.assertEqual(ralph_codex.DEFAULT_PROFILE["runtime_limits"]["max_iterations"], 0)
         self.assertEqual(ralph_codex.DEFAULT_PROFILE["execution"]["max_prompt_chars"], 0)
 
@@ -251,6 +252,15 @@ class RalphCodexTests(unittest.TestCase):
             path = Path(tempdir) / "profile.json"
             invalid = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
             invalid["planning"]["reasoning_effort"] = "extreme"
+            path.write_text(json.dumps(invalid), encoding="utf-8")
+            with self.assertRaises(ralph_codex.RalphError):
+                ralph_codex.load_profile(self.make_schema_catalog(), path)
+
+    def test_custom_profile_rejects_invalid_thread_access_mode(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            path = Path(tempdir) / "profile.json"
+            invalid = ralph_codex.deep_copy_json(ralph_codex.DEFAULT_PROFILE)
+            invalid["thread_policy"]["access_mode"] = "unsafe"
             path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ralph_codex.RalphError):
                 ralph_codex.load_profile(self.make_schema_catalog(), path)
@@ -327,6 +337,65 @@ class RalphCodexTests(unittest.TestCase):
         store.finish(session, "completed", "done")
         with self.assertRaisesRegex(ralph_codex.RalphError, "cannot be resumed"):
             store.resolve_resume_target(session.session_id)
+
+    def test_ensure_thread_uses_restricted_sandbox_by_default(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        client = FakeClient(
+            {
+                "thread/start": {
+                    "thread": {"id": "thread-1", "status": {"type": "ready"}},
+                    "model": "gpt-5.4",
+                    "approvalPolicy": "never",
+                    "sandbox": {"type": "workspace-write"},
+                }
+            },
+            [],
+        )
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
+        controller.ensure_thread()
+        method, params = client.requests[0]
+        self.assertEqual(method, "thread/start")
+        self.assertEqual(params["approvalPolicy"], "never")
+        self.assertEqual(params["sandbox"], "workspace-write")
+
+    def test_ensure_thread_uses_dangerously_unrestricted_when_configured(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        session.profile["thread_policy"]["access_mode"] = "dangerously-unrestricted"
+        client = FakeClient(
+            {
+                "thread/start": {
+                    "thread": {"id": "thread-1", "status": {"type": "ready"}},
+                    "model": "gpt-5.4",
+                    "approvalPolicy": "never",
+                    "sandbox": {"type": "danger-full-access"},
+                }
+            },
+            [],
+        )
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
+        controller.ensure_thread()
+        method, params = client.requests[0]
+        self.assertEqual(method, "thread/start")
+        self.assertEqual(params["approvalPolicy"], "never")
+        self.assertEqual(params["sandbox"], "danger-full-access")
 
     def test_request_fails_when_app_server_exits_before_responding(self):
         runtime_config = ralph_codex.RuntimeConfig(workdir=SCRIPT_PATH.parents[1], state_root=SCRIPT_PATH.parents[1])
@@ -868,6 +937,8 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("does not use turn inactivity timeouts", readme_text)
         self.assertIn("`max_iterations` uses `0` to mean unlimited", readme_text)
         self.assertIn("events.jsonl", readme_text)
+        self.assertIn("workspace-write", readme_text)
+        self.assertIn("dangerously-unrestricted", readme_text)
         self.assertIn("python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py", readme_text)
         self.assertNotIn("--prompt", readme_text)
         self.assertNotIn("--config", readme_text)

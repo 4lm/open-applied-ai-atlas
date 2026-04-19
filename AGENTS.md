@@ -31,12 +31,15 @@ When guidance overlaps, use this order:
 5. explicitly referenced prompt artifacts
 
 `MISSION.md` is authoritative and must not be edited. Prompt artifacts are optional context, not default policy.
+Live PIPs become task context only when explicitly referenced.
 
 ## Repository Shape
 
 - Root files carry mission, editorial, contribution, and operator guidance.
 - `docs/` holds numbered atlas content.
 - `pips/` holds optional prompt artifacts.
+- Every `pips/PIP_*.md` file must declare `status: live`, `status: archived`, or `status: superseded` in frontmatter.
+- `superseded` PIPs must also declare `superseded_by`; `archived` PIPs must also declare `retention_reason`.
 - Keep internal operator guidance separate from public atlas content.
 
 ## Operating Rules

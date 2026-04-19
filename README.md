@@ -96,6 +96,7 @@ flowchart TB
 - Read [AGENTS.md](./AGENTS.md) for durable structure and mission guardrails.
 - Read [MISSION.md](./MISSION.md) for durable mission, audience, scope, and priorities.
 - Read a `pips/PIP_*.md` file only when the task explicitly references it as optional prompt context.
+  Live PIPs are current task context only when explicitly referenced; `archived` and `superseded` PIPs are historical.
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
 - Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
@@ -113,12 +114,14 @@ The public CLI is intentionally small:
 3. `./scripts/ralph-codex.py --file prompts/fix-tests.md`
    Starts a new session from a message file.
 4. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/cautious.json`
-   Starts a new session from a message file with a custom profile.
-5. `./scripts/ralph-codex.py --message "Refactor the controller deeply" --verbose`
+   Starts a new session from a message file with a restricted custom profile.
+5. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/dangerously-unrestricted.json`
+   Starts a new session from a message file with full-access sandboxing.
+6. `./scripts/ralph-codex.py --message "Refactor the controller deeply" --verbose`
    Starts a new verbose session with structured terminal trace output and full wire diagnostics in `events.jsonl`.
-6. `./scripts/ralph-codex.py --sessions 10`
+7. `./scripts/ralph-codex.py --sessions 10`
    Lists the latest ten run-history rows.
-7. `./scripts/ralph-codex.py --resume`
+8. `./scripts/ralph-codex.py --resume`
    Resumes the latest resumable session.
 
 Canonical schemas for Ralph artifacts live under `schemas/ralph-codex/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
@@ -126,13 +129,23 @@ Canonical schemas for Ralph artifacts live under `schemas/ralph-codex/`, the def
 Operational defaults:
 
 - Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
+- Ralph keeps `approvalPolicy` set to `never` in every access mode, so it does not ask for permissions during unattended execution after the initial seed confirmation.
+- Ralph defaults to `thread_policy.access_mode: "restricted"`, which uses the `workspace-write` sandbox.
+- `thread_policy.access_mode: "dangerously-unrestricted"` is an opt-in profile mode that uses `danger-full-access`.
 - `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
 - `execution.max_prompt_chars` defaults to `0`, which disables prompt-size caps unless a profile opts into one.
 - `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only.
 
+PIP status conventions:
+
+- Every `pips/PIP_*.md` file carries a frontmatter `status`.
+- Allowed values are `live`, `archived`, and `superseded`.
+- `superseded` PIPs must declare `superseded_by`.
+- `archived` PIPs must declare `retention_reason`.
+
 Verification:
 
-- When changing `scripts/ralph-codex.py`, its schemas, or its tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py`.
+- When changing `scripts/ralph-codex.py`, its schemas, or its tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py`.
 - Then run `python3 -m unittest discover -s tests`.
 
 ## Page Signals

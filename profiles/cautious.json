@@ -1,0 +1,44 @@
+{
+  "schema_id": "ralph-codex/profile",
+  "schema_version": "0.1.0",
+  "profile_name": "cautious",
+  "model": "gpt-5.4",
+  "thread_policy": {
+    "access_mode": "restricted"
+  },
+  "runtime_limits": {
+    "max_iterations": 0
+  },
+  "seed_policy": {
+    "require_confirmation": true,
+    "auto_confirm": false
+  },
+  "prompt_answering": {
+    "selection_policy": "recommended_or_first",
+    "reject_secret_questions": true,
+    "require_selectable_options": true
+  },
+  "charter_policy": {
+    "min_workstreams": 3,
+    "require_adjacent_surfaces": true,
+    "require_validation_for_each_workstream": true,
+    "require_validation_categories": true
+  },
+  "completion_policy": {
+    "allow_deferred_workstreams": true,
+    "require_all_workstreams_resolved": true,
+    "require_no_remaining_gaps": true,
+    "require_validation_categories_complete": true
+  },
+  "planning": {
+    "mode": "plan",
+    "reasoning_effort": "high",
+    "output_schema_id": "ralph-codex/output/planning"
+  },
+  "execution": {
+    "mode": "default",
+    "reasoning_effort": "high",
+    "output_schema_id": "ralph-codex/output/execution",
+    "max_prompt_chars": 0
+  }
+}
