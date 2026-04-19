@@ -92,7 +92,13 @@ class CaptureReporter:
     def prompt(self, message):
         self.stderr.write(message + "\n")
 
-    def model_result(self, phase_name, payload):
+    def approval_prompt(self, message):
+        self.stdout.write(message + "\n")
+
+    def command_trace_context(self, trace_rows):
+        self.stdout.write(f"trace {len(trace_rows)}\n")
+
+    def model_result(self, phase_name, payload, full=False):
         self.stdout.write(f"{phase_name} result\n")
 
     def model_text(self, phase_name, text):
@@ -584,6 +590,93 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("\x1b[", stdout.getvalue())
         self.assertIn("\x1b[", stderr.getvalue())
 
+    def test_terminal_reporter_full_model_result_does_not_truncate_seed_review(self):
+        stdout = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout)
+        long_summary = "This is a very long planning summary " * 20
+        payload = {
+            "status": "CHARTER_READY",
+            "summary": long_summary.strip(),
+            "broadening_rationale": "Wide enough for operator review.",
+            "charter": {
+                "goal": "Review the whole charter before unattended execution.",
+                "success_criteria": ["Criterion " + ("x" * 80)],
+                "validation_categories": ["unit", "integration"],
+                "explicit_deferrals": ["None"],
+                "workstreams": [
+                    {
+                        "id": "WS1",
+                        "title": "Audit",
+                        "goal": "Inspect everything",
+                        "required_adjacent_surfaces": ["docs/", "tests/"],
+                        "validation": ["unit tests", "doc review"],
+                        "status": "planned",
+                    }
+                ],
+            },
+            "next_step": "Ask the operator for approval.",
+            "gate_reasoning": "The operator must be able to read the full charter.",
+        }
+        reporter.model_result("initial planning", payload, full=True)
+        console = stdout.getvalue()
+        self.assertIn("This is a very long planning summary", console)
+        self.assertNotIn("truncated for console", console)
+        self.assertIn("goal:", console)
+        self.assertIn("validation_categories:", console)
+        self.assertIn("WS1: Audit", console)
+
+    def test_session_store_extracts_command_trace_rows_for_turn(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        store.append_event(
+            session,
+            "notification",
+            {
+                "method": "item/started",
+                "turn_id": "turn-1",
+                "item": {
+                    "type": "commandExecution",
+                    "id": "call-1",
+                    "command": "/bin/zsh -lc 'echo hi'",
+                    "status": "inProgress",
+                    "command_actions": 1,
+                    "processId": "123",
+                },
+            },
+        )
+        store.append_event(
+            session,
+            "notification",
+            {
+                "method": "item/completed",
+                "turn_id": "turn-1",
+                "item": {
+                    "type": "commandExecution",
+                    "id": "call-1",
+                    "command": "/bin/zsh -lc 'echo hi'",
+                    "status": "completed",
+                    "aggregated_output_chars": 17,
+                    "command_actions": 1,
+                    "processId": "123",
+                },
+            },
+        )
+        rows = store.command_trace_for_turn(session, "turn-1")
+        self.assertEqual(
+            rows,
+            [
+                {
+                    "call_id": "call-1",
+                    "command": "/bin/zsh -lc 'echo hi'",
+                    "status": "completed",
+                    "output_chars": 17,
+                    "command_actions": 1,
+                    "process_id": "123",
+                }
+            ],
+        )
+
     def test_session_store_deduplicates_identical_events(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -977,6 +1070,78 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("status:", console)
         self.assertNotIn(json.dumps(result_payload), console)
         self.assertIn("Working...", console)
+
+    def test_confirm_seed_if_needed_renders_full_review_and_exec_context(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        session.profile["seed_policy"]["require_confirmation"] = True
+        session.profile["seed_policy"]["auto_confirm"] = False
+        long_summary = "Operator review summary " * 18
+        planning_result = {
+            "status": "CHARTER_READY",
+            "summary": long_summary.strip(),
+            "broadening_rationale": "Review before unattended execution.",
+            "charter": self.broad_charter(),
+            "next_step": "Await operator approval.",
+            "gate_reasoning": "The operator must approve the broadened charter.",
+        }
+        session.state["charter_version"] = 1
+        store.save_charter(session, planning_result, confirmed=False)
+        store.append_turn(session, "initial planning", "turn-1", "CHARTER_READY", "ready")
+        store.append_event(
+            session,
+            "notification",
+            {
+                "method": "item/started",
+                "turn_id": "turn-1",
+                "item": {
+                    "type": "commandExecution",
+                    "id": "call-1",
+                    "command": "/bin/zsh -lc \"sed -n '1,240p' MISSION.md\"",
+                    "status": "inProgress",
+                    "command_actions": 1,
+                    "processId": "51660",
+                },
+            },
+        )
+        store.append_event(
+            session,
+            "notification",
+            {
+                "method": "item/completed",
+                "turn_id": "turn-1",
+                "item": {
+                    "type": "commandExecution",
+                    "id": "call-1",
+                    "command": "/bin/zsh -lc \"sed -n '1,240p' MISSION.md\"",
+                    "status": "completed",
+                    "aggregated_output_chars": 2091,
+                    "command_actions": 1,
+                    "processId": "51660",
+                },
+            },
+        )
+        stdout = io.StringIO()
+        prompts = []
+        original_stdin = sys.stdin
+        self.addCleanup(setattr, sys, "stdin", original_stdin)
+        sys.stdin = FakeTTYStream()
+        controller = self.make_controller(
+            root,
+            session=session,
+            input_func=lambda prompt: prompts.append(prompt) or "yes",
+            stdout=stdout,
+        )
+        controller.confirm_seed_if_needed()
+        console = stdout.getvalue()
+        self.assertIn("Operator review summary", console)
+        self.assertNotIn("truncated for console", console)
+        self.assertIn("exec log context", console)
+        self.assertIn("/bin/zsh -lc \"sed -n '1,240p' MISSION.md\"", console)
+        self.assertIn("output=2091 chars", console)
+        self.assertIn("Approve broadened Ralph charter and continue unattended? [y/N]", console)
+        self.assertEqual(prompts, [""])
 
     def test_run_turn_extracts_plan_thread_item_output(self):
         tempdir, root = self.make_temp_root()

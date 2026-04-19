@@ -39,6 +39,7 @@ The public CLI is intentionally small:
 - Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
 - Ralph always emits human-readable live status to `stdout` and event/error logging to `stderr` so an operator can follow along in the shell.
 - Ralph formats live model output for humans instead of streaming raw schema JSON to the terminal during structured turns.
+- When the initial planning charter requires operator seed confirmation, Ralph prints that review block in full without console truncation in both normal and verbose mode before asking for approval.
 - Ralph uses colored terminal layout automatically on interactive TTYs and falls back to plain text when output is redirected.
 - Pressing `Ctrl+C` aborts the current run gracefully, clears the active controller run pointer, closes the app-server, and leaves the session resumable.
 - After an abort, Ralph prints a one-line resume hint such as `./scripts/ralph-codex.py --resume <session-id>`.
@@ -48,6 +49,7 @@ The public CLI is intentionally small:
 - `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
 - `execution.max_prompt_chars` defaults to `0`, which disables prompt-size caps unless a profile opts into one.
 - `events.jsonl` records semantic event changes and skips ghost duplicates where only the timestamp changed.
+- Seed-review output includes a compact exec-log context reconstructed from semantic `commandExecution` notifications in `events.jsonl` for the reviewed planning turn.
 - `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping console-rendered verbose payloads aggressively capped for readability.
 
 ## Verification

@@ -168,8 +168,17 @@ class TerminalReporter:
     def prompt(self, message: str) -> None:
         self._emit_record("stderr", "prompt", message, tone="prompt")
 
-    def model_result(self, phase_name: str, payload: dict[str, Any]) -> None:
-        lines = self._render_model_payload_lines(payload)
+    def approval_prompt(self, message: str) -> None:
+        self._emit_record("stdout", "prompt", message, tone="prompt")
+
+    def command_trace_context(self, trace_rows: list[dict[str, Any]]) -> None:
+        if not trace_rows:
+            return
+        lines = self._render_command_trace_lines(trace_rows)
+        self._emit_block("stdout", "trace", "exec log context", lines, tone="tool")
+
+    def model_result(self, phase_name: str, payload: dict[str, Any], full: bool = False) -> None:
+        lines = self._render_full_model_payload_lines(payload) if full else self._render_model_payload_lines(payload)
         title = f"{phase_name} result"
         self._emit_block("stdout", "model", title, lines, tone="model")
 
@@ -340,6 +349,102 @@ class TerminalReporter:
         if isinstance(validation, list) and validation:
             lines.append(self._format_kv("stdout", "validation", ", ".join(map(str, validation[:4]))))
         return lines or [self._format_kv("stdout", "status", "no structured details")]
+
+    def _render_full_model_payload_lines(self, payload: dict[str, Any]) -> list[str]:
+        lines: list[str] = []
+        scalar_keys = ("status", "summary", "next_step", "gate_reasoning", "broadening_rationale")
+        for key in scalar_keys:
+            if isinstance(payload.get(key), str) and payload[key].strip():
+                lines.extend(
+                    self._wrap_detail(
+                        self._format_kv("stdout", key, " ".join(payload[key].split())),
+                        width=CONSOLE_WRAP_WIDTH - 4,
+                    )
+                )
+        charter = payload.get("charter")
+        if isinstance(charter, dict):
+            goal = charter.get("goal")
+            if isinstance(goal, str) and goal.strip():
+                lines.extend(
+                    self._wrap_detail(
+                        self._format_kv("stdout", "goal", " ".join(goal.split())),
+                        width=CONSOLE_WRAP_WIDTH - 4,
+                    )
+                )
+            lines.extend(self._render_list_section("success", charter.get("success_criteria") or []))
+            lines.extend(self._render_workstream_section(charter.get("workstreams") or []))
+            lines.extend(self._render_list_section("validation_categories", charter.get("validation_categories") or []))
+            lines.extend(self._render_list_section("deferrals", charter.get("explicit_deferrals") or []))
+        updates = payload.get("workstream_updates")
+        if isinstance(updates, list) and updates:
+            lines.append(self._format_kv("stdout", "updates", f"{len(updates)} workstreams"))
+            for update in updates:
+                identifier = update.get("id", "?")
+                status = update.get("status", "?")
+                evidence_count = len(update.get("evidence") or [])
+                detail = f"- {identifier}: {status}"
+                if evidence_count:
+                    detail += f" | evidence={evidence_count}"
+                lines.extend(self._wrap_detail(detail, width=CONSOLE_WRAP_WIDTH - 6))
+        lines.extend(self._render_list_section("remaining_gaps", payload.get("remaining_gaps") or []))
+        lines.extend(self._render_list_section("validation_completed", payload.get("validation_completed") or []))
+        lines.extend(self._render_list_section("evidence", payload.get("evidence") or []))
+        return lines or [self._format_kv("stdout", "status", "no structured details")]
+
+    def _render_list_section(self, key: str, values: list[Any]) -> list[str]:
+        rendered_values = [" ".join(str(value).split()) for value in values if str(value).strip()]
+        if not rendered_values:
+            return []
+        lines = [self._format_kv("stdout", key, f"{len(rendered_values)} item(s)")]
+        for value in rendered_values:
+            lines.extend(self._wrap_detail(f"- {value}", width=CONSOLE_WRAP_WIDTH - 6))
+        return lines
+
+    def _render_workstream_section(self, workstreams: list[dict[str, Any]]) -> list[str]:
+        if not workstreams:
+            return []
+        lines = [self._format_kv("stdout", "workstreams", f"{len(workstreams)} planned")]
+        for workstream in workstreams:
+            identifier = workstream.get("id", "?")
+            title = " ".join(str(workstream.get("title", "")).split()) or "(untitled)"
+            lines.extend(self._wrap_detail(f"- {identifier}: {title}", width=CONSOLE_WRAP_WIDTH - 6))
+            if isinstance(workstream.get("goal"), str) and workstream["goal"].strip():
+                lines.extend(
+                    self._wrap_detail(
+                        f"  goal: {' '.join(workstream['goal'].split())}",
+                        width=CONSOLE_WRAP_WIDTH - 6,
+                    )
+                )
+            adjacent = [str(value).strip() for value in workstream.get("required_adjacent_surfaces") or [] if str(value).strip()]
+            if adjacent:
+                lines.extend(self._wrap_detail(f"  adjacent: {', '.join(adjacent)}", width=CONSOLE_WRAP_WIDTH - 6))
+            validation = [str(value).strip() for value in workstream.get("validation") or [] if str(value).strip()]
+            if validation:
+                lines.extend(self._wrap_detail(f"  validation: {', '.join(validation)}", width=CONSOLE_WRAP_WIDTH - 6))
+            status = workstream.get("status")
+            if isinstance(status, str) and status.strip():
+                lines.extend(self._wrap_detail(f"  status: {status}", width=CONSOLE_WRAP_WIDTH - 6))
+        return lines
+
+    def _render_command_trace_lines(self, trace_rows: list[dict[str, Any]]) -> list[str]:
+        lines = [self._format_kv("stdout", "commands", f"{len(trace_rows)} recorded")]
+        for row in trace_rows:
+            status = " ".join(str(row.get("status", "unknown")).split()) or "unknown"
+            command = truncate_label(" ".join(str(row.get("command", "")).split()), limit=160)
+            detail_parts = [status]
+            if command:
+                detail_parts.append(command)
+            output_chars = row.get("output_chars")
+            if isinstance(output_chars, int):
+                detail_parts.append(f"output={output_chars} chars")
+            command_actions = row.get("command_actions")
+            if isinstance(command_actions, int):
+                detail_parts.append(f"actions={command_actions}")
+            process_id = row.get("process_id")
+            if process_id:
+                detail_parts.append(f"pid={process_id}")
+            lines.extend(self._wrap_detail(f"- {' | '.join(detail_parts)}", width=CONSOLE_WRAP_WIDTH - 6))
+        return lines
 
     def _render_trace_lines(self, payload: dict[str, Any]) -> list[str]:
         lines: list[str] = []
@@ -1009,6 +1114,58 @@ class SessionStore:
         normalized = {"event_type": event_type, "payload": payload}
         return json.dumps(normalized, sort_keys=True, separators=(",", ":"))
 
+    def latest_turn(self, session: SessionContext) -> dict[str, Any] | None:
+        turns = self.read_jsonl(session.session_dir / "turns.jsonl", TURN_LOG_LINE_SCHEMA_ID)
+        if not turns:
+            return None
+        return turns[-1]
+
+    def command_trace_for_turn(self, session: SessionContext, turn_id: str) -> list[dict[str, Any]]:
+        events = self.read_jsonl(session.session_dir / "events.jsonl", EVENT_LOG_LINE_SCHEMA_ID)
+        rows_by_call_id: dict[str, dict[str, Any]] = {}
+        ordered_call_ids: list[str] = []
+        anonymous_index = 0
+        for event in events:
+            if event.get("event_type") != "notification":
+                continue
+            payload = event.get("payload") or {}
+            if payload.get("turn_id") != turn_id:
+                continue
+            if payload.get("method") not in {"item/started", "item/completed"}:
+                continue
+            item = payload.get("item") or {}
+            if item.get("type") != "commandExecution":
+                continue
+            call_id = item.get("id")
+            if not isinstance(call_id, str) or not call_id:
+                anonymous_index += 1
+                call_id = f"anonymous-command-{anonymous_index}"
+            if call_id not in rows_by_call_id:
+                rows_by_call_id[call_id] = {
+                    "call_id": call_id,
+                    "command": "",
+                    "status": "",
+                    "output_chars": None,
+                    "command_actions": None,
+                    "process_id": "",
+                }
+                ordered_call_ids.append(call_id)
+            row = rows_by_call_id[call_id]
+            if isinstance(item.get("command"), str) and item["command"].strip():
+                row["command"] = item["command"]
+            if isinstance(item.get("status"), str) and item["status"].strip():
+                row["status"] = item["status"]
+            output_chars = item.get("aggregated_output_chars")
+            if not isinstance(output_chars, int):
+                output_chars = item.get("output_chars")
+            if isinstance(output_chars, int):
+                row["output_chars"] = output_chars
+            if isinstance(item.get("command_actions"), int):
+                row["command_actions"] = item["command_actions"]
+            if isinstance(item.get("processId"), str) and item["processId"].strip():
+                row["process_id"] = item["processId"]
+        return [rows_by_call_id[call_id] for call_id in ordered_call_ids]
+
 
 class EventRecorder:
     def __init__(
@@ -1548,7 +1705,16 @@ class RalphController:
         self.ensure_thread()
         if not self.session.charter_record:
             self.print_status("planning started: initial planning")
-            planning_result = self.plan_once("initial planning", self.session.state["pending_feedback"])
+            needs_manual_seed_review = (
+                self.session.profile["seed_policy"]["require_confirmation"]
+                and not self.session.profile["seed_policy"]["auto_confirm"]
+                and not self.session.state["seed_confirmed"]
+            )
+            planning_result = self.plan_once(
+                "initial planning",
+                self.session.state["pending_feedback"],
+                render_output=not needs_manual_seed_review,
+            )
             self.validate_charter(planning_result)
             self.session.state["charter_version"] += 1
             self.session.state["pending_feedback"] = ""
@@ -1647,7 +1813,7 @@ class RalphController:
         self.store.append_event(self.session, "thread-started", {"thread_id": self.session.state["thread_id"]})
         self.print_status(f"thread started: {self.session.state['thread_id']}")
 
-    def plan_once(self, phase_name: str, feedback: str | None) -> dict[str, Any]:
+    def plan_once(self, phase_name: str, feedback: str | None, render_output: bool = True) -> dict[str, Any]:
         return self.run_turn(
             phase_name=phase_name,
             prompt=self.build_planning_prompt(phase_name, feedback),
@@ -1657,6 +1823,7 @@ class RalphController:
                 self.session.profile["planning"]["reasoning_effort"],
                 self.planning_instructions(),
             ),
+            render_output=render_output,
         )
 
     def execute_once(self) -> dict[str, Any]:
@@ -1677,6 +1844,7 @@ class RalphController:
         prompt: str,
         schema: dict[str, Any],
         collaboration_mode: dict[str, Any],
+        render_output: bool = True,
     ) -> dict[str, Any]:
         result = self.client.request(
             "turn/start",
@@ -1737,12 +1905,13 @@ class RalphController:
                 break
         self.terminal_reporter.finish_stdout_line()
         final_output = self.extract_final_output(raw_items, thread_items, schema)
-        if buffered_deltas:
-            streamed_text = "".join(buffered_deltas).strip()
-            if streamed_text:
-                self.render_model_output(phase_name, final_output, streamed_text)
-        else:
-            self.render_model_output(phase_name, final_output, "")
+        if render_output:
+            if buffered_deltas:
+                streamed_text = "".join(buffered_deltas).strip()
+                if streamed_text:
+                    self.render_model_output(phase_name, final_output, streamed_text)
+            else:
+                self.render_model_output(phase_name, final_output, "")
         self.store.append_turn(
             self.session,
             phase_name,
@@ -1875,10 +2044,9 @@ class RalphController:
         if not sys.stdin.isatty():
             raise RalphError("seed confirmation is required, but stdin is not interactive")
         self.print_status("waiting for seed confirmation")
-        response = self.input_func(
-            f"{self.charter_summary((self.session.charter_record or {}).get('charter', {}))}\n"
-            "Approve broadened Ralph charter and continue unattended? [y/N] "
-        ).strip()
+        self.render_seed_review()
+        self.terminal_reporter.approval_prompt("Approve broadened Ralph charter and continue unattended? [y/N]")
+        response = self.input_func("").strip()
         if response.lower() not in {"y", "yes"}:
             raise RalphError("seed confirmation declined by operator")
         self.session.state["seed_confirmed"] = True
@@ -2050,6 +2218,16 @@ class RalphController:
         if parsed == final_output:
             return
         self.terminal_reporter.model_text(phase_name, normalized)
+
+    def render_seed_review(self) -> None:
+        if not self.session.charter_record:
+            return
+        planning_result = self.session.charter_record.get("planning_result") or {}
+        self.terminal_reporter.model_result("initial planning", planning_result, full=True)
+        latest_turn = self.store.latest_turn(self.session)
+        if latest_turn:
+            trace_rows = self.store.command_trace_for_turn(self.session, latest_turn["turn_id"])
+            self.terminal_reporter.command_trace_context(trace_rows)
 
 
 def resolve_start_task(command: Command) -> dict[str, str]:
