@@ -82,7 +82,6 @@ META_ARTIFACT_PATTERNS = (
     "ledger",
     "scoreboard",
     "parity-matrix",
-    "closure",
     "structural-change",
 )
 REPEATED_HEADING_PATTERNS = (
@@ -141,7 +140,7 @@ class ExecutionAudit:
     checkpoint_reason: str
     diff_samples: list[str]
     novelty_score: float = 0.0
-    closure_score: float = 0.0
+    acceptance_progress_score: float = 0.0
     acceptance_criteria_met: list[str] | None = None
     acceptance_criteria_remaining: list[str] | None = None
     off_tranche_file_count: int = 0
@@ -952,6 +951,14 @@ def normalize_payload_for_schema(schema_id: str, payload: dict[str, Any]) -> dic
         session_id = str(normalized.get("session_id", "")).strip()
         started_at = str(normalized.get("started_at", "")).strip()
         normalized = merge_missing_keys(normalized, default_session_state_payload(session_id, started_at))
+        execution_memory = normalized.get("execution_memory")
+        if isinstance(execution_memory, list):
+            for entry in execution_memory:
+                if not isinstance(entry, dict):
+                    continue
+                if "acceptance_progress_score" not in entry and "closure_score" in entry:
+                    entry["acceptance_progress_score"] = entry.get("closure_score")
+                entry.pop("closure_score", None)
         normalized["schema_id"] = SESSION_STATE_SCHEMA_ID
         normalized["schema_version"] = VERSION
         return normalized
@@ -1012,9 +1019,14 @@ def normalize_payload_for_schema(schema_id: str, payload: dict[str, Any]) -> dic
                     "criteria_met": [],
                     "criteria_remaining": ["Refresh the milestone progress block."],
                     "novelty_notes": ["Legacy output did not record novelty assessment."],
-                    "closure_notes": ["Refresh the closure assessment."],
+                    "completion_notes": ["Refresh the milestone completion assessment."],
                 },
             )
+            milestone_progress = last_result.get("milestone_progress")
+            if isinstance(milestone_progress, dict):
+                if "completion_notes" not in milestone_progress and "closure_notes" in milestone_progress:
+                    milestone_progress["completion_notes"] = milestone_progress.get("closure_notes")
+                milestone_progress.pop("closure_notes", None)
             last_result.setdefault("acceptance_artifacts", [])
             last_result.setdefault("evidence_updates", [])
             last_result.setdefault("next_tranche_recommendation", last_result.get("next_step", "Refresh the tranche plan."))
@@ -2437,7 +2449,7 @@ class RalphController:
                     "checkpoint_reason": audit.checkpoint_reason,
                     "diff_samples": audit.diff_samples,
                     "novelty_score": audit.novelty_score,
-                    "closure_score": audit.closure_score,
+                    "acceptance_progress_score": audit.acceptance_progress_score,
                     "acceptance_criteria_met": audit.acceptance_criteria_met or [],
                     "acceptance_criteria_remaining": audit.acceptance_criteria_remaining or [],
                 },
@@ -2480,7 +2492,7 @@ class RalphController:
             if self.session.state["consecutive_replans"] > self.loop_policy()["max_consecutive_replans"]:
                 raise RalphError(
                     "exhausted max_consecutive_replans="
-                    f"{self.loop_policy()['max_consecutive_replans']} without verified closure"
+                    f"{self.loop_policy()['max_consecutive_replans']} without verified milestone completion"
                 )
             self.session.state["phase"] = "planning"
             self.print_status("replanning started", badge="PLANNING")
@@ -3022,7 +3034,7 @@ class RalphController:
                 "iteration": self.session.state["iteration"],
                 "summary": execution_result.get("summary", "") or "Execution update",
                 "novelty_score": audit.novelty_score,
-                "closure_score": audit.closure_score,
+                "acceptance_progress_score": audit.acceptance_progress_score,
             }
         )
         max_entries = self.session.profile["memory_policy"]["max_execution_memory_entries"]
@@ -3047,7 +3059,7 @@ class RalphController:
             manifests = self.session.state.get("worker_manifests") or []
             manifests.append(manifest)
             self.session.state["worker_manifests"] = manifests[-8:]
-        if evaluation_result.get("milestone_status") == "closed":
+        if evaluation_result.get("milestone_status") in {"accepted", "closed"}:
             self.session.state["milestone_iteration_count"] = 0
 
     def register_evidence_sources(self, sources: list[dict[str, Any]], used_for_prefix: str) -> None:
@@ -3349,11 +3361,11 @@ class RalphController:
         ):
             feedback.append("milestone progress did not report acceptance criteria state")
         novelty_score = float(len(milestone_progress.get("novelty_notes") or []))
-        closure_score = 0.0
+        acceptance_progress_score = 0.0
         if required_set:
-            closure_score = len(required_set & met_set) / max(1, len(required_set))
+            acceptance_progress_score = len(required_set & met_set) / max(1, len(required_set))
         elif not execution_result.get("remaining_gaps"):
-            closure_score = 1.0
+            acceptance_progress_score = 1.0
         if (
             self.session.state.get("consecutive_low_novelty_iterations", 0) + (1 if novelty_score <= 0 else 0)
             >= self.loop_policy()["max_consecutive_low_novelty_iterations"]
@@ -3372,7 +3384,7 @@ class RalphController:
         ):
             checkpoint_reasons.append("milestone iteration checkpoint reached")
         if self.session.profile["milestone_policy"]["checkpoint_on_milestone_close"] and required_set and required_set <= met_set:
-            checkpoint_reasons.append("milestone close checkpoint reached")
+            checkpoint_reasons.append("milestone completion checkpoint reached")
         return ExecutionAudit(
             ok=not feedback,
             feedback="; ".join(feedback) if feedback else "",
@@ -3383,7 +3395,7 @@ class RalphController:
             checkpoint_reason="; ".join(checkpoint_reasons),
             diff_samples=self.diff_sample_paths(changed_entries, quality_policy["require_diff_samples"]),
             novelty_score=novelty_score,
-            closure_score=closure_score,
+            acceptance_progress_score=acceptance_progress_score,
             acceptance_criteria_met=sorted(required_set & met_set) if required_set else sorted(met_set),
             acceptance_criteria_remaining=sorted((required_set - met_set) | remaining_set) if required_set else sorted(remaining_set),
             off_tranche_file_count=len(off_tranche_files),
@@ -3571,8 +3583,8 @@ class RalphController:
             audit result, and observed evidence posture.
             Prefer same-tranche repair over broad replanning when the tranche is still sound.
             Recommend broad replanning only when the tranche is wrong, evidence is insufficient,
-            or repair is unlikely to close the remaining gaps.
-            Prefer milestone closure only when the acceptance bundle is actually met.
+            or repair is unlikely to resolve the remaining gaps.
+            Only treat a milestone as complete when the acceptance bundle is actually met.
             Output only a schema-valid JSON object.
             """
         ).strip()
@@ -3784,7 +3796,7 @@ class RalphController:
                     "diff_samples": audit.diff_samples,
                     "observed_search_count": self.latest_turn_search_count(),
                     "novelty_score": audit.novelty_score,
-                    "closure_score": audit.closure_score,
+                    "acceptance_progress_score": audit.acceptance_progress_score,
                     "acceptance_criteria_met": audit.acceptance_criteria_met or [],
                     "acceptance_criteria_remaining": audit.acceptance_criteria_remaining or [],
                 },
@@ -3792,10 +3804,10 @@ class RalphController:
             ),
             "",
             "## Evaluation Contract",
-            "- Prefer repair_same_tranche when the current tranche can still close the gaps.",
+            "- Prefer repair_same_tranche when the current tranche can still resolve the gaps.",
             "- Use replan when the tranche is wrong, evidence is insufficient, or repair is exhausted.",
             "- Use accept only when the result is strong enough to advance without another broad plan.",
-            "- Use milestone_status to say whether the active milestone remains open, is ready to close, or is closed.",
+            "- Use milestone_status to say whether the active milestone remains open, is ready for acceptance, or is accepted.",
         ]
         return "\n".join(sections).strip() + "\n"
 
@@ -3824,6 +3836,10 @@ class RalphController:
         )
         summary = str(evaluation_result.get("summary", "")).strip() or str(execution_result.get("summary", "")).strip()
         milestone_status = str(evaluation_result.get("milestone_status", "")).strip()
+        if milestone_status == "ready_to_close":
+            milestone_status = "ready_for_acceptance"
+        elif milestone_status == "closed":
+            milestone_status = "accepted"
         recommended_scope_change = str(evaluation_result.get("recommended_scope_change", "")).strip()
         confidence = str(evaluation_result.get("confidence", "")).strip() or "low"
         confidence_floor = self.session.profile["eval_policy"]["evaluator_confidence_floor"]
@@ -3847,7 +3863,7 @@ class RalphController:
         if not audit.ok:
             return "replan", audit.feedback
 
-        if milestone_status in {"ready_to_close", "closed"} and execution_result["status"] != "COMPLETE":
+        if milestone_status in {"ready_for_acceptance", "accepted"} and execution_result["status"] != "COMPLETE":
             return "replan", (
                 f"Active milestone {self.session.state.get('active_milestone_id') or '(none)'} is ready to advance. "
                 "Refresh the program board, select the next milestone if needed, and continue."

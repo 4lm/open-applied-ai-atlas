@@ -339,7 +339,7 @@ class RalphCodexTests(unittest.TestCase):
                 "criteria_met": ["controller exists"] if status == "COMPLETE" else [],
                 "criteria_remaining": [] if status == "COMPLETE" else ["docs updated"],
                 "novelty_notes": ["Added net-new milestone progress."] if status != "BLOCKED" else [],
-                "closure_notes": ["Milestone criteria are moving toward closure."],
+                "completion_notes": ["Milestone criteria are moving toward completion."],
             },
             "acceptance_artifacts": ["scripts/ralph-codex.py"] if status == "COMPLETE" else [],
             "evidence_updates": [
@@ -363,7 +363,7 @@ class RalphCodexTests(unittest.TestCase):
     def evaluation_result_payload(self, disposition="repair_same_tranche", summary="tighten the tranche"):
         return {
             "disposition": disposition,
-            "milestone_status": "closed" if disposition == "accept" else "open",
+            "milestone_status": "accepted" if disposition == "accept" else "open",
             "acceptance_criteria_met": ["controller exists"] if disposition == "accept" else [],
             "evidence_sufficiency": "sufficient" if disposition == "accept" else "partial",
             "novelty_assessment": "The latest tranche added useful novelty." if disposition != "blocked" else "No useful novelty landed.",
@@ -548,6 +548,57 @@ class RalphCodexTests(unittest.TestCase):
             self.assertEqual(loaded["planning"]["model"], "gpt-5.4-mini")
             self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4-mini")
             self.assertEqual(loaded["execution"]["model"], "gpt-5.4-mini")
+
+    def test_normalize_session_state_renames_legacy_closure_score(self):
+        session_id = "20260420T000000000Z_123456789abc"
+        payload = {
+            "schema_id": ralph_codex.SESSION_STATE_SCHEMA_ID,
+            "schema_version": "0.1.0",
+            "session_id": session_id,
+            "started_at": "2026-04-20T00:00:00Z",
+            "execution_memory": [
+                {
+                    "iteration": 1,
+                    "summary": "Legacy iteration",
+                    "novelty_score": 1.0,
+                    "closure_score": 0.5,
+                }
+            ],
+        }
+        normalized = ralph_codex.normalize_payload_for_schema(ralph_codex.SESSION_STATE_SCHEMA_ID, payload)
+        memory = normalized["execution_memory"][0]
+        self.assertEqual(memory["acceptance_progress_score"], 0.5)
+        self.assertNotIn("closure_score", memory)
+        self.make_schema_catalog().validate(ralph_codex.SESSION_STATE_SCHEMA_ID, normalized)
+
+    def test_normalize_completion_payload_renames_legacy_closure_notes(self):
+        session_id = "20260420T000000000Z_123456789abc"
+        payload = {
+            "schema_id": ralph_codex.COMPLETION_SCHEMA_ID,
+            "schema_version": "0.1.0",
+            "session_id": session_id,
+            "accepted": False,
+            "last_result": {
+                "status": "IN_PROGRESS",
+                "summary": "Legacy result",
+                "evidence": ["legacy"],
+                "milestone_progress": {
+                    "milestone_id": "legacy-milestone",
+                    "criteria_met": [],
+                    "criteria_remaining": ["docs updated"],
+                    "novelty_notes": ["Legacy progress"],
+                    "closure_notes": ["Legacy closure note"],
+                },
+            },
+            "last_reason": "",
+            "rejections": [],
+            "updated_at": "2026-04-20T00:00:00Z",
+        }
+        normalized = ralph_codex.normalize_payload_for_schema(ralph_codex.COMPLETION_SCHEMA_ID, payload)
+        progress = normalized["last_result"]["milestone_progress"]
+        self.assertEqual(progress["completion_notes"], ["Legacy closure note"])
+        self.assertNotIn("closure_notes", progress)
+        self.make_schema_catalog().validate(ralph_codex.COMPLETION_SCHEMA_ID, normalized)
 
     def test_custom_profile_invalid_is_rejected(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -2147,6 +2198,24 @@ class RalphCodexTests(unittest.TestCase):
         self.save_charter(controller)
         controller.changed_repo_entries = lambda: [
             {"path": "docs/scoreboard.md", "operation": "deleted"},
+            {"path": "scripts/ralph-codex.py", "operation": "modified"},
+        ]
+        controller.count_repeated_heading_files = lambda touched_files: 0
+        audit = controller.audit_execution_result(
+            self.execution_result_payload(
+                touched_files=["scripts/ralph-codex.py"],
+            )
+        )
+        self.assertTrue(audit.ok)
+        self.assertEqual(audit.feedback, "")
+
+    def test_audit_execution_result_does_not_flag_generic_closure_word(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.changed_repo_entries = lambda: [
+            {"path": "docs/closure-plan.md", "operation": "added"},
             {"path": "scripts/ralph-codex.py", "operation": "modified"},
         ]
         controller.count_repeated_heading_files = lambda touched_files: 0

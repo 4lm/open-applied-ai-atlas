@@ -56,7 +56,7 @@ The public CLI is intentionally small:
 - Ralph execution prompts send the tranche plus compact memory blocks, evidence registry slices, and milestone context rather than replaying the entire result history each turn.
 - Ralph prefers same-tranche repair before broad replanning when the current tranche is still sound.
 - Ralph rejects execution turns that exceed the tranche budget, spread repeated stock headings broadly, or create controller-serving meta artifacts such as ledgers or scoreboards unless the task explicitly asks for them.
-- Ralph runs a post-iteration audit using an iteration-scoped repo baseline, model-reported touched files, milestone acceptance progress, repeated-heading heuristics, novelty/closure scoring, and representative diff samples.
+- Ralph runs a post-iteration audit using an iteration-scoped repo baseline, model-reported touched files, milestone acceptance progress, repeated-heading heuristics, novelty plus milestone-completion scoring, and representative diff samples.
 - Ralph records compact non-command tool activity relevant to research in `events.jsonl`.
 - Ralph checks observed search activity against claimed planning research and execution verification before accepting those blocks as complete.
 - Ralph uses milestone checkpoints and long-run memory state to keep super-long runs bounded and resumable.
@@ -74,7 +74,7 @@ The public CLI is intentionally small:
 - Search enablement is independent of sandbox access mode. The default restricted mode still uses live web search.
 - `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
 - `execution.max_prompt_chars` is profile-controlled; the shipped profiles now use non-zero planning and execution prompt budgets.
-- `research_policy`, `tranche_policy`, `quality_policy`, `memory_policy`, `milestone_policy`, `worker_policy`, `evidence_policy`, `eval_policy`, and `loop_policy` define the mandatory research contract, per-iteration tranche budget, long-run memory behavior, milestone closure checks, selective worker fan-out rules, evidence freshness, and prompt-compaction thresholds.
+- `research_policy`, `tranche_policy`, `quality_policy`, `memory_policy`, `milestone_policy`, `worker_policy`, `evidence_policy`, `eval_policy`, and `loop_policy` define the mandatory research contract, per-iteration tranche budget, long-run memory behavior, milestone acceptance checks, selective worker fan-out rules, evidence freshness, and prompt-compaction thresholds.
 - Ralph uses semantic live badges such as `STARTING`, `PLANNING`, `WORKING`, `REVIEW`, `RESULT`, `DONE`, and `ABORTED` instead of generic `STATUS` and `WAIT`.
 - Command activity from `commandExecution` items is rendered as one compact completed-command `TOOL` line rather than separate in-progress and completed lines.
 - `events.jsonl` records semantic event changes and skips ghost duplicates where only the timestamp changed.

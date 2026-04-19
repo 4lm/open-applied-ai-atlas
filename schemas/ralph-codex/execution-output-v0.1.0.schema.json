@@ -105,7 +105,7 @@
         "criteria_met",
         "criteria_remaining",
         "novelty_notes",
-        "closure_notes"
+        "completion_notes"
       ],
       "properties": {
         "milestone_id": { "type": "string", "minLength": 1 },
@@ -121,7 +121,7 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
-        "closure_notes": {
+        "completion_notes": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         }

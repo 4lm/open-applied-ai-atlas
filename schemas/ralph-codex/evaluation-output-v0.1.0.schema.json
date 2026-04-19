@@ -26,7 +26,7 @@
     },
     "milestone_status": {
       "type": "string",
-      "enum": ["open", "ready_to_close", "closed", "blocked"]
+      "enum": ["open", "ready_for_acceptance", "accepted", "blocked"]
     },
     "acceptance_criteria_met": {
       "type": "array",

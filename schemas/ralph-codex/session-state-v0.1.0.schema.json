@@ -119,12 +119,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["iteration", "summary", "novelty_score", "closure_score"],
+        "required": ["iteration", "summary", "novelty_score", "acceptance_progress_score"],
         "properties": {
           "iteration": { "type": "integer", "minimum": 0 },
           "summary": { "type": "string", "minLength": 1 },
           "novelty_score": { "type": "number", "minimum": 0 },
-          "closure_score": { "type": "number", "minimum": 0 }
+          "acceptance_progress_score": { "type": "number", "minimum": 0 }
         }
       }
     },
