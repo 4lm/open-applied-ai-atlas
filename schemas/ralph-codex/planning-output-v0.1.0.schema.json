@@ -1,0 +1,82 @@
+{
+  "schema_id": "ralph-codex/output/planning",
+  "schema_version": "0.1.0",
+  "title": "ralph-planning",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "summary",
+    "broadening_rationale",
+    "charter",
+    "next_step",
+    "gate_reasoning"
+  ],
+  "properties": {
+    "status": { "type": "string", "enum": ["CHARTER_READY", "BLOCKED"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "broadening_rationale": { "type": "string", "minLength": 1 },
+    "charter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goal",
+        "success_criteria",
+        "validation_categories",
+        "explicit_deferrals",
+        "workstreams"
+      ],
+      "properties": {
+        "goal": { "type": "string", "minLength": 1 },
+        "success_criteria": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "validation_categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "explicit_deferrals": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "workstreams": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "goal",
+              "required_adjacent_surfaces",
+              "validation",
+              "status"
+            ],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "goal": { "type": "string", "minLength": 1 },
+              "required_adjacent_surfaces": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "validation": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "status": { "type": "string", "enum": ["planned", "deferred"] }
+            }
+          }
+        }
+      }
+    },
+    "next_step": { "type": "string", "minLength": 1 },
+    "gate_reasoning": { "type": "string", "minLength": 1 }
+  }
+}

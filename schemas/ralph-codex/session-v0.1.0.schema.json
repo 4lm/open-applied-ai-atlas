@@ -1,0 +1,22 @@
+{
+  "schema_id": "ralph-codex/session",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "created_at",
+    "workdir",
+    "profile_name"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/session"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "created_at": { "type": "string", "minLength": 1 },
+    "workdir": { "type": "string", "minLength": 1 },
+    "profile_name": { "type": "string", "minLength": 1 }
+  }
+}

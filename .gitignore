@@ -1,2 +1,3 @@
-.ralph
 .codex/
+__pycache__/
+*.pyc

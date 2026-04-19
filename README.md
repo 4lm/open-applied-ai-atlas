@@ -94,31 +94,37 @@ flowchart TB
 ## Contribution Entry Points
 
 - Read [AGENTS.md](./AGENTS.md) for durable structure and mission guardrails.
+- Read [MISSION.md](./MISSION.md) for durable mission, audience, scope, and priorities.
+- Read a `pips/PIP_*.md` file only when the task explicitly references it as optional prompt context.
 - Read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution workflow and review expectations.
 - Read [EDITORIAL_RULES.md](./EDITORIAL_RULES.md) for numbering, taxonomy reuse, and mission-preserving editorial rules.
-- Read [.delivery/STATUS.md](./.delivery/STATUS.md) for the current delivery board and repository-wide audit snapshot.
-- Operator scripts: use `./scripts/delivery-harness-check.sh` for delivery validation, `./scripts/delivery-harness-status.sh` for the concise delivery snapshot from `.delivery/STATUS.md`, and `./scripts/ralph-codex.sh` as a human-run external loop for repeated `codex exec` runs. Run `./scripts/ralph-codex.sh --help` for the script's built-in help text.
 - See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the public contributor list.
 
 ## Human-Run Ralph Loop
 
-`./scripts/ralph-codex.sh` is a human-run outer loop for repeated fresh `codex exec -` runs. The default prompt lives at `.delivery/PROMPT.md`, but the shell runner injects its own control prompt and owns completion policy. The script already runs in unattended auto-allow mode via `-a never -s danger-full-access`, recreates a root `.ralph` ledger each run, and keeps detailed loop state under `.codex/ralph-loop/`.
+`./scripts/ralph-codex.py` is a human-run outer controller for long-running Codex work. It launches `codex app-server`, stores structured session state under `.codex/ralph-codex/`, starts in Plan mode to build a broadened execution charter, and resumes prior work only through explicit session commands.
 
-Examples:
+The public CLI is intentionally small:
 
-1. Advance the current `.delivery/PIP.md` with the tracked default prompt:
+1. `./scripts/ralph-codex.py`
+   Prints help.
+2. `./scripts/ralph-codex.py --message "Refactor the controller deeply"`
+   Starts a new session from inline message text.
+3. `./scripts/ralph-codex.py --file prompts/fix-tests.md`
+   Starts a new session from a message file.
+4. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/cautious.json`
+   Starts a new session from a message file with a custom profile.
+5. `./scripts/ralph-codex.py --sessions 10`
+   Lists the latest ten run-history rows.
+6. `./scripts/ralph-codex.py --resume`
+   Resumes the latest resumable session.
 
-```sh
-./scripts/ralph-codex.sh
-```
+Canonical schemas for Ralph artifacts live under `schemas/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
 
-2. Run a different bounded task with a custom prompt file:
+Verification:
 
-```sh
-PROMPT_FILE=prompts/fix-tests.md ./scripts/ralph-codex.sh
-```
-
-The Codex output stays on the console during the run; `.ralph` is the lightweight per-run ledger rather than a captured stdout/stderr archive. Ralph now requires a schema-valid final JSON reply, and the shell runner will only accept `COMPLETE` when hard gates pass. For the default delivery prompt, open gaps in `.delivery/STATUS.md` or a failing `./scripts/delivery-harness-check.sh` block completion. For custom prompts, Ralph does not auto-complete unless `HARD_COMPLETE_CMD` is set. `PROFILE` is optional and only useful for user-level defaults such as model selection; it does not replace the script's explicit auto-allow flags. Run `./scripts/ralph-codex.sh --help` for the full env-var matrix, profile example, and longer prompt examples.
+- When changing `scripts/ralph-codex.py`, its schemas, or its tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py`.
+- Then run `python3 -m unittest discover -s tests`.
 
 ## Page Signals
 

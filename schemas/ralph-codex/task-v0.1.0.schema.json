@@ -1,0 +1,24 @@
+{
+  "schema_id": "ralph-codex/task",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "created_at",
+    "message_source_kind",
+    "message_source_label",
+    "message_text"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/task"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "created_at": { "type": "string", "minLength": 1 },
+    "message_source_kind": { "type": "string", "enum": ["inline", "file"] },
+    "message_source_label": { "type": "string", "minLength": 1 },
+    "message_text": { "type": "string", "minLength": 1 }
+  }
+}

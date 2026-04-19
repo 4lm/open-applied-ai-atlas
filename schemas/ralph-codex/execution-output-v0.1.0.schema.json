@@ -1,0 +1,59 @@
+{
+  "schema_id": "ralph-codex/output/execution",
+  "schema_version": "0.1.0",
+  "title": "ralph-execution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "summary",
+    "evidence",
+    "workstream_updates",
+    "remaining_gaps",
+    "validation_completed",
+    "explicit_deferrals",
+    "next_step",
+    "gate_reasoning"
+  ],
+  "properties": {
+    "status": { "type": "string", "enum": ["IN_PROGRESS", "BLOCKED", "COMPLETE"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "workstream_updates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["not_started", "in_progress", "done", "deferred"] },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "remaining_gaps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "validation_completed": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "explicit_deferrals": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "next_step": { "type": "string", "minLength": 1 },
+    "gate_reasoning": { "type": "string", "minLength": 1 }
+  }
+}

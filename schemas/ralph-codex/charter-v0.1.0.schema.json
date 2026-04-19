@@ -1,0 +1,28 @@
+{
+  "schema_id": "ralph-codex/charter",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "charter_version",
+    "locked",
+    "confirmed",
+    "updated_at",
+    "planning_result",
+    "charter"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/charter"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "charter_version": { "type": "integer", "minimum": 1 },
+    "locked": { "type": "boolean" },
+    "confirmed": { "type": "boolean" },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "planning_result": { "type": "object" },
+    "charter": { "type": "object" }
+  }
+}

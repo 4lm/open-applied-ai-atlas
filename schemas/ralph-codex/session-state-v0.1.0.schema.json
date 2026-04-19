@@ -1,0 +1,40 @@
+{
+  "schema_id": "ralph-codex/session-state",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "thread_id",
+    "current_turn_id",
+    "model",
+    "phase",
+    "status",
+    "iteration",
+    "seed_confirmed",
+    "charter_version",
+    "pending_feedback",
+    "completion_rejections",
+    "started_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/session-state"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "thread_id": { "type": "string" },
+    "current_turn_id": { "type": "string" },
+    "model": { "type": "string" },
+    "phase": { "type": "string", "enum": ["planning", "awaiting_seed_confirmation", "executing", "finished"] },
+    "status": { "type": "string", "enum": ["active", "finished"] },
+    "iteration": { "type": "integer", "minimum": 0 },
+    "seed_confirmed": { "type": "boolean" },
+    "charter_version": { "type": "integer", "minimum": 0 },
+    "pending_feedback": { "type": "string" },
+    "completion_rejections": { "type": "array", "items": { "type": "string" } },
+    "started_at": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 }
+  }
+}

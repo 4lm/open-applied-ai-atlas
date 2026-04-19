@@ -1,0 +1,26 @@
+{
+  "schema_id": "ralph-codex/completion",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "accepted",
+    "last_result",
+    "last_reason",
+    "rejections",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/completion"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "accepted": { "type": "boolean" },
+    "last_result": { "type": "object" },
+    "last_reason": { "type": "string" },
+    "rejections": { "type": "array", "items": { "type": "string" } },
+    "updated_at": { "type": "string", "minLength": 1 }
+  }
+}

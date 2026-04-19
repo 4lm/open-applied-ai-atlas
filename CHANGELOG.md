@@ -1,9 +1,11 @@
 # Changelog
 
-This file is a completion-only root ledger. Intermediate delivery passes stay in `.delivery/STATUS.md`.
+This file is a completion-only root ledger. Active operator context belongs in the durable root docs and explicitly referenced `pips/` artifacts, not here.
 
 | Date | Completed Outcome |
 | --- | --- |
+| 2026-04-19 | Hardened `scripts/ralph-codex.py` so the documented direct CLI entrypoint is executable, app-server failures surface as bounded errors instead of hangs, and completion rejection state is persisted consistently with the live controller state. |
+| 2026-04-19 | Replaced the shell-era Ralph loop with a plan-aware `scripts/ralph-codex.py` app-server controller, added stdlib unittest coverage, and removed shell-era Ralph references and artifact naming. |
 | 2026-04-19 | Closed the remaining tracked delivery gap by leaving the current PIP board with no open gaps. |
 | 2026-04-18 | Hardened `scripts/ralph-codex.sh` into a shell-gated Ralph loop that overrides prompt completion policy and refuses premature completion without hard verification. |
 | 2026-04-18 | Simplified delivery tracking by moving the repository-wide audit snapshot into `.delivery/STATUS.md`, removing the duplicate root audit-summary file, and keeping `CHANGELOG.md` as a completion-only ledger. |

@@ -1,0 +1,17 @@
+{
+  "schema_id": "ralph-codex/server-request-log-line",
+  "schema_version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "session_id", "ts", "request_id", "method", "action", "payload"],
+  "properties": {
+    "schema_id": { "type": "string", "enum": ["ralph-codex/server-request-log-line"] },
+    "schema_version": { "type": "string", "enum": ["0.1.0"] },
+    "session_id": { "type": "string", "pattern": "^\\d{8}T\\d{9}Z_[0-9a-f]{12}$" },
+    "ts": { "type": "string", "minLength": 1 },
+    "request_id": { "type": "string", "minLength": 1 },
+    "method": { "type": "string", "minLength": 1 },
+    "action": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" }
+  }
+}
