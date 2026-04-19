@@ -211,9 +211,9 @@ class TurnOutputTracker:
             self.candidate_texts.append(text)
         if item_type != "commandExecution":
             return
-        primary_action = str(item.get("primary_action", "")).strip().lower()
+        primary_action, primary_target = summarize_command_execution_primary(item)
         if primary_action == "search":
-            self.search_names.append(str(item.get("primary_target", "")).strip() or "search")
+            self.search_names.append(primary_target or "search")
 
     def extract_final_output(self, schema: dict[str, Any]) -> dict[str, Any]:
         for text in reversed(self.candidate_texts):
@@ -314,6 +314,34 @@ class PlainTextRunLog:
             self._handle.flush()
             self._handle.close()
             self._closed = True
+
+
+def summarize_command_execution_primary(item: dict[str, Any]) -> tuple[str, str]:
+    action = str(item.get("primary_action", "")).strip().lower()
+    target = str(item.get("primary_target", "")).strip()
+    if action:
+        return action, target
+    command_actions = item.get("commandActions")
+    if not isinstance(command_actions, list) or not command_actions:
+        return "", target
+    first_action = command_actions[0]
+    if not isinstance(first_action, dict):
+        return "", target
+    action = {
+        "listFiles": "list",
+        "searchText": "search",
+    }.get(str(first_action.get("type", "")).strip(), str(first_action.get("type", "")).strip().lower())
+    if not target:
+        raw_target = ""
+        for key in ("path", "name", "query"):
+            value = first_action.get(key)
+            if isinstance(value, str) and value.strip():
+                raw_target = value.strip()
+                break
+        if raw_target:
+            path_obj = Path(raw_target)
+            target = raw_target if not path_obj.is_absolute() else path_obj.name
+    return action, target
 
 
 class TerminalReporter:
@@ -2256,25 +2284,13 @@ class EventRecorder:
             summary["aggregated_output_chars"] = len(item["aggregatedOutput"])
         if isinstance(item.get("command_actions"), int):
             summary["command_actions"] = item["command_actions"]
+        primary_action, primary_target = summarize_command_execution_primary(item)
+        if primary_action:
+            summary["primary_action"] = primary_action
+        if primary_target:
+            summary["primary_target"] = primary_target
         if isinstance(item.get("commandActions"), list):
             summary["command_actions"] = len(item["commandActions"])
-            if item["commandActions"]:
-                first_action = item["commandActions"][0]
-                if isinstance(first_action, dict):
-                    action_type = str(first_action.get("type", "")).strip()
-                    if action_type:
-                        summary["primary_action"] = {
-                            "listFiles": "list",
-                            "searchText": "search",
-                        }.get(action_type, action_type)
-                    target = ""
-                    if isinstance(first_action.get("path"), str) and first_action["path"].strip():
-                        target = first_action["path"].strip()
-                    if target:
-                        path_obj = Path(target)
-                        summary["primary_target"] = target if not path_obj.is_absolute() else path_obj.name
-                    elif isinstance(first_action.get("name"), str) and first_action["name"].strip():
-                        summary["primary_target"] = first_action["name"].strip()
         return summary
 
     @staticmethod

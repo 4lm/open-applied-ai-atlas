@@ -2058,6 +2058,169 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertEqual(controller.turn_search_count("turn-1"), 2)
 
+    def test_run_turn_records_search_activity_from_raw_command_actions(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        result_payload = self.planning_result_payload(summary="ready")
+        client = FakeClient(
+            {"turn/start": {"turn": {"id": "turn-1"}}},
+            [
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "item/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "commandExecution",
+                                "id": "call-1",
+                                "command": "/bin/zsh -lc 'rg -n needle docs'",
+                                "status": "completed",
+                                "commandActions": [{"type": "searchText", "path": "docs/19-reference-architectures"}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "rawResponseItem/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "message",
+                                "role": "assistant",
+                                "phase": "final_answer",
+                                "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "turn/completed",
+                        "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                    },
+                },
+            ],
+        )
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+
+        result = controller.run_turn(
+            phase_name="planning",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.PLANNING_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("plan", "high", "instructions"),
+        )
+
+        self.assertEqual(result["status"], "CHARTER_READY")
+        latest_turn = store.latest_turn(session)
+        self.assertIsNotNone(latest_turn)
+        self.assertEqual(controller.turn_search_count(latest_turn["turn_id"]), 1)
+
+    def test_validate_planning_result_accepts_searches_from_raw_command_actions(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        result_payload = self.planning_result_payload(summary="ready")
+        client = FakeClient(
+            {"turn/start": {"turn": {"id": "turn-1"}}},
+            [
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "item/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "commandExecution",
+                                "id": "call-1",
+                                "command": "/bin/zsh -lc 'rg -n notes docs/19-reference-architectures'",
+                                "status": "completed",
+                                "commandActions": [{"type": "searchText", "path": "docs/19-reference-architectures"}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "item/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "commandExecution",
+                                "id": "call-2",
+                                "command": "/bin/zsh -lc 'rg -n overlap docs/03-enterprise-ai-stack-map'",
+                                "status": "completed",
+                                "commandActions": [{"type": "searchText", "path": "docs/03-enterprise-ai-stack-map"}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "rawResponseItem/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "message",
+                                "role": "assistant",
+                                "phase": "final_answer",
+                                "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "turn/completed",
+                        "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                    },
+                },
+            ],
+        )
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+
+        result = controller.run_turn(
+            phase_name="planning",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.PLANNING_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("plan", "high", "instructions"),
+        )
+
+        controller.validate_planning_result(result)
+        self.assertEqual(controller.latest_turn_search_count(), 2)
+
     def test_rejected_completion_is_persisted_immediately(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
