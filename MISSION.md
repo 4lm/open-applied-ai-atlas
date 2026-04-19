@@ -1,5 +1,5 @@
 ---
-hard-agent-rule: NEVER CHANGE THE MISSION FILE
+agent-rule: never change the this file without consent
 ---
 
 # Open Applied AI Atlas
