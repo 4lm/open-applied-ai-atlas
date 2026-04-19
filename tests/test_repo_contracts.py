@@ -159,10 +159,6 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("events.jsonl", ralph_text)
         self.assertIn("charter-history.jsonl", ralph_text)
         self.assertIn("logs/<run-id>.log", ralph_text)
-        self.assertTrue((ROOT / "scripts" / "ralph-eval.py").exists())
-        self.assertTrue((ROOT / "scripts" / "ralph-session-diagnostics.py").exists())
-        self.assertTrue((ROOT / "evals" / "ralph" / "suites" / "quality-first.json").exists())
-        self.assertTrue((ROOT / "evals" / "ralph" / "fixtures" / "long-running-broad-atlas-closure.json").exists())
         self.assertFalse((ROOT / "evals" / "ralph" / "repo-native-corpus.json").exists())
         self.assertIn("stdin", ralph_text)
         self.assertIn("stdout", ralph_text)
@@ -173,7 +169,7 @@ class RepoContractTests(unittest.TestCase):
         self.assertIn("update_plan", ralph_text)
 
         self.assertIn(
-            "python3 -m py_compile scripts/ralph-codex.py scripts/ralph-eval.py scripts/ralph-session-diagnostics.py tests/test_ralph_codex.py tests/test_repo_contracts.py",
+            "python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py",
             ralph_text,
         )
         self.assertIn(

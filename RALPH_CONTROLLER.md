@@ -80,10 +80,7 @@ The public CLI is intentionally small:
 - `events.jsonl` records semantic event changes and skips ghost duplicates where only the timestamp changed.
 - Plan-review output includes a compact exec-log context reconstructed from semantic `commandExecution` notifications in `events.jsonl` for the reviewed planning turn.
 - `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping them out of the operator console. The plain-text run log is the terminal transcript artifact; `events.jsonl` remains the structured debugging artifact.
-- Ralph ships durable repo-owned benchmark fixtures under `evals/ralph/` plus `scripts/ralph-eval.py` for fixture-based result grading.
-- Local session-derived diagnostics live outside the repo-native eval contract and are summarized through `scripts/ralph-session-diagnostics.py`.
-
 ## Verification
 
-- When changing `scripts/ralph-codex.py`, `scripts/ralph-eval.py`, `scripts/ralph-session-diagnostics.py`, `RALPH_CONTROLLER.md`, its schemas, or the related Ralph contract tests, run `python3 -m py_compile scripts/ralph-codex.py scripts/ralph-eval.py scripts/ralph-session-diagnostics.py tests/test_ralph_codex.py tests/test_repo_contracts.py`.
+- When changing `scripts/ralph-codex.py`, `RALPH_CONTROLLER.md`, its schemas, or the related Ralph contract tests, run `python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py tests/test_repo_contracts.py`.
 - Then run `python3 -m unittest tests.test_repo_contracts tests.test_ralph_codex`.
