@@ -97,15 +97,41 @@ class RalphCodexTests(unittest.TestCase):
         session = store.create_session(root, self.make_task(), self.make_profile())
         return store, session
 
-    def make_event_recorder(self, store, session, verbose=False, stderr=None):
-        return ralph_codex.EventRecorder(store, session, verbose=verbose, stderr=stderr or io.StringIO())
+    def make_reporter(self, verbose=False, stdout=None, stderr=None):
+        return ralph_codex.TerminalReporter(
+            verbose=verbose,
+            stdout=stdout or io.StringIO(),
+            stderr=stderr or io.StringIO(),
+        )
 
-    def make_controller(self, root, client=None, session=None, input_func=lambda _: "yes"):
+    def make_event_recorder(self, store, session, verbose=False, stdout=None, stderr=None, reporter=None):
+        return ralph_codex.EventRecorder(
+            store,
+            session,
+            verbose=verbose,
+            reporter=reporter,
+            stdout=stdout or io.StringIO(),
+            stderr=stderr or io.StringIO(),
+        )
+
+    def make_controller(
+        self,
+        root,
+        client=None,
+        session=None,
+        input_func=lambda _: "yes",
+        verbose=False,
+        stdout=None,
+        stderr=None,
+        reporter=None,
+        monotonic_func=None,
+    ):
         store, built_session = self.make_session(root)
         session = session or built_session
         client = client or FakeClient({}, [])
         runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
-        event_recorder = self.make_event_recorder(store, session)
+        reporter = reporter or self.make_reporter(verbose=verbose, stdout=stdout, stderr=stderr)
+        event_recorder = self.make_event_recorder(store, session, verbose=verbose, reporter=reporter)
         return ralph_codex.RalphController(
             runtime_config,
             client,
@@ -114,6 +140,8 @@ class RalphCodexTests(unittest.TestCase):
             self.make_schema_catalog(),
             session,
             input_func=input_func,
+            terminal_reporter=reporter,
+            monotonic_func=monotonic_func or (lambda: 0.0),
         )
 
     def broad_charter(self):
@@ -434,6 +462,18 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(notification["payload"]["item"]["output_chars"], 120)
         self.assertNotIn("output", notification["payload"]["item"])
 
+    def test_event_recorder_normal_console_is_human_readable(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stderr = io.StringIO()
+        reporter = self.make_reporter(verbose=False, stderr=stderr)
+        recorder = self.make_event_recorder(store, session, reporter=reporter)
+        recorder.record_client_event({"type": "stderr", "line": "fatal: app-server crashed"})
+        console = stderr.getvalue()
+        self.assertIn("app-server stderr: fatal: app-server crashed", console)
+        self.assertNotIn('{"line"', console)
+
     def test_event_recorder_verbose_wire_keeps_raw_output(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -452,6 +492,31 @@ class RalphCodexTests(unittest.TestCase):
         wire = events[-1]
         self.assertEqual(wire["event_type"], "wire")
         self.assertEqual(wire["payload"]["payload"]["params"]["item"]["output"], "abc")
+
+    def test_event_recorder_verbose_console_caps_output_but_events_keep_full_wire(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stderr = io.StringIO()
+        reporter = self.make_reporter(verbose=True, stderr=stderr)
+        recorder = self.make_event_recorder(store, session, verbose=True, reporter=reporter)
+        long_output = "x" * 1400
+        recorder.record_client_event(
+            {
+                "type": "wire",
+                "payload": {
+                    "method": "rawResponseItem/completed",
+                    "params": {"item": {"type": "function_call_output", "output": long_output}},
+                },
+            }
+        )
+        console = stderr.getvalue()
+        self.assertIn("[ralph][wire]", console)
+        self.assertIn("(truncated for console)", console)
+        self.assertLessEqual(len(console.splitlines()[-1]), 1100)
+        events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
+        wire = events[-1]
+        self.assertEqual(wire["payload"]["payload"]["params"]["item"]["output"], long_output)
 
     def test_event_recorder_verbose_traces_to_stderr(self):
         tempdir, root = self.make_temp_root()
@@ -509,6 +574,9 @@ class RalphCodexTests(unittest.TestCase):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout, stderr=stderr)
         result_payload = {
             "status": "IN_PROGRESS",
             "summary": "working",
@@ -574,10 +642,11 @@ class RalphCodexTests(unittest.TestCase):
         controller = ralph_codex.RalphController(
             runtime_config,
             client,
-            self.make_event_recorder(store, session),
+            self.make_event_recorder(store, session, reporter=reporter),
             store,
             self.make_schema_catalog(),
             session,
+            terminal_reporter=reporter,
         )
         session.state["thread_id"] = "thread-1"
         session.state["model"] = "gpt-5.4"
@@ -592,11 +661,17 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(client.sent_results[0][1]["answers"]["mode"]["answers"], ["Plan (Recommended)"])
         turns = (session.session_dir / "turns.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(turns), 1)
+        self.assertIn("prompt request received: 1 question(s)", stderr.getvalue())
+        self.assertIn("prompt request answered: 1 answer(s)", stderr.getvalue())
+        self.assertIn("test: turn started turn-1", stdout.getvalue())
+        self.assertIn("test: turn completed turn-1 -> IN_PROGRESS: working", stdout.getvalue())
 
     def test_run_turn_waits_through_silence_and_completes(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
+        stdout = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout)
         result_payload = {
             "status": "IN_PROGRESS",
             "summary": "working",
@@ -616,9 +691,9 @@ class RalphCodexTests(unittest.TestCase):
 
             def next_event(self, timeout=0.1):
                 self.poll_count += 1
-                if self.poll_count <= 3:
+                if self.poll_count == 1:
                     return None
-                if self.poll_count == 4:
+                if self.poll_count == 2:
                     return {
                         "kind": "notification",
                         "payload": {
@@ -635,7 +710,7 @@ class RalphCodexTests(unittest.TestCase):
                             },
                         },
                     }
-                if self.poll_count == 5:
+                if self.poll_count == 3:
                     return {
                         "kind": "notification",
                         "payload": {
@@ -650,10 +725,12 @@ class RalphCodexTests(unittest.TestCase):
         controller = ralph_codex.RalphController(
             runtime_config,
             client,
-            self.make_event_recorder(store, session),
+            self.make_event_recorder(store, session, reporter=reporter),
             store,
             self.make_schema_catalog(),
             session,
+            terminal_reporter=reporter,
+            monotonic_func=iter([0.0, 11.0, 12.0, 13.0]).__next__,
         )
         session.state["thread_id"] = "thread-1"
         session.state["model"] = "gpt-5.4"
@@ -665,7 +742,8 @@ class RalphCodexTests(unittest.TestCase):
             collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
         )
         self.assertEqual(result["status"], "IN_PROGRESS")
-        self.assertGreaterEqual(client.poll_count, 5)
+        self.assertEqual(client.poll_count, 3)
+        self.assertIn("waiting for model on turn-1 (11s idle)", stdout.getvalue())
 
     def test_run_turn_raises_when_app_server_stream_closes(self):
         tempdir, root = self.make_temp_root()
@@ -694,6 +772,77 @@ class RalphCodexTests(unittest.TestCase):
                 schema={"type": "object"},
                 collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
             )
+
+    def test_run_turn_keeps_status_lines_readable_after_delta_output(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stdout = io.StringIO()
+        reporter = self.make_reporter(stdout=stdout)
+        result_payload = {
+            "status": "CHARTER_READY",
+            "summary": "ready",
+            "broadening_rationale": "wide enough",
+            "charter": self.broad_charter(),
+            "next_step": "execute",
+            "gate_reasoning": "safe",
+        }
+        client = FakeClient(
+            {"turn/start": {"turn": {"id": "turn-1"}}},
+            [
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "item/agentMessage/delta",
+                        "params": {"threadId": "thread-1", "turnId": "turn-1", "delta": "Working..."},
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "rawResponseItem/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "message",
+                                "role": "assistant",
+                                "phase": "final_answer",
+                                "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "turn/completed",
+                        "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                    },
+                },
+            ],
+        )
+        controller = ralph_codex.RalphController(
+            ralph_codex.RuntimeConfig(workdir=root, state_root=store.root),
+            client,
+            self.make_event_recorder(store, session, reporter=reporter),
+            store,
+            self.make_schema_catalog(),
+            session,
+            terminal_reporter=reporter,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+        result = controller.run_turn(
+            phase_name="planning",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.PLANNING_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("plan", "high", "instructions"),
+        )
+        self.assertEqual(result["status"], "CHARTER_READY")
+        console = stdout.getvalue()
+        self.assertIn("Working...\n[ralph][status]", console)
 
     def test_run_turn_extracts_plan_thread_item_output(self):
         tempdir, root = self.make_temp_root()

@@ -29,6 +29,8 @@ STATE_ROOT_NAME = ".codex/ralph-codex"
 CODEx_BIN = "codex"
 APP_SERVER_REQUEST_TIMEOUT_SECS = 30.0
 STDERR_BUFFER_LINES = 50
+TURN_IDLE_HEARTBEAT_SECS = 10.0
+VERBOSE_CONSOLE_CHAR_LIMIT = 1000
 
 PROFILE_SCHEMA_ID = "ralph-codex/profile"
 PLANNING_OUTPUT_SCHEMA_ID = "ralph-codex/output/planning"
@@ -129,6 +131,74 @@ class Command:
 class RuntimeConfig:
     workdir: Path
     state_root: Path
+
+
+class TerminalReporter:
+    def __init__(
+        self,
+        verbose: bool,
+        stdout: Any = sys.stdout,
+        stderr: Any = sys.stderr,
+    ):
+        self.verbose = verbose
+        self.stdout = stdout
+        self.stderr = stderr
+        self._stdout_at_line_start = True
+        self._stderr_at_line_start = True
+
+    def status(self, message: str) -> None:
+        self._write_line("stdout", "status", message)
+
+    def event(self, message: str) -> None:
+        self._write_line("stderr", "event", message)
+
+    def verbose_trace(self, event_type: str, payload: dict[str, Any]) -> None:
+        if not self.verbose:
+            return
+        rendered = self.cap_console_text(self.stringify(payload))
+        self._write_line("stderr", event_type, rendered)
+
+    def delta(self, text: str) -> None:
+        if not text:
+            return
+        self._write("stdout", text)
+
+    def finish_stdout_line(self) -> None:
+        if not self._stdout_at_line_start:
+            self._write("stdout", "\n")
+
+    @staticmethod
+    def stringify(value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        try:
+            return json.dumps(value, sort_keys=True)
+        except TypeError:
+            return str(value)
+
+    @staticmethod
+    def cap_console_text(text: str, limit: int = VERBOSE_CONSOLE_CHAR_LIMIT) -> str:
+        if len(text) <= limit:
+            return text
+        marker = "... (truncated for console)"
+        return text[: max(0, limit - len(marker))] + marker
+
+    def _write_line(self, stream_name: str, label: str, message: str) -> None:
+        if stream_name == "stdout":
+            self.finish_stdout_line()
+        elif not self._stderr_at_line_start:
+            self._write("stderr", "\n")
+        timestamp = utc_now().strftime("%H:%M:%SZ")
+        self._write(stream_name, f"[ralph][{label}] {timestamp} {message}\n")
+
+    def _write(self, stream_name: str, text: str) -> None:
+        stream = self.stdout if stream_name == "stdout" else self.stderr
+        stream.write(text)
+        stream.flush()
+        if stream_name == "stdout":
+            self._stdout_at_line_start = text.endswith("\n")
+        else:
+            self._stderr_at_line_start = text.endswith("\n")
 
 
 @dataclass
@@ -723,20 +793,25 @@ class SessionStore:
 
 
 class EventRecorder:
-    def __init__(self, store: SessionStore, session: SessionContext, verbose: bool, stderr: Any = sys.stderr):
+    def __init__(
+        self,
+        store: SessionStore,
+        session: SessionContext,
+        verbose: bool,
+        reporter: TerminalReporter | None = None,
+        stdout: Any = sys.stdout,
+        stderr: Any = sys.stderr,
+    ):
         self.store = store
         self.session = session
         self.verbose = verbose
-        self.stderr = stderr
+        self.reporter = reporter or TerminalReporter(verbose=verbose, stdout=stdout, stderr=stderr)
 
     def append(self, event_type: str, payload: dict[str, Any]) -> None:
         self.store.append_event(self.session, event_type, payload)
 
     def trace(self, event_type: str, payload: dict[str, Any]) -> None:
-        if not self.verbose:
-            return
-        self.stderr.write(f"[ralph][{event_type}] {json.dumps(payload, sort_keys=True)}\n")
-        self.stderr.flush()
+        self.reporter.verbose_trace(event_type, payload)
 
     def record_run_config(self, run_id: str, invocation_mode: str, workdir: Path) -> None:
         payload = {
@@ -753,10 +828,12 @@ class EventRecorder:
         if event_type == "wire":
             if self.verbose:
                 self.append("wire", payload)
+                self.trace("wire", payload)
             return
         compact_payload = {key: value for key, value in payload.items() if key != "type"}
         self.append(event_type, compact_payload)
         self.trace(event_type, compact_payload)
+        self.report_client_event(event_type, compact_payload)
 
     def record_rpc_request(self, request_id: str | int, method: str, params: dict[str, Any] | None) -> None:
         payload = {
@@ -775,11 +852,15 @@ class EventRecorder:
             payload["result"] = self.summarize_response_result(method, response.get("result", {}))
         self.append("rpc-response", payload)
         self.trace("rpc-response", payload)
+        if "error" in payload:
+            message = payload["error"].get("message", "unknown error")
+            self.reporter.event(f"{method} failed: {message}")
 
     def record_notification(self, method: str | None, params: dict[str, Any]) -> None:
         payload = self.summarize_notification(method or "", params)
         self.append("notification", payload)
         self.trace("notification", payload)
+        self.report_notification(payload)
 
     def record_server_request(
         self,
@@ -796,6 +877,60 @@ class EventRecorder:
         }
         self.append("server-request", record)
         self.trace("server-request", record)
+        self.report_server_request(record)
+
+    def report_client_event(self, event_type: str, payload: dict[str, Any]) -> None:
+        if event_type == "stderr":
+            line = self.cap_human_text(payload.get("line", ""))
+            self.reporter.event(f"app-server stderr: {line}")
+            return
+        if event_type == "stdout-parse-error":
+            line = self.cap_human_text(payload.get("line", ""))
+            self.reporter.event(f"app-server stdout parse error: {line}")
+            return
+        if event_type == "stream-closed":
+            stream = payload.get("stream", "unknown")
+            self.reporter.event(f"app-server stream closed: {stream}")
+            return
+        if event_type == "orphan-response":
+            response_id = payload.get("id", "")
+            self.reporter.event(f"orphan app-server response ignored: id={response_id or 'unknown'}")
+
+    def report_notification(self, payload: dict[str, Any]) -> None:
+        method = payload.get("method")
+        if method != "turn/completed":
+            return
+        turn = payload.get("turn") or {}
+        turn_id = turn.get("id") or payload.get("turn_id", "")
+        status = turn.get("status") or payload.get("status", "")
+        if turn_id and status:
+            self.reporter.event(f"turn completed event: {turn_id} status={status}")
+        elif turn_id:
+            self.reporter.event(f"turn completed event: {turn_id}")
+        else:
+            self.reporter.event("turn completed event received")
+
+    def report_server_request(self, record: dict[str, Any]) -> None:
+        method = record.get("method", "")
+        action = record.get("action", "")
+        payload = record.get("payload") or {}
+        if method == "item/tool/requestUserInput":
+            question_count = payload.get("question_count", 0)
+            if action == "received":
+                self.reporter.event(f"prompt request received: {question_count} question(s)")
+                return
+            if action == "answered":
+                answer_ids = payload.get("answer_ids") or []
+                self.reporter.event(f"prompt request answered: {len(answer_ids)} answer(s)")
+                return
+            if action == "rejected":
+                self.reporter.event("prompt request rejected")
+                return
+        self.reporter.event(f"server request {action}: {method}")
+
+    @staticmethod
+    def cap_human_text(text: str, limit: int = 240) -> str:
+        return TerminalReporter.cap_console_text(" ".join(text.split()), limit)
 
     @staticmethod
     def summarize_request_params(method: str, params: dict[str, Any]) -> dict[str, Any]:
@@ -1119,7 +1254,9 @@ class SubprocessAppServerClient:
                 if waiter is not None:
                     waiter.put(payload)
                 else:
-                    self._event_queue.put({"kind": "orphan-response", "payload": payload})
+                    self.event_recorder.record_client_event(
+                        {"type": "orphan-response", "id": payload.get("id"), "keys": sorted(payload.keys())}
+                    )
                 continue
             if "id" in payload and "method" in payload:
                 self._event_queue.put({"kind": "server-request", "payload": payload})
@@ -1127,6 +1264,7 @@ class SubprocessAppServerClient:
             self._event_queue.put({"kind": "notification", "payload": payload})
         self._stdout_closed = True
         self._fail_pending_requests("codex app-server stdout closed before responding")
+        self.event_recorder.record_client_event({"type": "stream-closed", "stream": "stdout"})
         self._event_queue.put({"kind": "stream-closed", "payload": {"stream": "stdout"}})
 
     def _read_stderr(self) -> None:
@@ -1155,7 +1293,8 @@ class RalphController:
         schema_catalog: SchemaCatalog,
         session: SessionContext,
         input_func: Callable[[str], str] = input,
-        stdout: Any = sys.stdout,
+        terminal_reporter: TerminalReporter | None = None,
+        monotonic_func: Callable[[], float] = time.monotonic,
     ):
         self.runtime_config = runtime_config
         self.client = client
@@ -1164,12 +1303,17 @@ class RalphController:
         self.schema_catalog = schema_catalog
         self.session = session
         self.input_func = input_func
-        self.stdout = stdout
+        self.terminal_reporter = terminal_reporter or event_recorder.reporter
+        self.monotonic_func = monotonic_func
 
     def run(self) -> int:
+        self.print_status(f"run starting for session {self.session.session_id}")
+        self.print_status("starting Codex app-server")
         self.client.start()
+        self.print_status("Codex app-server ready")
         self.ensure_thread()
         if not self.session.charter_record:
+            self.print_status("planning started: initial planning")
             planning_result = self.plan_once("initial planning", self.session.state["pending_feedback"])
             self.validate_charter(planning_result)
             self.session.state["charter_version"] += 1
@@ -1178,33 +1322,45 @@ class RalphController:
             self.store.save_charter(self.session, planning_result, confirmed=False)
             self.store.append_event(self.session, "planning-result", planning_result)
             self.store.save_state(self.session)
+            self.print_status(f"planning completed: {truncate_label(planning_result['summary'], 120)}")
         self.confirm_seed_if_needed()
         max_iterations = self.session.profile["runtime_limits"]["max_iterations"]
         while max_iterations == 0 or self.session.state["iteration"] < max_iterations:
             self.session.state["iteration"] += 1
             self.session.state["phase"] = "executing"
             self.store.save_state(self.session)
+            self.print_status(f"execution iteration {self.session.state['iteration']} started")
             execution_result = self.execute_once()
             self.store.append_event(self.session, "execution-result", execution_result)
+            self.print_status(
+                "execution iteration "
+                f"{self.session.state['iteration']} returned {execution_result['status']}: "
+                f"{truncate_label(execution_result['summary'], 120)}"
+            )
             if execution_result["status"] == "COMPLETE":
                 accepted, reason = self.evaluate_completion(execution_result)
                 if not accepted:
                     self.session.state["completion_rejections"].append(reason)
                 self.store.save_completion(self.session, execution_result, accepted, reason)
                 if accepted:
+                    self.print_status("completion accepted; Ralph run finished")
                     self.store.finish(self.session, "completed", execution_result["summary"])
                     return 0
                 self.session.state["pending_feedback"] = reason
+                self.print_status(f"completion rejected; replanning: {truncate_label(reason, 120)}")
             elif execution_result["status"] == "BLOCKED":
                 self.store.save_completion(self.session, execution_result, False, execution_result["summary"])
                 self.session.state["pending_feedback"] = (
                     f"execution blocked: {execution_result['summary']} | {execution_result['gate_reasoning']}"
                 )
+                self.print_status(f"execution blocked; replanning: {truncate_label(execution_result['summary'], 120)}")
             else:
                 self.store.save_completion(self.session, execution_result, False, execution_result["summary"])
                 self.session.state["pending_feedback"] = self.compose_replanning_feedback(execution_result)
+                self.print_status("execution incomplete; replanning required")
             self.store.save_state(self.session)
             self.session.state["phase"] = "planning"
+            self.print_status("planning started: replanning")
             planning_result = self.plan_once("replanning", self.session.state["pending_feedback"])
             self.validate_charter(planning_result)
             self.session.state["charter_version"] += 1
@@ -1215,12 +1371,14 @@ class RalphController:
             )
             self.store.append_event(self.session, "planning-result", planning_result)
             self.store.save_state(self.session)
+            self.print_status(f"planning completed: {truncate_label(planning_result['summary'], 120)}")
         raise RalphError(f"reached max_iterations={max_iterations} without verified completion")
 
     def ensure_thread(self) -> None:
         model = self.session.profile["model"]
         sandbox_mode = SANDBOX_BY_ACCESS_MODE[self.session.profile["thread_policy"]["access_mode"]]
         if self.session.state["thread_id"]:
+            self.print_status(f"resuming thread {self.session.state['thread_id']}")
             result = self.client.request(
                 "thread/resume",
                 {
@@ -1235,7 +1393,9 @@ class RalphController:
             self.session.state["model"] = result.get("model", self.session.state["model"] or model)
             self.store.save_state(self.session)
             self.store.append_event(self.session, "thread-resumed", {"thread_id": self.session.state["thread_id"]})
+            self.print_status(f"thread resumed: {self.session.state['thread_id']}")
             return
+        self.print_status("starting new thread")
         result = self.client.request(
             "thread/start",
             {
@@ -1251,6 +1411,7 @@ class RalphController:
         self.session.state["model"] = result.get("model", model)
         self.store.save_state(self.session)
         self.store.append_event(self.session, "thread-started", {"thread_id": self.session.state["thread_id"]})
+        self.print_status(f"thread started: {self.session.state['thread_id']}")
 
     def plan_once(self, phase_name: str, feedback: str | None) -> dict[str, Any]:
         return self.run_turn(
@@ -1295,13 +1456,23 @@ class RalphController:
         turn_id = result["turn"]["id"]
         self.session.state["current_turn_id"] = turn_id
         self.store.save_state(self.session)
+        self.print_status(f"{phase_name}: turn started {turn_id}")
         raw_items: list[dict[str, Any]] = []
         thread_items: list[dict[str, Any]] = []
+        last_activity = self.monotonic_func()
+        next_heartbeat_at = last_activity + TURN_IDLE_HEARTBEAT_SECS
         while True:
             event = self.client.next_event(timeout=0.1)
             if event is None:
                 self.client.raise_if_unavailable("while waiting for turn events")
+                current_time = self.monotonic_func()
+                if current_time >= next_heartbeat_at:
+                    idle_seconds = max(1, int(current_time - last_activity))
+                    self.print_status(f"{phase_name}: waiting for model on {turn_id} ({idle_seconds}s idle)")
+                    next_heartbeat_at = current_time + TURN_IDLE_HEARTBEAT_SECS
                 continue
+            last_activity = self.monotonic_func()
+            next_heartbeat_at = last_activity + TURN_IDLE_HEARTBEAT_SECS
             if event["kind"] == "server-request":
                 self.handle_server_request(event["payload"])
                 continue
@@ -1329,7 +1500,7 @@ class RalphController:
                 if status == "interrupted":
                     raise RalphError("Codex turn was interrupted")
                 break
-        self.print_stream("\n")
+        self.terminal_reporter.finish_stdout_line()
         final_output = self.extract_final_output(raw_items, thread_items, schema)
         self.store.append_turn(
             self.session,
@@ -1340,6 +1511,10 @@ class RalphController:
         )
         self.session.state["current_turn_id"] = ""
         self.store.save_state(self.session)
+        self.print_status(
+            f"{phase_name}: turn completed {turn_id} -> "
+            f"{final_output.get('status', 'UNKNOWN')}: {truncate_label(final_output.get('summary', ''), 120)}"
+        )
         return final_output
 
     def handle_server_request(self, payload: dict[str, Any]) -> None:
@@ -1347,6 +1522,8 @@ class RalphController:
         request_id = payload.get("id")
         params = payload.get("params", {})
         if method == "item/tool/requestUserInput":
+            self.store.append_server_request(self.session, request_id, method, "received", params)
+            self.event_recorder.record_server_request(request_id, method, "received", params)
             answer = self.answer_request_user_input(params)
             self.client.send_result(request_id, answer)
             self.store.append_server_request(self.session, request_id, method, "answered", answer)
@@ -1452,9 +1629,11 @@ class RalphController:
             if self.session.charter_record:
                 self.store.save_charter(self.session, self.session.charter_record["planning_result"], confirmed=True)
             self.store.save_state(self.session)
+            self.print_status("seed confirmed by profile; continuing unattended")
             return
         if not sys.stdin.isatty():
             raise RalphError("seed confirmation is required, but stdin is not interactive")
+        self.print_status("waiting for seed confirmation")
         response = self.input_func(
             f"{self.charter_summary((self.session.charter_record or {}).get('charter', {}))}\n"
             "Approve broadened Ralph charter and continue unattended? [y/N] "
@@ -1466,6 +1645,7 @@ class RalphController:
         if self.session.charter_record:
             self.store.save_charter(self.session, self.session.charter_record["planning_result"], confirmed=True)
         self.store.save_state(self.session)
+        self.print_status("seed confirmed by operator; continuing unattended")
 
     @staticmethod
     def charter_summary(charter: dict[str, Any]) -> str:
@@ -1612,8 +1792,10 @@ class RalphController:
         }
 
     def print_stream(self, text: str) -> None:
-        self.stdout.write(text)
-        self.stdout.flush()
+        self.terminal_reporter.delta(text)
+
+    def print_status(self, text: str) -> None:
+        self.terminal_reporter.status(text)
 
 
 def resolve_start_task(command: Command) -> dict[str, str]:
@@ -1678,17 +1860,29 @@ def execute_run(
     store.update_controller_state(session.session_id, run_id)
     store.append_run_history(session, run_id, "run_started", invocation_mode, "run started")
     client: SubprocessAppServerClient | None = None
-    event_recorder = EventRecorder(store, session, verbose)
+    reporter = TerminalReporter(verbose=verbose)
+    event_recorder = EventRecorder(store, session, verbose, reporter=reporter)
     event_recorder.record_run_config(run_id, invocation_mode, runtime_config.workdir)
+    reporter.status(f"run started: session={session.session_id} mode={invocation_mode}")
     try:
         client = SubprocessAppServerClient(runtime_config, event_recorder)
-        controller = RalphController(runtime_config, client, event_recorder, store, schema_catalog, session)
+        controller = RalphController(
+            runtime_config,
+            client,
+            event_recorder,
+            store,
+            schema_catalog,
+            session,
+            terminal_reporter=reporter,
+        )
         exit_code = controller.run()
         summary = controller.session.completion_record.get("last_result", {}).get("summary", "session completed")
         store.append_run_history(session, run_id, "run_completed", invocation_mode, summary)
+        reporter.status(f"run completed: {truncate_label(summary, 120)}")
         return exit_code
     except Exception as exc:
         store.append_run_history(session, run_id, "run_failed", invocation_mode, str(exc))
+        reporter.event(f"run failed: {truncate_label(str(exc), 160)}")
         raise
     finally:
         store.update_controller_state(session.session_id, "")

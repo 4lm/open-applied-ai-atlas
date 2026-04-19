@@ -118,7 +118,7 @@ The public CLI is intentionally small:
 5. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/dangerously-unrestricted.json`
    Starts a new session from a message file with full-access sandboxing.
 6. `./scripts/ralph-codex.py --message "Refactor the controller deeply" --verbose`
-   Starts a new verbose session with structured terminal trace output and full wire diagnostics in `events.jsonl`.
+   Starts a new verbose session with human-readable live status and event logging, plus capped structured terminal diagnostics and full wire diagnostics in `events.jsonl`.
 7. `./scripts/ralph-codex.py --sessions 10`
    Lists the latest ten run-history rows.
 8. `./scripts/ralph-codex.py --resume`
@@ -129,12 +129,13 @@ Canonical schemas for Ralph artifacts live under `schemas/ralph-codex/`, the def
 Operational defaults:
 
 - Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
+- Ralph always emits human-readable live status to `stdout` and event/error logging to `stderr` so an operator can follow along in the shell.
 - Ralph keeps `approvalPolicy` set to `never` in every access mode, so it does not ask for permissions during unattended execution after the initial seed confirmation.
 - Ralph defaults to `thread_policy.access_mode: "restricted"`, which uses the `workspace-write` sandbox.
 - `thread_policy.access_mode: "dangerously-unrestricted"` is an opt-in profile mode that uses `danger-full-access`.
 - `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
 - `execution.max_prompt_chars` defaults to `0`, which disables prompt-size caps unless a profile opts into one.
-- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only.
+- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only while keeping console-rendered verbose payloads capped for readability.
 
 PIP status conventions:
 
