@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "ralph-codex.py"
-DEFAULT_MAX_EXECUTION_PROMPT_CHARS = 4000
+DEFAULT_MAX_EXECUTION_PROMPT_CHARS = 0
 SPEC = importlib.util.spec_from_file_location("ralph_codex", SCRIPT_PATH)
 ralph_codex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -97,14 +97,19 @@ class RalphCodexTests(unittest.TestCase):
         session = store.create_session(root, self.make_task(), self.make_profile())
         return store, session
 
+    def make_event_recorder(self, store, session, verbose=False, stderr=None):
+        return ralph_codex.EventRecorder(store, session, verbose=verbose, stderr=stderr or io.StringIO())
+
     def make_controller(self, root, client=None, session=None, input_func=lambda _: "yes"):
         store, built_session = self.make_session(root)
         session = session or built_session
         client = client or FakeClient({}, [])
         runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
+        event_recorder = self.make_event_recorder(store, session)
         return ralph_codex.RalphController(
             runtime_config,
             client,
+            event_recorder,
             store,
             self.make_schema_catalog(),
             session,
@@ -167,6 +172,12 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(command.kind, "message")
         self.assertEqual(command.value, "fix this")
         self.assertEqual(command.profile_path.name, "profile.json")
+        self.assertFalse(command.verbose)
+
+    def test_parse_command_accepts_verbose(self):
+        _, command = ralph_codex.parse_command(["--verbose", "--resume"])
+        self.assertEqual(command.kind, "resume")
+        self.assertTrue(command.verbose)
 
     def test_parse_command_accepts_file(self):
         _, command = ralph_codex.parse_command(["--file", "task.md"])
@@ -223,6 +234,8 @@ class RalphCodexTests(unittest.TestCase):
 
     def test_default_profile_validates_against_profile_schema(self):
         self.make_schema_catalog().validate(ralph_codex.PROFILE_SCHEMA_ID, ralph_codex.DEFAULT_PROFILE)
+        self.assertEqual(ralph_codex.DEFAULT_PROFILE["runtime_limits"]["max_iterations"], 0)
+        self.assertEqual(ralph_codex.DEFAULT_PROFILE["execution"]["max_prompt_chars"], 0)
 
     def test_custom_profile_invalid_is_rejected(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -261,6 +274,16 @@ class RalphCodexTests(unittest.TestCase):
             self.assertTrue(path.exists())
             self.assertTrue(ralph_codex.adjacent_schema_path(path).exists())
 
+    def test_ensure_jsonl_skips_rewriting_identical_adjacent_schema_copy(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store = self.make_store(root)
+        path = store.sessions_log_path
+        schema_copy = ralph_codex.adjacent_schema_path(path)
+        schema_copy.chmod(0o444)
+        store.ensure_jsonl(path, ralph_codex.RUN_HISTORY_LINE_SCHEMA_ID)
+        self.assertTrue(schema_copy.exists())
+
     def test_list_run_rows_collapses_events_per_run(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -298,7 +321,10 @@ class RalphCodexTests(unittest.TestCase):
 
     def test_request_fails_when_app_server_exits_before_responding(self):
         runtime_config = ralph_codex.RuntimeConfig(workdir=SCRIPT_PATH.parents[1], state_root=SCRIPT_PATH.parents[1])
-        client = ralph_codex.SubprocessAppServerClient(runtime_config, lambda payload: None)
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        client = ralph_codex.SubprocessAppServerClient(runtime_config, self.make_event_recorder(store, session))
         client.process = FakeProcess(exit_code=3)
         client._stderr_lines.append("fatal: app-server crashed")
         original_timeout = ralph_codex.APP_SERVER_REQUEST_TIMEOUT_SECS
@@ -306,6 +332,57 @@ class RalphCodexTests(unittest.TestCase):
         ralph_codex.APP_SERVER_REQUEST_TIMEOUT_SECS = 0.01
         with self.assertRaisesRegex(ralph_codex.RalphError, "exited with code 3"):
             client.request("turn/start", {})
+
+    def test_event_recorder_normal_notification_trims_large_output(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        recorder = self.make_event_recorder(store, session, verbose=False)
+        recorder.record_notification(
+            "rawResponseItem/completed",
+            {
+                "threadId": "thread-1",
+                "turnId": "turn-1",
+                "item": {
+                    "type": "function_call_output",
+                    "call_id": "call-1",
+                    "output": "x" * 120,
+                },
+            },
+        )
+        events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
+        notification = events[-1]
+        self.assertEqual(notification["event_type"], "notification")
+        self.assertEqual(notification["payload"]["item"]["output_chars"], 120)
+        self.assertNotIn("output", notification["payload"]["item"])
+
+    def test_event_recorder_verbose_wire_keeps_raw_output(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        recorder = self.make_event_recorder(store, session, verbose=True)
+        recorder.record_client_event(
+            {
+                "type": "wire",
+                "payload": {
+                    "method": "rawResponseItem/completed",
+                    "params": {"item": {"type": "function_call_output", "output": "abc"}},
+                },
+            }
+        )
+        events = store.read_jsonl(session.session_dir / "events.jsonl", ralph_codex.EVENT_LOG_LINE_SCHEMA_ID)
+        wire = events[-1]
+        self.assertEqual(wire["event_type"], "wire")
+        self.assertEqual(wire["payload"]["payload"]["params"]["item"]["output"], "abc")
+
+    def test_event_recorder_verbose_traces_to_stderr(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        stderr = io.StringIO()
+        recorder = self.make_event_recorder(store, session, verbose=True, stderr=stderr)
+        recorder.record_rpc_request(3, "turn/start", {"threadId": "thread-1", "input": [], "outputSchema": {}})
+        self.assertIn("[ralph][rpc-request]", stderr.getvalue())
 
     def test_select_prompt_option_prefers_recommended(self):
         choice = ralph_codex.RalphController.select_prompt_option(
@@ -416,7 +493,14 @@ class RalphCodexTests(unittest.TestCase):
             ],
         )
         runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
-        controller = ralph_codex.RalphController(runtime_config, client, store, self.make_schema_catalog(), session)
+        controller = ralph_codex.RalphController(
+            runtime_config,
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
         session.state["thread_id"] = "thread-1"
         session.state["model"] = "gpt-5.4"
         store.save_state(session)
@@ -431,6 +515,80 @@ class RalphCodexTests(unittest.TestCase):
         turns = (session.session_dir / "turns.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(turns), 1)
 
+    def test_run_turn_waits_through_silence_and_completes(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        store, session = self.make_session(root)
+        result_payload = {
+            "status": "IN_PROGRESS",
+            "summary": "working",
+            "evidence": ["progress"],
+            "workstream_updates": [{"id": "W1", "status": "in_progress", "evidence": ["ok"]}],
+            "remaining_gaps": [],
+            "validation_completed": ["unit"],
+            "explicit_deferrals": [],
+            "next_step": "continue",
+            "gate_reasoning": "more work",
+        }
+
+        class DelayedEventClient(FakeClient):
+            def __init__(self):
+                super().__init__({"turn/start": {"turn": {"id": "turn-1"}}}, [])
+                self.poll_count = 0
+
+            def next_event(self, timeout=0.1):
+                self.poll_count += 1
+                if self.poll_count <= 3:
+                    return None
+                if self.poll_count == 4:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "rawResponseItem/completed",
+                            "params": {
+                                "threadId": "thread-1",
+                                "turnId": "turn-1",
+                                "item": {
+                                    "type": "message",
+                                    "role": "assistant",
+                                    "phase": "final_answer",
+                                    "content": [{"type": "output_text", "text": json.dumps(result_payload)}],
+                                },
+                            },
+                        },
+                    }
+                if self.poll_count == 5:
+                    return {
+                        "kind": "notification",
+                        "payload": {
+                            "method": "turn/completed",
+                            "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                        },
+                    }
+                return None
+
+        client = DelayedEventClient()
+        runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
+        controller = ralph_codex.RalphController(
+            runtime_config,
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
+        session.state["thread_id"] = "thread-1"
+        session.state["model"] = "gpt-5.4"
+        store.save_state(session)
+        result = controller.run_turn(
+            phase_name="test",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.EXECUTION_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
+        )
+        self.assertEqual(result["status"], "IN_PROGRESS")
+        self.assertGreaterEqual(client.poll_count, 5)
+
     def test_run_turn_raises_when_app_server_stream_closes(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
@@ -440,7 +598,14 @@ class RalphCodexTests(unittest.TestCase):
             [{"kind": "stream-closed", "payload": {"stream": "stdout"}}],
         )
         runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
-        controller = ralph_codex.RalphController(runtime_config, client, store, self.make_schema_catalog(), session)
+        controller = ralph_codex.RalphController(
+            runtime_config,
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
         session.state["thread_id"] = "thread-1"
         session.state["model"] = "gpt-5.4"
         store.save_state(session)
@@ -452,26 +617,60 @@ class RalphCodexTests(unittest.TestCase):
                 collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
             )
 
-    def test_run_turn_times_out_when_events_stall(self):
+    def test_run_turn_extracts_plan_thread_item_output(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
-        client = FakeClient({"turn/start": {"turn": {"id": "turn-1"}}}, [])
+        result_payload = {
+            "status": "CHARTER_READY",
+            "summary": "ready",
+            "broadening_rationale": "wide enough",
+            "charter": self.broad_charter(),
+            "next_step": "execute",
+            "gate_reasoning": "safe",
+        }
+        client = FakeClient(
+            {"turn/start": {"turn": {"id": "turn-1"}}},
+            [
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "item/completed",
+                        "params": {
+                            "threadId": "thread-1",
+                            "turnId": "turn-1",
+                            "item": {"type": "plan", "id": "plan-1", "text": json.dumps(result_payload)},
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "turn/completed",
+                        "params": {"threadId": "thread-1", "turn": {"id": "turn-1", "status": "completed"}},
+                    },
+                },
+            ],
+        )
         runtime_config = ralph_codex.RuntimeConfig(workdir=root, state_root=store.root)
-        controller = ralph_codex.RalphController(runtime_config, client, store, self.make_schema_catalog(), session)
+        controller = ralph_codex.RalphController(
+            runtime_config,
+            client,
+            self.make_event_recorder(store, session),
+            store,
+            self.make_schema_catalog(),
+            session,
+        )
         session.state["thread_id"] = "thread-1"
         session.state["model"] = "gpt-5.4"
         store.save_state(session)
-        original_timeout = ralph_codex.TURN_IDLE_TIMEOUT_SECS
-        self.addCleanup(setattr, ralph_codex, "TURN_IDLE_TIMEOUT_SECS", original_timeout)
-        ralph_codex.TURN_IDLE_TIMEOUT_SECS = 0.01
-        with self.assertRaisesRegex(ralph_codex.RalphError, "no turn events received"):
-            controller.run_turn(
-                phase_name="test",
-                prompt="hello",
-                schema={"type": "object"},
-                collaboration_mode=controller.make_collaboration_mode("default", "high", "instructions"),
-            )
+        result = controller.run_turn(
+            phase_name="test",
+            prompt="hello",
+            schema=self.make_schema_catalog().model_schema(ralph_codex.PLANNING_OUTPUT_SCHEMA_ID),
+            collaboration_mode=controller.make_collaboration_mode("plan", "high", "instructions"),
+        )
+        self.assertEqual(result["status"], "CHARTER_READY")
 
     def test_rejected_completion_is_persisted_immediately(self):
         tempdir, root = self.make_temp_root()
@@ -563,13 +762,15 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("Current Charter", prompt)
         self.assertIn("Need broader validation", prompt)
 
-    def test_build_execution_prompt_respects_default_max_chars(self):
+    def test_build_execution_prompt_default_cap_is_unlimited(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
+        controller.session.task["message_text"] = "Test message " + ("x" * 5000)
         self.save_charter(controller)
         prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertLessEqual(len(prompt), DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+        self.assertGreater(len(prompt), 4000)
+        self.assertEqual(controller.session.profile["execution"]["max_prompt_chars"], DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
 
     def test_build_execution_prompt_rejects_when_over_custom_limit(self):
         tempdir, root = self.make_temp_root()
@@ -577,7 +778,7 @@ class RalphCodexTests(unittest.TestCase):
         controller = self.make_controller(root)
         self.save_charter(controller)
         controller.session.profile["execution"]["max_prompt_chars"] = 100
-        with self.assertRaisesRegex(ralph_codex.RalphError, "max_prompt_chars=100"):
+        with self.assertRaisesRegex(ralph_codex.RalphError, "charter="):
             controller.build_execution_prompt("Need broader validation")
 
     def test_build_execution_prompt_allows_unlimited_when_limit_is_zero(self):
@@ -590,6 +791,48 @@ class RalphCodexTests(unittest.TestCase):
         self.save_charter(controller)
         prompt = controller.build_execution_prompt("Need broader validation")
         self.assertGreater(len(prompt), DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+
+    def test_run_with_zero_max_iterations_treats_limit_as_unbounded(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.profile["runtime_limits"]["max_iterations"] = 0
+        controller.client.start = lambda: None
+        controller.ensure_thread = lambda: None
+        controller.confirm_seed_if_needed = lambda: None
+        calls = {"execute": 0}
+
+        def execute_once():
+            calls["execute"] += 1
+            return {
+                "status": "COMPLETE" if calls["execute"] == 2 else "IN_PROGRESS",
+                "summary": "done" if calls["execute"] == 2 else "working",
+                "workstream_updates": [
+                    {"id": "W1", "status": "done", "evidence": ["ok"]},
+                    {"id": "W2", "status": "done", "evidence": ["ok"]},
+                    {"id": "W3", "status": "done", "evidence": ["ok"]},
+                ],
+                "remaining_gaps": [],
+                "validation_completed": ["unit", "integration", "gating"],
+                "explicit_deferrals": [],
+                "next_step": "none",
+                "evidence": ["ok"],
+                "gate_reasoning": "safe",
+            }
+
+        controller.execute_once = execute_once
+        controller.plan_once = lambda phase_name, feedback: {
+            "status": "CHARTER_READY",
+            "summary": "retry",
+            "broadening_rationale": "keep going",
+            "charter": self.broad_charter(),
+            "next_step": "execute",
+            "gate_reasoning": "safe",
+        }
+        result = controller.run()
+        self.assertEqual(result, 0)
+        self.assertEqual(calls["execute"], 2)
 
     def test_finish_writes_finished_marker(self):
         tempdir, root = self.make_temp_root()
@@ -610,8 +853,12 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("--message", readme_text)
         self.assertIn("--profile", readme_text)
         self.assertIn("--file", readme_text)
+        self.assertIn("--verbose", readme_text)
         self.assertIn("--sessions", readme_text)
         self.assertIn("--resume", readme_text)
+        self.assertIn("does not use turn inactivity timeouts", readme_text)
+        self.assertIn("`max_iterations` uses `0` to mean unlimited", readme_text)
+        self.assertIn("events.jsonl", readme_text)
         self.assertIn("python3 -m py_compile scripts/ralph-codex.py tests/test_ralph_codex.py", readme_text)
         self.assertNotIn("--prompt", readme_text)
         self.assertNotIn("--config", readme_text)

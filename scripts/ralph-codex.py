@@ -28,7 +28,6 @@ SCHEMA_ROOT = REPO_ROOT / "schemas"
 STATE_ROOT_NAME = ".codex/ralph-codex"
 CODEx_BIN = "codex"
 APP_SERVER_REQUEST_TIMEOUT_SECS = 30.0
-TURN_IDLE_TIMEOUT_SECS = 30.0
 STDERR_BUFFER_LINES = 50
 
 PROFILE_SCHEMA_ID = "ralph-codex/profile"
@@ -71,7 +70,7 @@ DEFAULT_PROFILE = {
     "schema_version": "0.1.0",
     "profile_name": "default",
     "model": "gpt-5.4",
-    "runtime_limits": {"max_iterations": 100},
+    "runtime_limits": {"max_iterations": 0},
     "seed_policy": {"require_confirmation": True, "auto_confirm": False},
     "prompt_answering": {
         "selection_policy": "recommended_or_first",
@@ -99,7 +98,7 @@ DEFAULT_PROFILE = {
         "mode": "default",
         "reasoning_effort": "high",
         "output_schema_id": EXECUTION_OUTPUT_SCHEMA_ID,
-        "max_prompt_chars": 4000,
+        "max_prompt_chars": 0,
     },
 }
 
@@ -117,6 +116,7 @@ class Command:
     kind: str
     value: str | None = None
     profile_path: Path | None = None
+    verbose: bool = False
 
 
 @dataclass
@@ -183,6 +183,12 @@ def build_parser() -> argparse.ArgumentParser:
         prog="ralph-codex",
         description="Universal, session-driven Ralph controller for Codex.",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose trace output and persist full wire diagnostics in events.jsonl.",
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-m", "--message", help="Start a new session from inline message text.")
     group.add_argument("-f", "--file", help="Start a new session from a message file.")
@@ -218,15 +224,25 @@ def parse_command(argv: list[str]) -> tuple[argparse.ArgumentParser, Command]:
     if namespace.profile and namespace.message is None and namespace.file is None:
         parser.error("--profile can only be used with --message or --file")
     if namespace.message is not None:
-        return parser, Command(kind="message", value=namespace.message, profile_path=path_or_none(namespace.profile))
+        return parser, Command(
+            kind="message",
+            value=namespace.message,
+            profile_path=path_or_none(namespace.profile),
+            verbose=namespace.verbose,
+        )
     if namespace.file is not None:
-        return parser, Command(kind="file", value=namespace.file, profile_path=path_or_none(namespace.profile))
+        return parser, Command(
+            kind="file",
+            value=namespace.file,
+            profile_path=path_or_none(namespace.profile),
+            verbose=namespace.verbose,
+        )
     if namespace.sessions is not None:
         limit = parse_positive_integer(parser, namespace.sessions, "--sessions") if namespace.sessions else None
-        return parser, Command(kind="sessions", value=str(limit) if limit is not None else None)
+        return parser, Command(kind="sessions", value=str(limit) if limit is not None else None, verbose=namespace.verbose)
     if namespace.resume is not None:
-        return parser, Command(kind="resume", value=namespace.resume or None)
-    return parser, Command(kind="help")
+        return parser, Command(kind="resume", value=namespace.resume or None, verbose=namespace.verbose)
+    return parser, Command(kind="help", verbose=namespace.verbose)
 
 
 def path_or_none(value: str | None) -> Path | None:
@@ -341,10 +357,11 @@ class SchemaCatalog:
         return schema
 
     def copy_adjacent(self, schema_id: str, artifact_path: Path) -> None:
-        adjacent_schema_path(artifact_path).write_text(
-            json.dumps(self.load(schema_id), indent=2) + "\n",
-            encoding="utf-8",
-        )
+        adjacent_path = adjacent_schema_path(artifact_path)
+        content = json.dumps(self.load(schema_id), indent=2) + "\n"
+        if adjacent_path.exists() and adjacent_path.read_text(encoding="utf-8") == content:
+            return
+        adjacent_path.write_text(content, encoding="utf-8")
 
 
 def load_profile(schema_catalog: SchemaCatalog, path: Path | None) -> dict[str, Any]:
@@ -699,10 +716,255 @@ class SessionStore:
         return rows
 
 
+class EventRecorder:
+    def __init__(self, store: SessionStore, session: SessionContext, verbose: bool, stderr: Any = sys.stderr):
+        self.store = store
+        self.session = session
+        self.verbose = verbose
+        self.stderr = stderr
+
+    def append(self, event_type: str, payload: dict[str, Any]) -> None:
+        self.store.append_event(self.session, event_type, payload)
+
+    def trace(self, event_type: str, payload: dict[str, Any]) -> None:
+        if not self.verbose:
+            return
+        self.stderr.write(f"[ralph][{event_type}] {json.dumps(payload, sort_keys=True)}\n")
+        self.stderr.flush()
+
+    def record_run_config(self, run_id: str, invocation_mode: str, workdir: Path) -> None:
+        payload = {
+            "run_id": run_id,
+            "invocation_mode": invocation_mode,
+            "verbose": self.verbose,
+            "workdir": str(workdir),
+        }
+        self.append("run-config", payload)
+        self.trace("run-config", payload)
+
+    def record_client_event(self, payload: dict[str, Any]) -> None:
+        event_type = payload.get("type", "event")
+        if event_type == "wire":
+            if self.verbose:
+                self.append("wire", payload)
+            return
+        compact_payload = {key: value for key, value in payload.items() if key != "type"}
+        self.append(event_type, compact_payload)
+        self.trace(event_type, compact_payload)
+
+    def record_rpc_request(self, request_id: str | int, method: str, params: dict[str, Any] | None) -> None:
+        payload = {
+            "request_id": str(request_id),
+            "method": method,
+            "params": self.summarize_request_params(method, params or {}),
+        }
+        self.append("rpc-request", payload)
+        self.trace("rpc-request", payload)
+
+    def record_rpc_response(self, request_id: str | int, method: str, response: dict[str, Any]) -> None:
+        payload: dict[str, Any] = {"request_id": str(request_id), "method": method}
+        if "error" in response:
+            payload["error"] = self.summarize_error(response["error"])
+        else:
+            payload["result"] = self.summarize_response_result(method, response.get("result", {}))
+        self.append("rpc-response", payload)
+        self.trace("rpc-response", payload)
+
+    def record_notification(self, method: str | None, params: dict[str, Any]) -> None:
+        payload = self.summarize_notification(method or "", params)
+        self.append("notification", payload)
+        self.trace("notification", payload)
+
+    def record_server_request(
+        self,
+        request_id: str | int | None,
+        method: str,
+        action: str,
+        payload: dict[str, Any],
+    ) -> None:
+        record = {
+            "request_id": "" if request_id is None else str(request_id),
+            "method": method,
+            "action": action,
+            "payload": self.summarize_server_request_payload(method, action, payload),
+        }
+        self.append("server-request", record)
+        self.trace("server-request", record)
+
+    @staticmethod
+    def summarize_request_params(method: str, params: dict[str, Any]) -> dict[str, Any]:
+        summary: dict[str, Any] = {"keys": sorted(params.keys())}
+        if method == "initialize":
+            client_info = params.get("clientInfo") or {}
+            summary["client"] = {
+                "name": client_info.get("name", ""),
+                "version": client_info.get("version", ""),
+            }
+            summary["capability_keys"] = sorted((params.get("capabilities") or {}).keys())
+            return summary
+        if method in {"thread/start", "thread/resume"}:
+            for key in ("threadId", "cwd", "approvalPolicy", "sandbox", "persistExtendedHistory", "model"):
+                if key in params:
+                    summary[key] = params[key]
+            return summary
+        if method == "turn/start":
+            summary["threadId"] = params.get("threadId", "")
+            summary["input_items"] = len(params.get("input") or [])
+            summary["input_chars"] = sum(
+                len(item.get("text", ""))
+                for item in params.get("input") or []
+                if isinstance(item, dict) and isinstance(item.get("text"), str)
+            )
+            collaboration_mode = params.get("collaborationMode") or {}
+            settings = collaboration_mode.get("settings") or {}
+            summary["collaboration_mode"] = collaboration_mode.get("mode", "")
+            summary["reasoning_effort"] = settings.get("reasoning_effort", "")
+            output_schema = params.get("outputSchema") or {}
+            summary["output_schema"] = {
+                "type": output_schema.get("type", ""),
+                "required": len(output_schema.get("required") or []),
+                "property_count": len((output_schema.get("properties") or {}).keys()),
+            }
+            return summary
+        return summary
+
+    @staticmethod
+    def summarize_response_result(method: str, result: dict[str, Any]) -> dict[str, Any]:
+        summary: dict[str, Any] = {"keys": sorted(result.keys())}
+        if method in {"thread/start", "thread/resume"}:
+            thread = result.get("thread") or {}
+            summary["thread"] = {
+                "id": thread.get("id", ""),
+                "status": ((thread.get("status") or {}).get("type", "")),
+            }
+            for key in ("model", "reasoningEffort", "approvalPolicy"):
+                if key in result:
+                    summary[key] = result[key]
+            sandbox = result.get("sandbox") or {}
+            if isinstance(sandbox, dict):
+                summary["sandbox"] = sandbox.get("type", "")
+            return summary
+        if method == "turn/start":
+            summary["turn"] = EventRecorder.summarize_turn(result.get("turn") or {})
+            return summary
+        return summary
+
+    @staticmethod
+    def summarize_notification(method: str, params: dict[str, Any]) -> dict[str, Any]:
+        summary: dict[str, Any] = {"method": method}
+        if "threadId" in params:
+            summary["thread_id"] = params.get("threadId", "")
+        if "turnId" in params:
+            summary["turn_id"] = params.get("turnId", "")
+        if "item" in params and isinstance(params["item"], dict):
+            summary["item"] = EventRecorder.summarize_item(params["item"])
+        if "turn" in params and isinstance(params["turn"], dict):
+            summary["turn"] = EventRecorder.summarize_turn(params["turn"])
+        if "status" in params:
+            summary["status"] = EventRecorder.summarize_scalar(params["status"])
+        if "name" in params and isinstance(params["name"], str):
+            summary["name"] = params["name"]
+        if "error" in params and params["error"] is not None:
+            summary["error"] = EventRecorder.summarize_error(params["error"])
+        handled = {"threadId", "turnId", "item", "turn", "status", "name", "error"}
+        remaining_keys = sorted(key for key in params.keys() if key not in handled)
+        if remaining_keys:
+            summary["keys"] = remaining_keys
+        return summary
+
+    @staticmethod
+    def summarize_server_request_payload(method: str, action: str, payload: dict[str, Any]) -> dict[str, Any]:
+        if method == "item/tool/requestUserInput":
+            if action == "answered":
+                answers = payload.get("answers") or {}
+                return {"answer_ids": sorted(answers.keys())}
+            questions = payload.get("questions") or []
+            return {
+                "question_ids": [question.get("id", "") for question in questions],
+                "question_count": len(questions),
+                "secret_count": sum(1 for question in questions if question.get("isSecret")),
+                "option_counts": [len(question.get("options") or []) for question in questions],
+            }
+        return {"keys": sorted(payload.keys())}
+
+    @staticmethod
+    def summarize_item(item: dict[str, Any]) -> dict[str, Any]:
+        summary: dict[str, Any] = {"type": item.get("type", "")}
+        for key in ("id", "status", "role", "phase", "name", "call_id", "processId"):
+            if key in item and item.get(key) not in {None, ""}:
+                summary[key] = item[key]
+        if isinstance(item.get("text"), str):
+            summary["text_chars"] = len(item["text"])
+        if isinstance(item.get("command"), str):
+            summary["command"] = truncate_label(item["command"], 96)
+        if isinstance(item.get("content"), list):
+            summary["content_items"] = len(item["content"])
+            content_text_chars = sum(
+                len(content.get("text", ""))
+                for content in item["content"]
+                if isinstance(content, dict) and isinstance(content.get("text"), str)
+            )
+            if content_text_chars:
+                summary["content_text_chars"] = content_text_chars
+        if isinstance(item.get("summary"), list):
+            summary["summary_parts"] = len(item["summary"])
+        if "output" in item:
+            summary["output_chars"] = len(EventRecorder.stringify(item.get("output")))
+        if isinstance(item.get("aggregatedOutput"), str):
+            summary["aggregated_output_chars"] = len(item["aggregatedOutput"])
+        if isinstance(item.get("commandActions"), list):
+            summary["command_actions"] = len(item["commandActions"])
+        return summary
+
+    @staticmethod
+    def summarize_turn(turn: dict[str, Any]) -> dict[str, Any]:
+        summary: dict[str, Any] = {}
+        for key in ("id", "status", "startedAt", "completedAt", "durationMs"):
+            if key in turn and turn.get(key) not in {None, ""}:
+                summary[key] = turn[key]
+        if isinstance(turn.get("items"), list):
+            summary["item_count"] = len(turn["items"])
+        if turn.get("error"):
+            summary["error"] = EventRecorder.summarize_error(turn["error"])
+        return summary
+
+    @staticmethod
+    def summarize_error(error: Any) -> dict[str, Any]:
+        if isinstance(error, dict):
+            summary = {}
+            if "code" in error:
+                summary["code"] = error["code"]
+            if isinstance(error.get("message"), str):
+                summary["message"] = truncate_label(error["message"], 160)
+            if "type" in error:
+                summary["type"] = error["type"]
+            if "data" in error and isinstance(error["data"], dict):
+                summary["data_keys"] = sorted(error["data"].keys())
+            return summary or {"keys": sorted(error.keys())}
+        return {"value": EventRecorder.stringify(error)}
+
+    @staticmethod
+    def summarize_scalar(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {key: value[key] for key in sorted(value.keys()) if isinstance(value[key], (str, int, float, bool))}
+        if isinstance(value, list):
+            return {"count": len(value)}
+        return value
+
+    @staticmethod
+    def stringify(value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        try:
+            return json.dumps(value, sort_keys=True)
+        except TypeError:
+            return str(value)
+
+
 class SubprocessAppServerClient:
-    def __init__(self, runtime_config: RuntimeConfig, event_logger: Callable[[dict[str, Any]], None]):
+    def __init__(self, runtime_config: RuntimeConfig, event_recorder: EventRecorder):
         self.runtime_config = runtime_config
-        self.event_logger = event_logger
+        self.event_recorder = event_recorder
         self.process: subprocess.Popen[str] | None = None
         self._reader: threading.Thread | None = None
         self._stderr_reader: threading.Thread | None = None
@@ -763,6 +1025,7 @@ class SubprocessAppServerClient:
         wait_queue: queue.Queue[dict[str, Any]] = queue.Queue()
         with self._response_lock:
             self._response_waiters[request_id] = wait_queue
+        self.event_recorder.record_rpc_request(request_id, method, params)
         self._send_json({"id": request_id, "method": method, "params": params})
         deadline = time.monotonic() + APP_SERVER_REQUEST_TIMEOUT_SECS
         try:
@@ -782,6 +1045,7 @@ class SubprocessAppServerClient:
         finally:
             with self._response_lock:
                 self._response_waiters.pop(request_id, None)
+        self.event_recorder.record_rpc_response(request_id, method, response)
         if "error" in response:
             raise RalphError(f"{method} failed: {response['error'].get('message', 'unknown error')}")
         return response.get("result", {})
@@ -840,9 +1104,9 @@ class SubprocessAppServerClient:
             try:
                 payload = json.loads(stripped)
             except json.JSONDecodeError:
-                self.event_logger({"type": "stdout-parse-error", "line": stripped})
+                self.event_recorder.record_client_event({"type": "stdout-parse-error", "line": stripped})
                 continue
-            self.event_logger({"type": "wire", "payload": payload})
+            self.event_recorder.record_client_event({"type": "wire", "payload": payload})
             if "id" in payload and ("result" in payload or "error" in payload) and "method" not in payload:
                 with self._response_lock:
                     waiter = self._response_waiters.get(payload["id"])
@@ -865,7 +1129,7 @@ class SubprocessAppServerClient:
             stripped = line.rstrip("\n")
             if stripped:
                 self._stderr_lines.append(stripped)
-                self.event_logger({"type": "stderr", "line": stripped})
+                self.event_recorder.record_client_event({"type": "stderr", "line": stripped})
 
     def _fail_pending_requests(self, message: str) -> None:
         response = {"error": {"message": self.diagnostic_error(message)}}
@@ -880,6 +1144,7 @@ class RalphController:
         self,
         runtime_config: RuntimeConfig,
         client: SubprocessAppServerClient,
+        event_recorder: EventRecorder,
         store: SessionStore,
         schema_catalog: SchemaCatalog,
         session: SessionContext,
@@ -888,6 +1153,7 @@ class RalphController:
     ):
         self.runtime_config = runtime_config
         self.client = client
+        self.event_recorder = event_recorder
         self.store = store
         self.schema_catalog = schema_catalog
         self.session = session
@@ -908,7 +1174,7 @@ class RalphController:
             self.store.save_state(self.session)
         self.confirm_seed_if_needed()
         max_iterations = self.session.profile["runtime_limits"]["max_iterations"]
-        while self.session.state["iteration"] < max_iterations:
+        while max_iterations == 0 or self.session.state["iteration"] < max_iterations:
             self.session.state["iteration"] += 1
             self.session.state["phase"] = "executing"
             self.store.save_state(self.session)
@@ -1024,19 +1290,11 @@ class RalphController:
         self.store.save_state(self.session)
         raw_items: list[dict[str, Any]] = []
         thread_items: list[dict[str, Any]] = []
-        last_event_at = time.monotonic()
         while True:
             event = self.client.next_event(timeout=0.1)
             if event is None:
                 self.client.raise_if_unavailable("while waiting for turn events")
-                if time.monotonic() - last_event_at >= TURN_IDLE_TIMEOUT_SECS:
-                    raise RalphError(
-                        self.client.diagnostic_error(
-                            f"no turn events received for {TURN_IDLE_TIMEOUT_SECS:.0f}s during {phase_name}"
-                        )
-                    )
                 continue
-            last_event_at = time.monotonic()
             if event["kind"] == "server-request":
                 self.handle_server_request(event["payload"])
                 continue
@@ -1045,7 +1303,7 @@ class RalphController:
             payload = event["payload"]
             method = payload.get("method")
             params = payload.get("params", {})
-            self.store.append_event(self.session, "notification", {"method": method, "params": params})
+            self.event_recorder.record_notification(method, params)
             if method in {"item/agentMessage/delta", "item/plan/delta"} and params.get("turnId") == turn_id:
                 self.print_stream(params.get("delta", ""))
                 continue
@@ -1065,7 +1323,7 @@ class RalphController:
                     raise RalphError("Codex turn was interrupted")
                 break
         self.print_stream("\n")
-        final_output = self.extract_final_output(raw_items, thread_items)
+        final_output = self.extract_final_output(raw_items, thread_items, schema)
         self.store.append_turn(
             self.session,
             phase_name,
@@ -1085,9 +1343,11 @@ class RalphController:
             answer = self.answer_request_user_input(params)
             self.client.send_result(request_id, answer)
             self.store.append_server_request(self.session, request_id, method, "answered", answer)
+            self.event_recorder.record_server_request(request_id, method, "answered", answer)
             return
         self.client.send_error(request_id, -32601, f"Unsupported server request: {method}")
         self.store.append_server_request(self.session, request_id, method or "", "rejected", params)
+        self.event_recorder.record_server_request(request_id, method or "", "rejected", params)
 
     def answer_request_user_input(self, params: dict[str, Any]) -> dict[str, Any]:
         policy = self.session.profile["prompt_answering"]
@@ -1110,9 +1370,15 @@ class RalphController:
         return options[0]["label"]
 
     @staticmethod
-    def extract_final_output(raw_items: list[dict[str, Any]], thread_items: list[dict[str, Any]]) -> dict[str, Any]:
+    def extract_final_output(
+        raw_items: list[dict[str, Any]],
+        thread_items: list[dict[str, Any]],
+        schema: dict[str, Any],
+    ) -> dict[str, Any]:
         candidate_texts: list[str] = []
+        seen_item_types: list[str] = []
         for item in raw_items:
+            seen_item_types.append(f"raw:{item.get('type', 'unknown')}")
             if item.get("type") != "message":
                 continue
             if item.get("role") not in {"assistant", "model"}:
@@ -1127,7 +1393,9 @@ class RalphController:
             if text:
                 candidate_texts.append(text)
         for item in thread_items:
-            if item.get("type") == "agentMessage" and item.get("text"):
+            item_type = item.get("type", "unknown")
+            seen_item_types.append(f"thread:{item_type}")
+            if item_type in {"agentMessage", "plan"} and item.get("text"):
                 candidate_texts.append(item["text"].strip())
         for text in reversed(candidate_texts):
             try:
@@ -1135,8 +1403,13 @@ class RalphController:
             except json.JSONDecodeError:
                 continue
             if isinstance(parsed, dict):
+                validate_subset(schema, parsed)
                 return parsed
-        raise RalphError("turn completed without a parseable final structured response")
+        item_summary = ", ".join(seen_item_types[-10:]) if seen_item_types else "none"
+        raise RalphError(
+            "turn completed without a parseable final structured response "
+            f"(seen items: {item_summary})"
+        )
 
     def validate_charter(self, planning_result: dict[str, Any]) -> dict[str, Any]:
         charter_policy = self.session.profile["charter_policy"]
@@ -1263,8 +1536,13 @@ class RalphController:
         prompt = "\n".join(sections).strip() + "\n"
         max_prompt_chars = self.session.profile["execution"]["max_prompt_chars"]
         if max_prompt_chars and len(prompt) > max_prompt_chars:
+            current_charter = json.dumps(self.session.charter_record["charter"], indent=2, sort_keys=True)
+            task_text = self.session.task["message_text"].strip()
+            feedback_text = feedback.strip() if feedback else ""
             raise RalphError(
-                f"execution prompt exceeds max_prompt_chars={max_prompt_chars}: {len(prompt)} chars"
+                "execution prompt exceeds "
+                f"max_prompt_chars={max_prompt_chars}: total={len(prompt)} "
+                f"(charter={len(current_charter)}, task={len(task_text)}, feedback={len(feedback_text)})"
             )
         return prompt
 
@@ -1386,18 +1664,18 @@ def execute_run(
     schema_catalog: SchemaCatalog,
     session: SessionContext,
     invocation_mode: str,
+    verbose: bool,
 ) -> int:
     ensure_codex_available()
     run_id = new_run_id()
     store.update_controller_state(session.session_id, run_id)
     store.append_run_history(session, run_id, "run_started", invocation_mode, "run started")
     client: SubprocessAppServerClient | None = None
+    event_recorder = EventRecorder(store, session, verbose)
+    event_recorder.record_run_config(run_id, invocation_mode, runtime_config.workdir)
     try:
-        client = SubprocessAppServerClient(
-            runtime_config,
-            lambda payload: store.append_event(session, payload.get("type", "wire"), payload),
-        )
-        controller = RalphController(runtime_config, client, store, schema_catalog, session)
+        client = SubprocessAppServerClient(runtime_config, event_recorder)
+        controller = RalphController(runtime_config, client, event_recorder, store, schema_catalog, session)
         exit_code = controller.run()
         summary = controller.session.completion_record.get("last_result", {}).get("summary", "session completed")
         store.append_run_history(session, run_id, "run_completed", invocation_mode, summary)
@@ -1431,12 +1709,12 @@ def main(argv: list[str] | None = None) -> int:
         task = resolve_start_task(command)
         runtime_config = RuntimeConfig(workdir=runtime_root, state_root=store.root)
         session = store.create_session(runtime_root, task, profile)
-        return execute_run(runtime_config, store, schema_catalog, session, command.kind)
+        return execute_run(runtime_config, store, schema_catalog, session, command.kind, command.verbose)
 
     if command.kind == "resume":
         session = store.resolve_resume_target(command.value)
         runtime_config = RuntimeConfig(workdir=Path(session.session["workdir"]).resolve(), state_root=store.root)
-        return execute_run(runtime_config, store, schema_catalog, session, "resume")
+        return execute_run(runtime_config, store, schema_catalog, session, "resume", command.verbose)
 
     raise RalphError(f"unsupported command: {command.kind}")
 

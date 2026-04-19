@@ -114,12 +114,21 @@ The public CLI is intentionally small:
    Starts a new session from a message file.
 4. `./scripts/ralph-codex.py --file prompts/fix-tests.md --profile profiles/cautious.json`
    Starts a new session from a message file with a custom profile.
-5. `./scripts/ralph-codex.py --sessions 10`
+5. `./scripts/ralph-codex.py --message "Refactor the controller deeply" --verbose`
+   Starts a new verbose session with structured terminal trace output and full wire diagnostics in `events.jsonl`.
+6. `./scripts/ralph-codex.py --sessions 10`
    Lists the latest ten run-history rows.
-6. `./scripts/ralph-codex.py --resume`
+7. `./scripts/ralph-codex.py --resume`
    Resumes the latest resumable session.
 
 Canonical schemas for Ralph artifacts live under `schemas/`, the default profile is defined inline in `scripts/ralph-codex.py`, and each persisted JSON or JSONL artifact gets an adjacent copied schema file.
+
+Operational defaults:
+
+- Ralph does not use turn inactivity timeouts. A live turn is allowed to stay silent while Codex reasons.
+- `max_iterations` uses `0` to mean unlimited. Non-zero values bound replanning loops, not wall-clock runtime.
+- `execution.max_prompt_chars` defaults to `0`, which disables prompt-size caps unless a profile opts into one.
+- `events.jsonl` stays compact in normal mode and omits verbose wire bodies such as command `output`; `--verbose` enables those full diagnostics for the current run only.
 
 Verification:
 
