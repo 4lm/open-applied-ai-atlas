@@ -15,7 +15,6 @@
     "iteration",
     "same_tranche_repair_count",
     "consecutive_replans",
-    "consecutive_low_novelty_iterations",
     "seed_confirmed",
     "charter_version",
     "active_milestone_id",
@@ -31,6 +30,8 @@
     "evidence_registry",
     "checkpoint_summaries",
     "worker_manifests",
+    "disabled_worker_roles",
+    "task_summary",
     "started_at",
     "updated_at"
   ],
@@ -46,7 +47,6 @@
     "iteration": { "type": "integer", "minimum": 0 },
     "same_tranche_repair_count": { "type": "integer", "minimum": 0 },
     "consecutive_replans": { "type": "integer", "minimum": 0 },
-    "consecutive_low_novelty_iterations": { "type": "integer", "minimum": 0 },
     "seed_confirmed": { "type": "boolean" },
     "charter_version": { "type": "integer", "minimum": 0 },
     "active_milestone_id": { "type": "string" },
@@ -145,13 +145,26 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["claim", "url", "source_type", "used_for", "status", "updated_at"],
+        "required": [
+          "claim",
+          "url",
+          "source_type",
+          "used_for",
+          "status",
+          "relevance_note",
+          "quality_note",
+          "freshness_note",
+          "updated_at"
+        ],
         "properties": {
           "claim": { "type": "string", "minLength": 1 },
           "url": { "type": "string", "minLength": 1 },
           "source_type": { "type": "string", "enum": ["primary", "secondary"] },
           "used_for": { "type": "string", "minLength": 1 },
           "status": { "type": "string", "enum": ["new", "confirmed", "contradicted", "stale"] },
+          "relevance_note": { "type": "string" },
+          "quality_note": { "type": "string" },
+          "freshness_note": { "type": "string" },
           "updated_at": { "type": "string", "minLength": 1 }
         }
       }
@@ -180,6 +193,23 @@
           "status": { "type": "string", "minLength": 1 },
           "summary": { "type": "string", "minLength": 1 }
         }
+      }
+    },
+    "disabled_worker_roles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["research", "read_only_repo", "evaluator_vote"]
+      }
+    },
+    "task_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "source", "updated_at"],
+      "properties": {
+        "summary": { "type": "string" },
+        "source": { "type": "string", "minLength": 1 },
+        "updated_at": { "type": "string", "minLength": 1 }
       }
     },
     "started_at": { "type": "string", "minLength": 1 },

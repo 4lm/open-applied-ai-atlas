@@ -17,7 +17,6 @@
     "research_policy",
     "tranche_policy",
     "quality_policy",
-    "memory_policy",
     "milestone_policy",
     "worker_policy",
     "evidence_policy",
@@ -60,9 +59,8 @@
     "prompt_answering": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["selection_policy", "reject_secret_questions", "require_selectable_options"],
+      "required": ["reject_secret_questions", "require_selectable_options"],
       "properties": {
-        "selection_policy": { "type": "string", "enum": ["recommended_or_first"] },
         "reject_secret_questions": { "type": "boolean" },
         "require_selectable_options": { "type": "boolean" }
       }
@@ -71,13 +69,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "min_workstreams",
         "require_adjacent_surfaces",
         "require_validation_for_each_workstream",
         "require_validation_categories"
       ],
       "properties": {
-        "min_workstreams": { "type": "integer", "minimum": 1 },
         "require_adjacent_surfaces": { "type": "boolean" },
         "require_validation_for_each_workstream": { "type": "boolean" },
         "require_validation_categories": { "type": "boolean" }
@@ -104,16 +100,12 @@
       "additionalProperties": false,
       "required": [
         "mode",
-        "planning_min_sources",
-        "execution_min_sources",
         "require_primary_sources_when_available",
         "require_multi_step_search",
         "block_on_search_unavailable"
       ],
       "properties": {
         "mode": { "type": "string", "enum": ["required"] },
-        "planning_min_sources": { "type": "integer", "minimum": 1 },
-        "execution_min_sources": { "type": "integer", "minimum": 1 },
         "require_primary_sources_when_available": { "type": "boolean" },
         "require_multi_step_search": { "type": "boolean" },
         "block_on_search_unavailable": { "type": "boolean" }
@@ -122,16 +114,8 @@
     "tranche_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "max_active_workstreams",
-        "max_target_files",
-        "max_new_files",
-        "require_explicit_target_files"
-      ],
+      "required": ["require_explicit_target_files"],
       "properties": {
-        "max_active_workstreams": { "type": "integer", "minimum": 1 },
-        "max_target_files": { "type": "integer", "minimum": 1 },
-        "max_new_files": { "type": "integer", "minimum": 0 },
         "require_explicit_target_files": { "type": "boolean" }
       }
     },
@@ -139,67 +123,22 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "require_post_iteration_audit",
-        "require_diff_samples",
-        "max_iterations_before_checkpoint",
-        "max_total_files_changed_before_checkpoint",
-        "max_repeated_heading_additions_per_iteration",
-        "max_meta_artifact_files_per_run",
-        "pause_on_stagnation_after_iterations",
+        "stagnation_escalation_after_iterations",
         "progress_checkpoint_mode"
       ],
       "properties": {
-        "require_post_iteration_audit": { "type": "boolean" },
-        "require_diff_samples": { "type": "integer", "minimum": 1 },
-        "max_iterations_before_checkpoint": { "type": "integer", "minimum": 1 },
-        "max_total_files_changed_before_checkpoint": { "type": "integer", "minimum": 1 },
-        "max_repeated_heading_additions_per_iteration": { "type": "integer", "minimum": 0 },
-        "max_meta_artifact_files_per_run": { "type": "integer", "minimum": 0 },
-        "pause_on_stagnation_after_iterations": { "type": "integer", "minimum": 1 },
+        "stagnation_escalation_after_iterations": { "type": "integer", "minimum": 1 },
         "progress_checkpoint_mode": {
           "type": "string",
           "enum": ["require_confirmation", "record_only_after_seed"]
         }
       }
     },
-    "memory_policy": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "persist_program_memory",
-        "persist_research_memory",
-        "persist_execution_memory",
-        "persist_skill_memory",
-        "max_execution_memory_entries",
-        "max_skill_memory_entries",
-        "max_checkpoint_summaries",
-        "max_evidence_registry_entries",
-        "max_worker_manifests"
-      ],
-      "properties": {
-        "persist_program_memory": { "type": "boolean" },
-        "persist_research_memory": { "type": "boolean" },
-        "persist_execution_memory": { "type": "boolean" },
-        "persist_skill_memory": { "type": "boolean" },
-        "max_execution_memory_entries": { "type": "integer", "minimum": 1 },
-        "max_skill_memory_entries": { "type": "integer", "minimum": 1 },
-        "max_checkpoint_summaries": { "type": "integer", "minimum": 1 },
-        "max_evidence_registry_entries": { "type": "integer", "minimum": 1 },
-        "max_worker_manifests": { "type": "integer", "minimum": 1 }
-      }
-    },
     "milestone_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "max_active_milestones",
-        "max_tranche_iterations_per_milestone",
-        "checkpoint_on_milestone_close",
-        "require_acceptance_bundle"
-      ],
+      "required": ["checkpoint_on_milestone_close", "require_acceptance_bundle"],
       "properties": {
-        "max_active_milestones": { "type": "integer", "minimum": 1 },
-        "max_tranche_iterations_per_milestone": { "type": "integer", "minimum": 1 },
         "checkpoint_on_milestone_close": { "type": "boolean" },
         "require_acceptance_bundle": { "type": "boolean" }
       }
@@ -207,16 +146,9 @@
     "worker_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "enabled",
-        "max_parallel_workers",
-        "allowed_roles",
-        "require_disjoint_write_sets",
-        "require_controller_merge_review"
-      ],
+      "required": ["enabled", "allowed_roles"],
       "properties": {
         "enabled": { "type": "boolean" },
-        "max_parallel_workers": { "type": "integer", "minimum": 0 },
         "allowed_roles": {
           "type": "array",
           "minItems": 1,
@@ -224,39 +156,31 @@
             "type": "string",
             "enum": ["research", "read_only_repo", "evaluator_vote"]
           }
-        },
-        "require_disjoint_write_sets": { "type": "boolean" },
-        "require_controller_merge_review": { "type": "boolean" }
+        }
       }
     },
     "evidence_policy": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "max_source_age_days",
-        "require_claim_linkage",
-        "require_contradiction_tracking",
+        "require_relevance_assessment",
+        "require_quality_assessment",
+        "require_freshness_assessment",
         "refresh_on_replan"
       ],
       "properties": {
-        "max_source_age_days": { "type": "integer", "minimum": 0 },
-        "require_claim_linkage": { "type": "boolean" },
-        "require_contradiction_tracking": { "type": "boolean" },
+        "require_relevance_assessment": { "type": "boolean" },
+        "require_quality_assessment": { "type": "boolean" },
+        "require_freshness_assessment": { "type": "boolean" },
         "refresh_on_replan": { "type": "boolean" }
       }
     },
     "eval_policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "require_trace_grade",
-        "require_deterministic_grades",
-        "evaluator_confidence_floor"
-      ],
+      "required": ["acceptance_confidence_floor"],
       "properties": {
-        "require_trace_grade": { "type": "boolean" },
-        "require_deterministic_grades": { "type": "boolean" },
-        "evaluator_confidence_floor": {
+        "acceptance_confidence_floor": {
           "type": "string",
           "enum": ["low", "medium", "high"]
         }
@@ -288,33 +212,31 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "same_tranche_retry_limit",
-        "max_consecutive_replans",
-        "planning_max_prompt_chars",
-        "execution_max_prompt_chars",
-        "compact_history_after_chars",
-        "require_iteration_repo_baseline"
+        "same_tranche_escalation_after",
+        "replan_escalation_after",
+        "require_iteration_repo_baseline",
+        "planning_repair_escalation_after",
+        "execution_repair_escalation_after",
+        "evaluation_repair_escalation_after"
       ],
       "properties": {
-        "same_tranche_retry_limit": { "type": "integer", "minimum": 0 },
-        "max_consecutive_replans": { "type": "integer", "minimum": 1 },
-        "planning_max_prompt_chars": { "type": "integer", "minimum": 0 },
-        "execution_max_prompt_chars": { "type": "integer", "minimum": 0 },
-        "compact_history_after_chars": { "type": "integer", "minimum": 1 },
+        "same_tranche_escalation_after": { "type": "integer", "minimum": 1 },
+        "replan_escalation_after": { "type": "integer", "minimum": 1 },
         "require_iteration_repo_baseline": { "type": "boolean" },
-        "max_consecutive_low_novelty_iterations": { "type": "integer", "minimum": 1 }
+        "planning_repair_escalation_after": { "type": "integer", "minimum": 1 },
+        "execution_repair_escalation_after": { "type": "integer", "minimum": 1 },
+        "evaluation_repair_escalation_after": { "type": "integer", "minimum": 1 }
       }
     },
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["model", "mode", "reasoning_effort", "output_schema_id", "max_prompt_chars"],
+      "required": ["model", "mode", "reasoning_effort", "output_schema_id"],
       "properties": {
         "model": { "type": "string", "minLength": 1 },
         "mode": { "type": "string", "enum": ["default"] },
         "reasoning_effort": { "type": "string", "enum": ["low", "medium", "high", "xhigh"] },
-        "output_schema_id": { "type": "string", "enum": ["ralph-codex/output/execution"] },
-        "max_prompt_chars": { "type": "integer", "minimum": 0 }
+        "output_schema_id": { "type": "string", "enum": ["ralph-codex/output/execution"] }
       }
     }
   }

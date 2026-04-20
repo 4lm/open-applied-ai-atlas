@@ -32,10 +32,15 @@ CODEx_BIN = "codex"
 APP_SERVER_REQUEST_TIMEOUT_SECS = 30.0
 STDERR_BUFFER_LINES = 50
 TURN_IDLE_HEARTBEAT_SECS = 10.0
+WORKER_IDLE_HEARTBEAT_SECS = 10.0
+WORKER_TURN_TIMEOUT_SECS = 60.0
 VERBOSE_CONSOLE_CHAR_LIMIT = 240
 CONSOLE_WRAP_WIDTH = 88
 MODEL_WORKSTREAM_PREVIEW_COUNT = 4
 MODEL_GAP_PREVIEW_COUNT = 4
+DIFF_SAMPLE_LIMIT = 3
+COMPACT_HISTORY_AFTER_CHARS = 3000
+RAW_TASK_REVISIT_REPAIR_INDEX = 1
 ABORT_EXIT_CODE = 130
 ABORT_REASON = "aborted by operator"
 
@@ -43,6 +48,7 @@ PROFILE_SCHEMA_ID = "ralph-codex/profile"
 PLANNING_OUTPUT_SCHEMA_ID = "ralph-codex/output/planning"
 EXECUTION_OUTPUT_SCHEMA_ID = "ralph-codex/output/execution"
 EVALUATION_OUTPUT_SCHEMA_ID = "ralph-codex/output/evaluation"
+WORKER_SUMMARY_SCHEMA_ID = "ralph-codex/output/worker-summary"
 CONTROLLER_STATE_SCHEMA_ID = "ralph-codex/controller-state"
 SESSION_SCHEMA_ID = "ralph-codex/session"
 TASK_SCHEMA_ID = "ralph-codex/task"
@@ -56,40 +62,12 @@ EVENT_LOG_LINE_SCHEMA_ID = "ralph-codex/event-log-line"
 TURN_LOG_LINE_SCHEMA_ID = "ralph-codex/turn-log-line"
 SERVER_REQUEST_LOG_LINE_SCHEMA_ID = "ralph-codex/server-request-log-line"
 
-WORKER_SUMMARY_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["role", "summary", "findings", "confidence"],
-    "properties": {
-        "role": {"type": "string", "enum": ["research", "read_only_repo", "evaluator_vote"]},
-        "summary": {"type": "string", "minLength": 1},
-        "findings": {
-            "type": "array",
-            "items": {"type": "string", "minLength": 1},
-        },
-        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
-        "sources": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["title", "url", "source_type", "used_for"],
-                "properties": {
-                    "title": {"type": "string", "minLength": 1},
-                    "url": {"type": "string", "minLength": 1},
-                    "source_type": {"type": "string", "enum": ["primary", "secondary"]},
-                    "used_for": {"type": "string", "minLength": 1},
-                },
-            },
-        },
-    },
-}
-
 SCHEMA_FILES = {
     PROFILE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "profile-v0.1.0.schema.json",
     PLANNING_OUTPUT_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "planning-output-v0.1.0.schema.json",
     EXECUTION_OUTPUT_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "execution-output-v0.1.0.schema.json",
     EVALUATION_OUTPUT_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "evaluation-output-v0.1.0.schema.json",
+    WORKER_SUMMARY_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "worker-summary-output-v0.1.0.schema.json",
     CONTROLLER_STATE_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "controller-state-v0.1.0.schema.json",
     SESSION_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "session-v0.1.0.schema.json",
     TASK_SCHEMA_ID: SCHEMA_ROOT / "ralph-codex" / "task-v0.1.0.schema.json",
@@ -174,6 +152,23 @@ class ExecutionAudit:
     acceptance_criteria_met: list[str] | None = None
     acceptance_criteria_remaining: list[str] | None = None
     off_tranche_file_count: int = 0
+
+
+@dataclass(frozen=True)
+class PromptShape:
+    task_mode: str
+    task_limit: int
+    program_limit: int
+    tranche_limit: int
+    milestone_limit: int
+    memory_limit: int
+    evidence_limit: int
+    include_review_history: bool
+    include_worker_summaries: bool
+    include_evidence_registry: bool
+    include_execution_memory: bool
+    include_latest_evaluation: bool
+    include_feedback: bool = True
 
 
 @dataclass
@@ -571,8 +566,6 @@ class TerminalReporter:
                 value = self.cap_console_text(" ".join(payload[key].split()))
                 lines.extend(self._wrap_detail(self._format_kv("stdout", key, value), width=CONSOLE_WRAP_WIDTH - 4))
         program_board = payload.get("program_board")
-        if not isinstance(program_board, dict) and isinstance(payload.get("charter"), dict):
-            program_board = legacy_program_board_from_charter(payload.get("charter"))
         if isinstance(program_board, dict):
             milestones = program_board.get("milestones") or []
             workstreams = [
@@ -642,8 +635,6 @@ class TerminalReporter:
                     )
                 )
         program_board = payload.get("program_board")
-        if not isinstance(program_board, dict) and isinstance(payload.get("charter"), dict):
-            program_board = legacy_program_board_from_charter(payload.get("charter"))
         if isinstance(program_board, dict):
             goal = program_board.get("goal")
             if isinstance(goal, str) and goal.strip():
@@ -828,94 +819,8 @@ def deep_copy_json(value: Any) -> Any:
     return json.loads(json.dumps(value))
 
 
-def merge_missing_keys(value: Any, defaults: Any) -> Any:
-    if isinstance(defaults, dict):
-        result = deep_copy_json(value) if isinstance(value, dict) else {}
-        for key, default_value in defaults.items():
-            if key not in result:
-                result[key] = deep_copy_json(default_value)
-            else:
-                result[key] = merge_missing_keys(result[key], default_value)
-        return result
-    if isinstance(defaults, list):
-        return deep_copy_json(value) if isinstance(value, list) else deep_copy_json(defaults)
-    if value in {None, ""}:
-        return deep_copy_json(defaults)
-    return value
-
-
 def semver(value: str) -> bool:
     return bool(re.match(r"^\d+\.\d+\.\d+$", value))
-
-
-def default_research_payload() -> dict[str, Any]:
-    return {
-        "status": "blocked",
-        "search_strategy": "Compatibility fallback for legacy Ralph session output.",
-        "findings": ["Legacy planning output did not record mandatory web research."],
-        "sources": [
-            {
-                "title": "Legacy session artifact",
-                "url": "local://legacy-session",
-                "source_type": "secondary",
-                "used_for": "Compatibility fallback",
-            }
-        ],
-        "open_questions": ["Refresh research under the current Ralph contract before executing again."],
-    }
-
-
-def default_tranche_payload(charter: dict[str, Any] | None = None) -> dict[str, Any]:
-    workstreams = (charter or {}).get("workstreams") or []
-    active_ids = [entry.get("id", "") for entry in workstreams if entry.get("status") == "planned"][:5]
-    if not active_ids:
-        active_ids = [entry.get("id", "") for entry in workstreams[:1] if entry.get("id")]
-    surfaces: list[str] = []
-    for entry in workstreams:
-        if entry.get("id") not in active_ids:
-            continue
-        for surface in entry.get("required_adjacent_surfaces") or []:
-            if surface and surface not in surfaces:
-                surfaces.append(surface)
-        if len(surfaces) >= 5:
-            break
-    if not surfaces:
-        surfaces = ["docs/"]
-    validation = []
-    for entry in workstreams:
-        if entry.get("id") not in active_ids:
-            continue
-        for item in entry.get("validation") or []:
-            if item and item not in validation:
-                validation.append(item)
-    if not validation:
-        validation = ["review the tranche result against the current charter"]
-    return {
-        "batch_id": "legacy-tranche",
-        "milestone_id": "legacy-milestone",
-        "workstream_ids": active_ids or ["legacy-workstream"],
-        "target_files": surfaces,
-        "intended_outcome": "Refresh the legacy charter under the current bounded-tranche contract.",
-        "validation": validation,
-    }
-
-
-def default_verification_payload() -> dict[str, Any]:
-    return {
-        "status": "not_needed",
-        "scope": "Legacy execution output did not include the mandatory verification block.",
-        "findings": ["Refresh verification under the current Ralph contract before claiming completion."],
-        "sources": [],
-    }
-
-
-def default_quality_claims_payload() -> dict[str, Any]:
-    return {
-        "tranche_followed": False,
-        "user_facing_outcome": "Legacy execution output did not record tranche adherence.",
-        "avoided_meta_artifacts": False,
-        "repeated_heading_risk": "unknown",
-    }
 
 
 def default_program_memory_payload(started_at: str = "") -> dict[str, Any]:
@@ -935,6 +840,23 @@ def default_research_memory_payload(started_at: str = "") -> dict[str, Any]:
     }
 
 
+def summarize_task_text(raw_text: str, limit: int = 2200) -> str:
+    normalized = " ".join(raw_text.split())
+    if limit <= 0 or len(normalized) <= limit:
+        return normalized
+    head = max(1, int(limit * 0.72))
+    tail = max(1, limit - head - 7)
+    return normalized[:head].rstrip() + " ... " + normalized[-tail:].lstrip()
+
+
+def default_task_summary_payload(raw_text: str = "", started_at: str = "") -> dict[str, Any]:
+    return {
+        "summary": summarize_task_text(raw_text),
+        "source": "raw_task",
+        "updated_at": started_at,
+    }
+
+
 def default_session_state_payload(session_id: str = "", started_at: str = "") -> dict[str, Any]:
     return {
         "session_id": session_id,
@@ -946,7 +868,6 @@ def default_session_state_payload(session_id: str = "", started_at: str = "") ->
         "iteration": 0,
         "same_tranche_repair_count": 0,
         "consecutive_replans": 0,
-        "consecutive_low_novelty_iterations": 0,
         "seed_confirmed": False,
         "charter_version": 0,
         "active_milestone_id": "",
@@ -962,62 +883,10 @@ def default_session_state_payload(session_id: str = "", started_at: str = "") ->
         "evidence_registry": [],
         "checkpoint_summaries": [],
         "worker_manifests": [],
+        "disabled_worker_roles": [],
+        "task_summary": default_task_summary_payload("", started_at),
         "started_at": started_at,
         "updated_at": started_at,
-    }
-
-
-def legacy_program_board_from_charter(charter: dict[str, Any] | None) -> dict[str, Any]:
-    workstreams = (charter or {}).get("workstreams") or []
-    return {
-        "goal": (charter or {}).get("goal", ""),
-        "milestones": [
-            {
-                "id": "legacy-milestone",
-                "title": "Legacy milestone",
-                "objective": (charter or {}).get("goal", "Refresh the legacy plan."),
-                "acceptance_criteria": (charter or {}).get("success_criteria", []) or ["Refresh the milestone plan."],
-                "dependencies": [],
-                "evidence_requirements": (charter or {}).get("validation_categories", []),
-                "status": "active",
-                "workstreams": workstreams or [
-                    {
-                        "id": "legacy-workstream",
-                        "title": "Legacy workstream",
-                        "goal": "Refresh the legacy workstream plan.",
-                        "required_adjacent_surfaces": ["docs/"],
-                        "validation": ["Refresh the tranche plan."],
-                        "status": "planned",
-                    }
-                ],
-            }
-        ],
-        "success_criteria": (charter or {}).get("success_criteria", []) or ["Refresh the legacy plan."],
-        "validation_categories": (charter or {}).get("validation_categories", []) or ["review"],
-        "explicit_deferrals": (charter or {}).get("explicit_deferrals", []),
-    }
-
-
-def default_active_milestone_payload(program_board: dict[str, Any] | None = None) -> dict[str, Any]:
-    milestones = (program_board or {}).get("milestones") or []
-    milestone = milestones[0] if milestones else {}
-    target_files: list[str] = []
-    for workstream in milestone.get("workstreams") or []:
-        for surface in workstream.get("required_adjacent_surfaces") or []:
-            if surface and surface not in target_files:
-                target_files.append(surface)
-    validation: list[str] = []
-    for workstream in milestone.get("workstreams") or []:
-        for item in workstream.get("validation") or []:
-            if item and item not in validation:
-                validation.append(item)
-    return {
-        "milestone_id": milestone.get("id", "legacy-milestone"),
-        "rationale": milestone.get("objective", "Refresh the active milestone plan."),
-        "success_checkpoint": ((milestone.get("acceptance_criteria") or ["Refresh the milestone plan."])[0]),
-        "evidence_focus": milestone.get("evidence_requirements", []),
-        "target_files": target_files or ["docs/"],
-        "validation": validation or ["Review the milestone outcome."],
     }
 
 
@@ -1053,162 +922,13 @@ def default_profile_baseline() -> dict[str, Any]:
     global _DEFAULT_PROFILE_CACHE
     if _DEFAULT_PROFILE_CACHE is None:
         payload = read_json_object(DEFAULT_PROFILE_PATH, "default profile")
-        payload["schema_id"] = PROFILE_SCHEMA_ID
-        payload["schema_version"] = VERSION
-        legacy_model = str(payload.get("model", "")).strip()
-        for section_name, default_mode, output_schema_id in (
-            ("planning", "plan", PLANNING_OUTPUT_SCHEMA_ID),
-            ("evaluation", "default", EVALUATION_OUTPUT_SCHEMA_ID),
-            ("execution", "default", EXECUTION_OUTPUT_SCHEMA_ID),
-        ):
-            section = payload.setdefault(section_name, {})
-            if legacy_model and not section.get("model"):
-                section["model"] = legacy_model
-            section.setdefault("mode", default_mode)
-            section.setdefault("output_schema_id", output_schema_id)
-        payload.setdefault(
-            "loop_policy",
-            {
-                "same_tranche_retry_limit": 2,
-                "max_consecutive_replans": 3,
-                "planning_max_prompt_chars": 0,
-                "execution_max_prompt_chars": payload.get("execution", {}).get("max_prompt_chars", 0),
-                "compact_history_after_chars": 12000,
-                "require_iteration_repo_baseline": True,
-                "max_consecutive_low_novelty_iterations": 2,
-            },
-        )
-        memory_policy = payload.setdefault("memory_policy", {})
-        memory_policy.setdefault("max_execution_memory_entries", 8)
-        memory_policy.setdefault("max_skill_memory_entries", 8)
-        memory_policy.setdefault("max_checkpoint_summaries", 8)
-        memory_policy.setdefault("max_evidence_registry_entries", 32)
-        memory_policy.setdefault("max_worker_manifests", 8)
-        quality_policy = payload.setdefault("quality_policy", {})
-        quality_policy.setdefault("progress_checkpoint_mode", "require_confirmation")
+        validate_subset(SchemaCatalog(SCHEMA_FILES).load(PROFILE_SCHEMA_ID), payload)
         _DEFAULT_PROFILE_CACHE = deep_copy_json(payload)
     return deep_copy_json(_DEFAULT_PROFILE_CACHE)
 
 
 def normalize_payload_for_schema(schema_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-    normalized = deep_copy_json(payload)
-    if schema_id == PROFILE_SCHEMA_ID:
-        legacy_model = str(normalized.get("model", "")).strip()
-        missing_phase_models = {
-            section_name: not (
-                isinstance(normalized.get(section_name), dict)
-                and str(normalized.get(section_name, {}).get("model", "")).strip()
-            )
-            for section_name in ("planning", "evaluation", "execution")
-        }
-        baseline = default_profile_baseline()
-        normalized = merge_missing_keys(normalized, baseline)
-        if legacy_model:
-            for section_name in ("planning", "evaluation", "execution"):
-                section = normalized.get(section_name)
-                if isinstance(section, dict) and missing_phase_models.get(section_name):
-                    section["model"] = legacy_model
-        loop_policy = normalized.get("loop_policy")
-        if isinstance(loop_policy, dict):
-            if not isinstance(loop_policy.get("execution_max_prompt_chars"), int):
-                loop_policy["execution_max_prompt_chars"] = normalized.get("execution", {}).get("max_prompt_chars", 0)
-        worker_policy = normalized.get("worker_policy")
-        if isinstance(worker_policy, dict):
-            allowed_roles = worker_policy.get("allowed_roles")
-            if isinstance(allowed_roles, list):
-                worker_policy["allowed_roles"] = [
-                    role
-                    for role in allowed_roles
-                    if role in {"research", "read_only_repo", "evaluator_vote"}
-                ] or ["research"]
-        normalized["schema_id"] = PROFILE_SCHEMA_ID
-        normalized["schema_version"] = baseline["schema_version"]
-        return normalized
-    if schema_id == SESSION_STATE_SCHEMA_ID:
-        session_id = str(normalized.get("session_id", "")).strip()
-        started_at = str(normalized.get("started_at", "")).strip()
-        normalized = merge_missing_keys(normalized, default_session_state_payload(session_id, started_at))
-        execution_memory = normalized.get("execution_memory")
-        if isinstance(execution_memory, list):
-            for entry in execution_memory:
-                if not isinstance(entry, dict):
-                    continue
-                if "acceptance_progress_score" not in entry and "closure_score" in entry:
-                    entry["acceptance_progress_score"] = entry.get("closure_score")
-                entry.pop("closure_score", None)
-        normalized["schema_id"] = SESSION_STATE_SCHEMA_ID
-        normalized["schema_version"] = VERSION
-        return normalized
-    if schema_id == CHARTER_SCHEMA_ID:
-        planning_result = normalized.get("planning_result")
-        if isinstance(planning_result, dict):
-            planning_result.setdefault("research", default_research_payload())
-            if "program_board" not in planning_result and isinstance(planning_result.get("charter"), dict):
-                planning_result["program_board"] = legacy_program_board_from_charter(planning_result.get("charter"))
-            planning_result.setdefault("active_milestone", default_active_milestone_payload(planning_result.get("program_board")))
-            planning_result.setdefault(
-                "current_tranche",
-                default_tranche_payload(
-                    planning_result.get("charter")
-                    or {
-                        "workstreams": [
-                            workstream
-                            for milestone in (planning_result.get("program_board") or {}).get("milestones", [])
-                            for workstream in milestone.get("workstreams", [])
-                        ]
-                    }
-                ),
-            )
-        return normalized
-    if schema_id == CHARTER_HISTORY_LINE_SCHEMA_ID:
-        planning_result = normalized.get("planning_result")
-        if isinstance(planning_result, dict):
-            planning_result.setdefault("research", default_research_payload())
-            if "program_board" not in planning_result and isinstance(planning_result.get("charter"), dict):
-                planning_result["program_board"] = legacy_program_board_from_charter(planning_result.get("charter"))
-            planning_result.setdefault("active_milestone", default_active_milestone_payload(planning_result.get("program_board")))
-            planning_result.setdefault(
-                "current_tranche",
-                default_tranche_payload(
-                    planning_result.get("charter")
-                    or {
-                        "workstreams": [
-                            workstream
-                            for milestone in (planning_result.get("program_board") or {}).get("milestones", [])
-                            for workstream in milestone.get("workstreams", [])
-                        ]
-                    }
-                ),
-            )
-        return normalized
-    if schema_id == COMPLETION_SCHEMA_ID:
-        last_result = normalized.get("last_result")
-        if isinstance(last_result, dict) and last_result:
-            last_result.setdefault("verification", default_verification_payload())
-            last_result.setdefault("touched_files", ["legacy-output"])
-            last_result.setdefault("created_files", [])
-            last_result.setdefault("off_tranche_justifications", [])
-            last_result.setdefault("quality_claims", default_quality_claims_payload())
-            last_result.setdefault(
-                "milestone_progress",
-                {
-                    "milestone_id": "legacy-milestone",
-                    "criteria_met": [],
-                    "criteria_remaining": ["Refresh the milestone progress block."],
-                    "novelty_notes": ["Legacy output did not record novelty assessment."],
-                    "completion_notes": ["Refresh the milestone completion assessment."],
-                },
-            )
-            milestone_progress = last_result.get("milestone_progress")
-            if isinstance(milestone_progress, dict):
-                if "completion_notes" not in milestone_progress and "closure_notes" in milestone_progress:
-                    milestone_progress["completion_notes"] = milestone_progress.get("closure_notes")
-                milestone_progress.pop("closure_notes", None)
-            last_result.setdefault("acceptance_artifacts", [])
-            last_result.setdefault("evidence_updates", [])
-            last_result.setdefault("next_tranche_recommendation", last_result.get("next_step", "Refresh the tranche plan."))
-        return normalized
-    return normalized
+    return deep_copy_json(payload)
 
 
 def adjacent_schema_path(path: Path) -> Path:
@@ -1220,6 +940,10 @@ def truncate_label(text: str, limit: int = 48) -> str:
     if len(normalized) <= limit:
         return normalized
     return normalized[: limit - 3] + "..."
+
+
+def limit_is_active(value: Any) -> bool:
+    return isinstance(value, int) and value > 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1523,6 +1247,7 @@ class SessionStore:
             "message_text": task["message_text"],
         }
         state = default_session_state_payload(session_id, created_at)
+        state["task_summary"] = default_task_summary_payload(task["message_text"], created_at)
         completion = {
             "session_id": session_id,
             "accepted": False,
@@ -2665,20 +2390,15 @@ class RalphController:
                 continue
             self.session.state["same_tranche_repair_count"] = 0
             self.session.state["consecutive_replans"] += 1
-            if self.session.state["consecutive_replans"] > self.loop_policy()["max_consecutive_replans"]:
-                raise RalphError(
-                    "exhausted max_consecutive_replans="
-                    f"{self.loop_policy()['max_consecutive_replans']} without verified milestone completion"
-                )
             self.session.state["phase"] = "planning"
             self.print_status("replanning started", badge="PLANNING")
-            planning_result = self.plan_once("replanning", self.session.state["pending_feedback"])
+            replanning_feedback = self.replanning_feedback(self.session.state["pending_feedback"])
+            planning_result = self.plan_once("replanning", replanning_feedback)
             self.validate_planning_result(planning_result)
             self.refresh_program_state(planning_result)
             self.session.state["charter_version"] += 1
             replanning_feedback = self.session.state["pending_feedback"]
             self.session.state["pending_feedback"] = ""
-            self.session.state["consecutive_replans"] = 0
             self.store.save_charter(
                 self.session,
                 planning_result,
@@ -2734,9 +2454,15 @@ class RalphController:
         self.print_status(f"thread started: {self.session.state['thread_id']}", badge="STARTING")
 
     def plan_once(self, phase_name: str, feedback: str | None, render_output: bool = True) -> dict[str, Any]:
-        return self.run_turn(
+        return self.run_validated_phase(
             phase_name=phase_name,
-            prompt=self.build_planning_prompt(phase_name, feedback),
+            prompt_shapes=self.planning_prompt_shapes(),
+            prompt_builder=lambda shape, phase_feedback, prompt_context: self.build_planning_prompt(
+                phase_name,
+                phase_feedback,
+                shape,
+                prompt_context=prompt_context,
+            ),
             schema=self.schema_catalog.model_schema(self.session.profile["planning"]["output_schema_id"]),
             collaboration_mode=self.make_collaboration_mode(
                 self.session.profile["planning"]["mode"],
@@ -2744,13 +2470,25 @@ class RalphController:
                 self.planning_instructions(),
                 model=self.session.profile["planning"]["model"],
             ),
+            validator=self.validate_planning_result,
+            escalation_after=self.phase_repair_escalation_after(phase_name),
+            prompt_context_builder=lambda shape, phase_feedback, repair_index: {
+                "worker_summaries": self.collect_planning_worker_summaries(phase_name, shape, repair_index)
+            },
+            initial_feedback=feedback or "",
             render_output=render_output,
         )
 
     def execute_once(self) -> dict[str, Any]:
-        return self.run_turn(
-            phase_name=f"execution-{self.session.state['iteration']}",
-            prompt=self.build_execution_prompt(self.session.state["pending_feedback"]),
+        phase_name = f"execution-{self.session.state['iteration']}"
+        return self.run_validated_phase(
+            phase_name=phase_name,
+            prompt_shapes=self.execution_prompt_shapes(),
+            prompt_builder=lambda shape, phase_feedback, prompt_context: self.build_execution_prompt(
+                phase_feedback,
+                shape,
+                prompt_context=prompt_context,
+            ),
             schema=self.schema_catalog.model_schema(self.session.profile["execution"]["output_schema_id"]),
             collaboration_mode=self.make_collaboration_mode(
                 self.session.profile["execution"]["mode"],
@@ -2758,12 +2496,26 @@ class RalphController:
                 self.execution_instructions(),
                 model=self.session.profile["execution"]["model"],
             ),
+            validator=self.validate_execution_result_basic,
+            escalation_after=self.phase_repair_escalation_after(phase_name),
+            prompt_context_builder=lambda shape, phase_feedback, repair_index: {
+                "worker_summaries": self.collect_execution_worker_summaries(phase_name, phase_feedback, shape)
+            },
+            initial_feedback=self.session.state["pending_feedback"],
         )
 
     def evaluate_once(self, execution_result: dict[str, Any], audit: ExecutionAudit) -> dict[str, Any]:
-        return self.run_turn(
-            phase_name=f"evaluation-{self.session.state['iteration']}",
-            prompt=self.build_evaluation_prompt(execution_result, audit),
+        phase_name = f"evaluation-{self.session.state['iteration']}"
+        return self.run_validated_phase(
+            phase_name=phase_name,
+            prompt_shapes=self.evaluation_prompt_shapes(),
+            prompt_builder=lambda shape, phase_feedback, prompt_context: self.build_evaluation_prompt(
+                execution_result,
+                audit,
+                shape,
+                phase_feedback,
+                prompt_context=prompt_context,
+            ),
             schema=self.schema_catalog.model_schema(self.session.profile["evaluation"]["output_schema_id"]),
             collaboration_mode=self.make_collaboration_mode(
                 self.session.profile["evaluation"]["mode"],
@@ -2771,6 +2523,11 @@ class RalphController:
                 self.evaluation_instructions(),
                 model=self.session.profile["evaluation"]["model"],
             ),
+            validator=self.validate_evaluation_result_basic,
+            escalation_after=self.phase_repair_escalation_after(phase_name),
+            prompt_context_builder=lambda shape, phase_feedback, repair_index: {
+                "worker_votes": self.collect_evaluation_worker_votes(phase_name, execution_result, audit, shape)
+            },
         )
 
     def run_turn(
@@ -2793,85 +2550,87 @@ class RalphController:
         turn_id = result["turn"]["id"]
         self.session.state["current_turn_id"] = turn_id
         self.store.save_state(self.session)
-        self.print_status(f"{phase_name} started", badge=self.phase_badge(phase_name))
-        tracker = TurnOutputTracker()
-        streamed_live = False
-        turn_started_at = self.monotonic_func()
-        next_heartbeat_at = turn_started_at + TURN_IDLE_HEARTBEAT_SECS
-        while True:
-            event = self.client.next_event(timeout=0.1)
-            if event is None:
-                self.client.raise_if_unavailable("while waiting for turn events")
-                current_time = self.monotonic_func()
-                if current_time >= next_heartbeat_at:
-                    elapsed_seconds = max(1, int(current_time - turn_started_at))
-                    self.terminal_reporter.wait(phase_name, elapsed_seconds, badge=self.phase_badge(phase_name))
-                    next_heartbeat_at += TURN_IDLE_HEARTBEAT_SECS
-                continue
-            if event["kind"] == "server-request":
-                self.handle_server_request(event["payload"])
-                continue
-            if event["kind"] == "stream-closed":
-                raise RalphError(self.client.diagnostic_error("codex app-server stream closed during turn"))
-            payload = event["payload"]
-            method = payload.get("method")
-            params = payload.get("params", {})
-            self.event_recorder.record_notification(method, params)
-            if method in {"item/agentMessage/delta", "item/plan/delta"} and params.get("turnId") == turn_id:
-                delta = params.get("delta", "")
-                if isinstance(delta, str) and delta:
-                    streamed_live = self.terminal_reporter.stream_model_text(phase_name, delta) or streamed_live
-                continue
-            if method == "rawResponseItem/completed" and params.get("turnId") == turn_id:
-                item = params.get("item", {})
-                tracker.record_raw_item(item)
-                if item.get("type") in {"function_call", "function_call_output"}:
-                    self.store.append_event(
-                        self.session,
-                        "tool-item",
-                        {
-                            "turn_id": turn_id,
-                            "item_type": item.get("type", ""),
-                            "name": item.get("name", ""),
-                            "call_id": item.get("call_id", ""),
-                            "output_chars": len(EventRecorder.stringify(item.get("output", ""))),
-                        },
-                    )
-                continue
-            if method == "item/completed" and params.get("turnId") == turn_id:
-                tracker.record_thread_item(params.get("item", {}))
-                continue
-            if method == "turn/completed" and params.get("turn", {}).get("id") == turn_id:
-                turn = params.get("turn", {})
-                status = turn.get("status")
-                if status == "failed":
-                    error = turn.get("error") or {}
-                    raise RalphError(error.get("message", "Codex turn failed"))
-                if status == "interrupted":
-                    raise RalphError("Codex turn was interrupted")
-                break
-        self.terminal_reporter.finish_stdout_line()
-        final_output = tracker.extract_final_output(schema)
-        search_activity = tracker.summarize_search_activity()
-        if search_activity["count"]:
-            self.store.append_event(self.session, "turn-search-activity", {"turn_id": turn_id, **search_activity})
-        if render_output:
-            self.render_model_output(phase_name, final_output, streamed_live)
-        self.store.append_turn(
-            self.session,
-            phase_name,
-            turn_id,
-            final_output.get("status", "UNKNOWN"),
-            final_output.get("summary", ""),
-        )
-        self.session.state["current_turn_id"] = ""
-        self.store.save_state(self.session)
-        self.print_status(
-            f"{phase_name} complete: "
-            f"{final_output.get('status', 'UNKNOWN')}: {truncate_label(final_output.get('summary', ''), 120)}",
-            badge=self.phase_badge(phase_name),
-        )
-        return final_output
+        try:
+            self.print_status(f"{phase_name} started", badge=self.phase_badge(phase_name))
+            tracker = TurnOutputTracker()
+            streamed_live = False
+            turn_started_at = self.monotonic_func()
+            next_heartbeat_at = turn_started_at + TURN_IDLE_HEARTBEAT_SECS
+            while True:
+                event = self.client.next_event(timeout=0.1)
+                if event is None:
+                    self.client.raise_if_unavailable("while waiting for turn events")
+                    current_time = self.monotonic_func()
+                    if current_time >= next_heartbeat_at:
+                        elapsed_seconds = max(1, int(current_time - turn_started_at))
+                        self.terminal_reporter.wait(phase_name, elapsed_seconds, badge=self.phase_badge(phase_name))
+                        next_heartbeat_at += TURN_IDLE_HEARTBEAT_SECS
+                    continue
+                if event["kind"] == "server-request":
+                    self.handle_server_request(event["payload"])
+                    continue
+                if event["kind"] == "stream-closed":
+                    raise RalphError(self.client.diagnostic_error("codex app-server stream closed during turn"))
+                payload = event["payload"]
+                method = payload.get("method")
+                params = payload.get("params", {})
+                self.event_recorder.record_notification(method, params)
+                if method in {"item/agentMessage/delta", "item/plan/delta"} and params.get("turnId") == turn_id:
+                    delta = params.get("delta", "")
+                    if isinstance(delta, str) and delta:
+                        streamed_live = self.terminal_reporter.stream_model_text(phase_name, delta) or streamed_live
+                    continue
+                if method == "rawResponseItem/completed" and params.get("turnId") == turn_id:
+                    item = params.get("item", {})
+                    tracker.record_raw_item(item)
+                    if item.get("type") in {"function_call", "function_call_output"}:
+                        self.store.append_event(
+                            self.session,
+                            "tool-item",
+                            {
+                                "turn_id": turn_id,
+                                "item_type": item.get("type", ""),
+                                "name": item.get("name", ""),
+                                "call_id": item.get("call_id", ""),
+                                "output_chars": len(EventRecorder.stringify(item.get("output", ""))),
+                            },
+                        )
+                    continue
+                if method == "item/completed" and params.get("turnId") == turn_id:
+                    tracker.record_thread_item(params.get("item", {}))
+                    continue
+                if method == "turn/completed" and params.get("turn", {}).get("id") == turn_id:
+                    turn = params.get("turn", {})
+                    status = turn.get("status")
+                    if status == "failed":
+                        error = turn.get("error") or {}
+                        raise RalphError(error.get("message", "Codex turn failed"))
+                    if status == "interrupted":
+                        raise RalphError("Codex turn was interrupted")
+                    break
+            self.terminal_reporter.finish_stdout_line()
+            final_output = tracker.extract_final_output(schema)
+            search_activity = tracker.summarize_search_activity()
+            if search_activity["count"]:
+                self.store.append_event(self.session, "turn-search-activity", {"turn_id": turn_id, **search_activity})
+            if render_output:
+                self.render_model_output(phase_name, final_output, streamed_live)
+            self.store.append_turn(
+                self.session,
+                phase_name,
+                turn_id,
+                final_output.get("status", "UNKNOWN"),
+                final_output.get("summary", ""),
+            )
+            self.print_status(
+                f"{phase_name} output received: "
+                f"{final_output.get('status', 'UNKNOWN')}: {truncate_label(final_output.get('summary', ''), 120)}",
+                badge=self.phase_badge(phase_name),
+            )
+            return final_output
+        finally:
+            self.session.state["current_turn_id"] = ""
+            self.store.save_state(self.session)
 
     def handle_server_request(self, payload: dict[str, Any]) -> None:
         method = payload.get("method")
@@ -2912,10 +2671,7 @@ class RalphController:
     def validate_planning_result(self, planning_result: dict[str, Any]) -> dict[str, Any]:
         if planning_result.get("status") == "BLOCKED":
             raise RalphError("planner reported BLOCKED and cannot proceed to execution")
-        self.validate_research_block(
-            planning_result.get("research"),
-            self.session.profile["research_policy"]["planning_min_sources"],
-        )
+        self.validate_research_block(planning_result.get("research"))
         charter_policy = self.session.profile["charter_policy"]
         program_board = planning_result.get("program_board")
         if not isinstance(program_board, dict):
@@ -2923,13 +2679,9 @@ class RalphController:
         milestones = program_board.get("milestones")
         if not isinstance(milestones, list) or not milestones:
             raise RalphError("planner program_board is missing milestones")
-        if len(milestones) > self.session.profile["milestone_policy"]["max_active_milestones"]:
-            active_count = sum(1 for item in milestones if item.get("status") == "active")
-            if active_count > self.session.profile["milestone_policy"]["max_active_milestones"]:
-                raise RalphError("planner returned too many active milestones")
         workstreams = [entry for milestone in milestones for entry in milestone.get("workstreams", [])]
-        if not isinstance(workstreams, list) or len(workstreams) < charter_policy["min_workstreams"]:
-            raise RalphError("planner program_board is too narrow")
+        if not isinstance(workstreams, list) or not workstreams:
+            raise RalphError("planner program_board is missing workstreams")
         seen_ids: set[str] = set()
         for workstream in workstreams:
             identifier = workstream.get("id")
@@ -2948,7 +2700,7 @@ class RalphController:
         self.validate_current_tranche(planning_result.get("current_tranche"), program_board, active_milestone)
         return program_board
 
-    def validate_research_block(self, research: Any, min_sources: int) -> None:
+    def validate_research_block(self, research: Any) -> None:
         if not isinstance(research, dict):
             raise RalphError("planner did not return a research block")
         status = research.get("status")
@@ -2961,11 +2713,12 @@ class RalphController:
         findings = research.get("findings")
         if not isinstance(findings, list) or not findings:
             raise RalphError("research block must include findings")
+        self.evidence_assessment(research.get("evidence_assessment"), "research")
         sources = research.get("sources")
         if not isinstance(sources, list):
             raise RalphError("research block must include sources")
-        if status == "completed" and len(sources) < min_sources:
-            raise RalphError(f"research block must include at least {min_sources} sources")
+        if status == "completed" and not sources:
+            raise RalphError("completed research block must include sources")
         if (
             status == "completed"
             and self.session.profile["research_policy"]["require_primary_sources_when_available"]
@@ -3005,13 +2758,9 @@ class RalphController:
         if not isinstance(workstream_ids, list) or not workstream_ids:
             raise RalphError("current tranche is missing workstream_ids")
         tranche_policy = self.session.profile["tranche_policy"]
-        if len(workstream_ids) > tranche_policy["max_active_workstreams"]:
-            raise RalphError("current tranche exceeds max_active_workstreams")
         target_files = tranche.get("target_files")
         if tranche_policy["require_explicit_target_files"] and (not isinstance(target_files, list) or not target_files):
             raise RalphError("current tranche is missing target_files")
-        if isinstance(target_files, list) and len(target_files) > tranche_policy["max_target_files"]:
-            raise RalphError("current tranche exceeds max_target_files")
         known_ids = {
             entry.get("id")
             for milestone in program_board.get("milestones", [])
@@ -3037,28 +2786,56 @@ class RalphController:
         findings = verification.get("findings")
         if not isinstance(findings, list) or not findings:
             raise RalphError("verification block must include findings")
+        self.evidence_assessment(verification.get("evidence_assessment"), "verification")
         sources = verification.get("sources")
         if not isinstance(sources, list):
             raise RalphError("verification block must include sources")
-        min_sources = self.session.profile["research_policy"]["execution_min_sources"]
-        if status == "completed" and len(sources) < min_sources:
-            raise RalphError(f"verification block must include at least {min_sources} sources")
+        if status == "completed" and not sources:
+            raise RalphError("completed verification block must include sources")
         if status == "completed" and self.store.latest_turn(self.session) and self.latest_turn_search_count() < 1:
             raise RalphError("completed verification block is not backed by observed live search activity")
+
+    def validate_execution_result_basic(self, execution_result: dict[str, Any]) -> None:
+        self.validate_verification_block(execution_result.get("verification"))
+        milestone_progress = execution_result.get("milestone_progress")
+        if not isinstance(milestone_progress, dict):
+            raise RalphError("execution result is missing milestone_progress")
+        progress_milestone_id = str(milestone_progress.get("milestone_id", "")).strip()
+        if progress_milestone_id != str(self.active_milestone().get("milestone_id", "")).strip():
+            raise RalphError("milestone_progress.milestone_id does not match the active milestone")
+        workstream_updates = execution_result.get("workstream_updates")
+        if not isinstance(workstream_updates, list) or not workstream_updates:
+            raise RalphError("execution result is missing workstream_updates")
+        known_ids = {entry.get("id") for entry in self.current_charter().get("workstreams", [])}
+        unknown_updates = sorted(
+            {
+                str(entry.get("id", "")).strip()
+                for entry in workstream_updates
+                if isinstance(entry, dict) and str(entry.get("id", "")).strip() not in known_ids
+            }
+        )
+        if unknown_updates:
+            raise RalphError("execution result references unknown workstream ids: " + ", ".join(unknown_updates[:5]))
+
+    def validate_evaluation_result_basic(self, evaluation_result: dict[str, Any]) -> None:
+        disposition = str(evaluation_result.get("disposition", "")).strip()
+        repair_instructions = evaluation_result.get("repair_instructions") or []
+        if disposition == "repair_same_tranche" and not repair_instructions:
+            raise RalphError("evaluation repair_same_tranche must include repair_instructions")
 
     def current_tranche(self) -> dict[str, Any]:
         planning_result = (self.session.charter_record or {}).get("planning_result") or {}
         tranche = planning_result.get("current_tranche")
         if isinstance(tranche, dict):
             return tranche
-        return default_tranche_payload(self.current_charter())
+        raise RalphError("session is missing current_tranche")
 
     def current_program_board(self) -> dict[str, Any]:
         planning_result = (self.session.charter_record or {}).get("planning_result") or {}
         program_board = planning_result.get("program_board")
         if isinstance(program_board, dict):
             return program_board
-        return legacy_program_board_from_charter((self.session.charter_record or {}).get("charter"))
+        raise RalphError("session is missing program_board")
 
     def current_charter(self) -> dict[str, Any]:
         return charter_from_program_board(self.current_program_board())
@@ -3068,7 +2845,7 @@ class RalphController:
         milestone = planning_result.get("active_milestone")
         if isinstance(milestone, dict):
             return milestone
-        return default_active_milestone_payload(self.current_program_board())
+        raise RalphError("session is missing active_milestone")
 
     def milestone_by_id(self, milestone_id: str) -> dict[str, Any] | None:
         for milestone in self.current_program_board().get("milestones", []):
@@ -3088,31 +2865,182 @@ class RalphController:
             return policy
         return default_profile_baseline()["quality_policy"]
 
-    def memory_policy(self) -> dict[str, Any]:
-        policy = self.session.profile.get("memory_policy") or {}
-        if isinstance(policy, dict):
-            return policy
-        return default_profile_baseline()["memory_policy"]
-
     def worker_policy(self) -> dict[str, Any]:
         policy = self.session.profile.get("worker_policy") or {}
         if isinstance(policy, dict):
             return policy
         return default_profile_baseline()["worker_policy"]
 
-    def trim_memory_entries(self, items: list[Any], key: str, fallback: int) -> list[Any]:
-        limit = self.memory_policy().get(key, fallback)
-        if not isinstance(limit, int) or limit < 1:
-            limit = fallback
-        return items[-limit:]
+    def evidence_policy(self) -> dict[str, Any]:
+        policy = self.session.profile.get("evidence_policy") or {}
+        if isinstance(policy, dict):
+            return policy
+        return default_profile_baseline()["evidence_policy"]
+
+    def loop_escalation_after(self, key: str, fallback: int) -> int:
+        value = self.loop_policy().get(key, fallback)
+        if not isinstance(value, int) or value < 1:
+            return fallback
+        return value
+
+    def phase_repair_escalation_after(self, phase_name: str) -> int:
+        lowered = phase_name.lower()
+        if "planning" in lowered or "replanning" in lowered:
+            return self.loop_escalation_after("planning_repair_escalation_after", 2)
+        if "evaluation" in lowered:
+            return self.loop_escalation_after("evaluation_repair_escalation_after", 2)
+        return self.loop_escalation_after("execution_repair_escalation_after", 2)
+
+    def same_tranche_escalated(self) -> bool:
+        threshold = self.loop_escalation_after("same_tranche_escalation_after", 4)
+        return self.session.state.get("same_tranche_repair_count", 0) >= threshold
+
+    def replan_escalated(self) -> bool:
+        threshold = self.loop_escalation_after("replan_escalation_after", 3)
+        return self.session.state.get("consecutive_replans", 0) >= threshold
+
+    def task_summary(self) -> dict[str, Any]:
+        summary = self.session.state.get("task_summary")
+        if isinstance(summary, dict):
+            return summary
+        fallback = default_task_summary_payload(self.session.task.get("message_text", ""), utc_timestamp())
+        self.session.state["task_summary"] = fallback
+        return fallback
+
+    def refresh_task_summary(self, source: str = "raw_task") -> dict[str, Any]:
+        summary = {
+            "summary": summarize_task_text(self.session.task.get("message_text", "")),
+            "source": source,
+            "updated_at": utc_timestamp(),
+        }
+        self.session.state["task_summary"] = summary
+        return summary
+
+    def task_text_for_prompt(self, mode: str, limit: int) -> str:
+        if mode == "raw":
+            return self.compact_text_block(self.session.task["message_text"].strip(), limit)
+        summary = self.task_summary()
+        if not str(summary.get("summary", "")).strip():
+            summary = self.refresh_task_summary(source="raw_task")
+        return self.compact_text_block(str(summary.get("summary", "")).strip(), limit)
+
+    def evidence_assessment(self, payload: Any, label: str) -> dict[str, Any]:
+        if not isinstance(payload, dict):
+            raise RalphError(f"{label} must include evidence_assessment")
+        policy = self.evidence_policy()
+        relevance = str(payload.get("relevance", "")).strip()
+        quality = str(payload.get("quality", "")).strip()
+        freshness = str(payload.get("freshness", "")).strip()
+        refresh_recommended = payload.get("refresh_recommended")
+        if policy.get("require_relevance_assessment") and not relevance:
+            raise RalphError(f"{label}.evidence_assessment.relevance is required")
+        if policy.get("require_quality_assessment") and not quality:
+            raise RalphError(f"{label}.evidence_assessment.quality is required")
+        if policy.get("require_freshness_assessment") and not freshness:
+            raise RalphError(f"{label}.evidence_assessment.freshness is required")
+        if not isinstance(refresh_recommended, bool):
+            raise RalphError(f"{label}.evidence_assessment.refresh_recommended must be a boolean")
+        return {
+            "relevance": relevance,
+            "quality": quality,
+            "freshness": freshness,
+            "refresh_recommended": refresh_recommended,
+        }
 
     def record_worker_manifest(self, role: str, status: str, summary: str) -> None:
         manifests = self.session.state.get("worker_manifests") or []
         manifests.append({"role": role, "status": status, "summary": summary})
-        self.session.state["worker_manifests"] = self.trim_memory_entries(
-            manifests,
-            "max_worker_manifests",
-            8,
+        self.session.state["worker_manifests"] = manifests
+
+    def append_worker_event(self, event_type: str, role: str, phase_name: str, payload: dict[str, Any]) -> None:
+        self.store.append_event(
+            self.session,
+            event_type,
+            {
+                "role": role,
+                "phase": phase_name,
+                **payload,
+            },
+        )
+
+    def collect_planning_worker_summaries(
+        self,
+        phase_name: str,
+        shape: PromptShape,
+        repair_index: int,
+    ) -> list[dict[str, Any]]:
+        if not shape.include_worker_summaries:
+            return []
+        if repair_index < self.phase_repair_escalation_after(phase_name):
+            return []
+        research_memory = self.session.state.get("research_memory") or {}
+        worker_payload = {
+            "phase": phase_name,
+            "task_summary": self.task_summary(),
+            "program_memory": self.session.state.get("program_memory", {}),
+            "research_memory": research_memory,
+        }
+        if self.session.charter_record:
+            worker_payload["current_tranche"] = self.current_tranche()
+        return self.collect_auxiliary_worker_summaries(
+            [role for role in ["research", "read_only_repo"] if self.worker_enabled_for_role(role)],
+            worker_payload,
+            model=self.session.profile["planning"]["model"],
+            reasoning_effort=self.session.profile["planning"]["reasoning_effort"],
+            phase_name=phase_name,
+        )
+
+    def collect_execution_worker_summaries(
+        self,
+        phase_name: str,
+        feedback: str,
+        shape: PromptShape,
+    ) -> list[dict[str, Any]]:
+        if not self.same_tranche_escalated():
+            return []
+        if shape.evidence_limit <= 0:
+            return []
+        evidence_registry = self.session.state.get("evidence_registry") or []
+        return self.collect_auxiliary_worker_summaries(
+            [role for role in ["research", "read_only_repo"] if self.worker_enabled_for_role(role)],
+            {
+                "task_summary": self.task_summary(),
+                "active_milestone": self.active_milestone(),
+                "current_tranche": self.current_tranche(),
+                "pending_feedback": feedback or "",
+                "evidence_registry": evidence_registry[-6:],
+            },
+            model=self.session.profile["execution"]["model"],
+            reasoning_effort=self.session.profile["execution"]["reasoning_effort"],
+            phase_name=phase_name,
+        )
+
+    def collect_evaluation_worker_votes(
+        self,
+        phase_name: str,
+        execution_result: dict[str, Any],
+        audit: ExecutionAudit,
+        shape: PromptShape,
+    ) -> list[dict[str, Any]]:
+        if not shape.include_worker_summaries:
+            return []
+        return self.collect_auxiliary_worker_summaries(
+            [role for role in ["evaluator_vote"] if self.worker_enabled_for_role(role)],
+            {
+                "task_summary": self.task_summary(),
+                "active_milestone": self.active_milestone(),
+                "current_tranche": self.current_tranche(),
+                "execution_result": execution_result,
+                "audit": {
+                    "feedback": audit.feedback,
+                    "novelty_score": audit.novelty_score,
+                    "acceptance_progress_score": audit.acceptance_progress_score,
+                    "diff_samples": audit.diff_samples,
+                },
+            },
+            model=self.session.profile["evaluation"]["model"],
+            reasoning_effort=self.session.profile["evaluation"]["reasoning_effort"],
+            phase_name=phase_name,
         )
 
     def latest_turn_search_count(self) -> int:
@@ -3135,12 +3063,12 @@ class RalphController:
         return total
 
     def refresh_program_state(self, planning_result: dict[str, Any]) -> None:
-        program_board = planning_result.get("program_board") or legacy_program_board_from_charter(planning_result.get("charter"))
-        active_milestone = planning_result.get("active_milestone") or default_active_milestone_payload(program_board)
+        program_board = planning_result["program_board"]
+        active_milestone = planning_result["active_milestone"]
         now = utc_timestamp()
         self.session.state["active_milestone_id"] = str(active_milestone.get("milestone_id", "")).strip()
         self.session.state["milestone_iteration_count"] = 0
-        self.session.state["consecutive_low_novelty_iterations"] = 0
+        self.refresh_task_summary(source="controller_refresh")
         self.session.state["program_memory"] = {
             "goal": program_board.get("goal", ""),
             "milestones": [
@@ -3160,14 +3088,14 @@ class RalphController:
             "open_questions": research.get("open_questions") or [],
             "last_refreshed_at": now,
         }
-        self.register_evidence_sources(research.get("sources") or [], used_for_prefix="planning")
+        self.register_evidence_sources(
+            research.get("sources") or [],
+            used_for_prefix="planning",
+            evidence_assessment=research.get("evidence_assessment"),
+        )
 
     def refresh_execution_memory(self, execution_result: dict[str, Any], audit: ExecutionAudit) -> None:
         self.session.state["milestone_iteration_count"] += 1
-        if audit.novelty_score <= 0:
-            self.session.state["consecutive_low_novelty_iterations"] += 1
-        else:
-            self.session.state["consecutive_low_novelty_iterations"] = 0
         execution_memory = self.session.state.get("execution_memory") or []
         execution_memory.append(
             {
@@ -3177,10 +3105,13 @@ class RalphController:
                 "acceptance_progress_score": audit.acceptance_progress_score,
             }
         )
-        max_entries = self.memory_policy()["max_execution_memory_entries"]
-        self.session.state["execution_memory"] = execution_memory[-max_entries:]
+        self.session.state["execution_memory"] = execution_memory
         verification = execution_result.get("verification") or {}
-        self.register_evidence_sources(verification.get("sources") or [], used_for_prefix="verification")
+        self.register_evidence_sources(
+            verification.get("sources") or [],
+            used_for_prefix="verification",
+            evidence_assessment=verification.get("evidence_assessment"),
+        )
         self.register_evidence_updates(execution_result.get("evidence_updates") or [])
         self.refresh_skill_memory(execution_result)
 
@@ -3189,11 +3120,7 @@ class RalphController:
         checkpoints = (self.session.state.get("checkpoint_summaries") or []) + [
             {"phase": "evaluation", "summary": summary, "ts": utc_timestamp()}
         ]
-        self.session.state["checkpoint_summaries"] = self.trim_memory_entries(
-            checkpoints,
-            "max_checkpoint_summaries",
-            8,
-        )
+        self.session.state["checkpoint_summaries"] = checkpoints
         if evaluation_result.get("worker_fanout_recommended") and self.worker_policy()["enabled"]:
             self.record_worker_manifest(
                 "research",
@@ -3203,11 +3130,25 @@ class RalphController:
         if evaluation_result.get("milestone_status") in {"accepted", "closed"}:
             self.session.state["milestone_iteration_count"] = 0
 
-    def register_evidence_sources(self, sources: list[dict[str, Any]], used_for_prefix: str) -> None:
+    def register_evidence_sources(
+        self,
+        sources: list[dict[str, Any]],
+        used_for_prefix: str,
+        evidence_assessment: dict[str, Any] | None = None,
+    ) -> None:
         if not sources:
             return
         registry = self.session.state.get("evidence_registry") or []
         now = utc_timestamp()
+        assessment = self.evidence_assessment(
+            evidence_assessment or {
+                "relevance": "",
+                "quality": "",
+                "freshness": "",
+                "refresh_recommended": False,
+            },
+            f"{used_for_prefix} evidence",
+        )
         for source in sources:
             if not isinstance(source, dict):
                 continue
@@ -3220,15 +3161,14 @@ class RalphController:
                 "source_type": str(source.get("source_type", "secondary")).strip() or "secondary",
                 "used_for": f"{used_for_prefix}:{str(source.get('used_for', '')).strip() or 'support'}",
                 "status": "confirmed",
+                "relevance_note": assessment["relevance"],
+                "quality_note": assessment["quality"],
+                "freshness_note": assessment["freshness"],
                 "updated_at": now,
             }
             registry = [item for item in registry if item.get("url") != url]
             registry.append(entry)
-        self.session.state["evidence_registry"] = self.trim_memory_entries(
-            registry,
-            "max_evidence_registry_entries",
-            32,
-        )
+        self.session.state["evidence_registry"] = registry
 
     def register_evidence_updates(self, updates: list[dict[str, Any]]) -> None:
         if not updates:
@@ -3247,15 +3187,14 @@ class RalphController:
                 "source_type": str(update.get("source_type", "secondary")).strip() or "secondary",
                 "used_for": str(update.get("used_for", "")).strip() or "execution update",
                 "status": str(update.get("status", "new")).strip() or "new",
+                "relevance_note": str(update.get("relevance_note", "")).strip(),
+                "quality_note": str(update.get("quality_note", "")).strip(),
+                "freshness_note": str(update.get("freshness_note", "")).strip(),
                 "updated_at": now,
             }
             registry = [item for item in registry if item.get("url") != url]
             registry.append(entry)
-        self.session.state["evidence_registry"] = self.trim_memory_entries(
-            registry,
-            "max_evidence_registry_entries",
-            32,
-        )
+        self.session.state["evidence_registry"] = registry
 
     def refresh_skill_memory(self, execution_result: dict[str, Any]) -> None:
         touched_files = execution_result.get("touched_files") or []
@@ -3271,11 +3210,7 @@ class RalphController:
         }
         skills = self.session.state.get("skill_memory") or []
         skills.append(entry)
-        self.session.state["skill_memory"] = self.trim_memory_entries(
-            skills,
-            "max_skill_memory_entries",
-            8,
-        )
+        self.session.state["skill_memory"] = skills
 
     def capture_iteration_repo_baseline(self) -> None:
         if not self.loop_policy()["require_iteration_repo_baseline"]:
@@ -3418,7 +3353,7 @@ class RalphController:
         return results[-limit:]
 
     def is_execution_stagnating(self, execution_result: dict[str, Any]) -> bool:
-        threshold = self.session.profile["quality_policy"]["pause_on_stagnation_after_iterations"]
+        threshold = self.session.profile["quality_policy"]["stagnation_escalation_after_iterations"]
         if threshold < 2:
             return False
         previous = self.recent_execution_results(threshold - 1)
@@ -3453,13 +3388,7 @@ class RalphController:
         evidence_updates = execution_result.get("evidence_updates")
         if not isinstance(evidence_updates, list):
             raise RalphError("execution result is missing evidence_updates")
-        tranche_policy = self.session.profile["tranche_policy"]
-        quality_policy = self.session.profile["quality_policy"]
         feedback: list[str] = []
-        if len(touched_files) > tranche_policy["max_target_files"]:
-            feedback.append(
-                f"execution touched {len(touched_files)} files, exceeding max_target_files={tranche_policy['max_target_files']}"
-            )
         off_tranche_files = self.off_tranche_touched_files(touched_files)
         justification_map = self.off_tranche_justification_map(off_tranche_justifications)
         unjustified_off_tranche = [path_text for path_text in off_tranche_files if path_text not in justification_map]
@@ -3468,14 +3397,10 @@ class RalphController:
                 "execution touched files outside current_tranche.target_files without justification: "
                 + ", ".join(unjustified_off_tranche[:5])
             )
-        if len(created_files) > tranche_policy["max_new_files"]:
-            feedback.append(
-                f"execution created {len(created_files)} files, exceeding max_new_files={tranche_policy['max_new_files']}"
-            )
         if quality_claims.get("tranche_followed") is not True:
             feedback.append("execution did not claim tranche_followed=true")
         repeated_heading_file_count = self.count_repeated_heading_files(touched_files)
-        if repeated_heading_file_count > quality_policy["max_repeated_heading_additions_per_iteration"]:
+        if repeated_heading_file_count > 0:
             feedback.append(
                 "execution introduced repeated stock headings across "
                 f"{repeated_heading_file_count} files"
@@ -3489,7 +3414,7 @@ class RalphController:
         ]
         introduced_meta_artifact_files = self.find_meta_artifact_files(introduced_paths)
         total_meta_artifact_files = len(introduced_meta_artifact_files)
-        if total_meta_artifact_files > quality_policy["max_meta_artifact_files_per_run"]:
+        if total_meta_artifact_files > 0:
             feedback.append(
                 "repo changes include disallowed controller-serving meta artifacts: "
                 + ", ".join(introduced_meta_artifact_files[:5])
@@ -3519,23 +3444,9 @@ class RalphController:
             acceptance_progress_score = len(required_set & met_set) / max(1, len(required_set))
         elif not execution_result.get("remaining_gaps"):
             acceptance_progress_score = 1.0
-        if (
-            self.session.state.get("consecutive_low_novelty_iterations", 0) + (1 if novelty_score <= 0 else 0)
-            >= self.loop_policy()["max_consecutive_low_novelty_iterations"]
-        ):
-            feedback.append("execution is adding too little novel milestone progress across consecutive iterations")
         checkpoint_reasons: list[str] = []
-        if self.session.state["iteration"] >= quality_policy["max_iterations_before_checkpoint"]:
-            checkpoint_reasons.append("iteration checkpoint reached")
-        if total_files_changed >= quality_policy["max_total_files_changed_before_checkpoint"]:
-            checkpoint_reasons.append("changed-file checkpoint reached")
         if self.is_execution_stagnating(execution_result):
             checkpoint_reasons.append("stagnation checkpoint reached")
-        if (
-            self.session.state.get("milestone_iteration_count", 0) + 1
-            >= self.session.profile["milestone_policy"]["max_tranche_iterations_per_milestone"]
-        ):
-            checkpoint_reasons.append("milestone iteration checkpoint reached")
         if self.session.profile["milestone_policy"]["checkpoint_on_milestone_close"] and required_set and required_set <= met_set:
             checkpoint_reasons.append("milestone completion checkpoint reached")
         return ExecutionAudit(
@@ -3546,7 +3457,7 @@ class RalphController:
             meta_artifact_files=meta_artifact_files,
             requires_checkpoint=bool(checkpoint_reasons),
             checkpoint_reason="; ".join(checkpoint_reasons),
-            diff_samples=self.diff_sample_paths(changed_entries, quality_policy["require_diff_samples"]),
+            diff_samples=self.diff_sample_paths(changed_entries, DIFF_SAMPLE_LIMIT),
             novelty_score=novelty_score,
             acceptance_progress_score=acceptance_progress_score,
             acceptance_criteria_met=sorted(required_set & met_set) if required_set else sorted(met_set),
@@ -3719,7 +3630,7 @@ class RalphController:
             - Produce a hierarchical program_board with milestones and workstreams when the task supports it.
             - Every workstream must name adjacent surfaces and validation obligations.
             - Return a research block with findings, sources, and open questions.
-            - Return one active_milestone and one current_tranche with at most five active workstreams and explicit target files.
+            - Return one active_milestone and one current_tranche with explicit target files and only the highest-signal next-step work.
             - Prefer root-cause and system-level improvements over local patching when the task benefits from them.
             - Output only a schema-valid JSON object.
             """
@@ -3787,28 +3698,11 @@ class RalphController:
                 rendered.append(content)
         return "\n".join(rendered).strip() + "\n"
 
-    def fit_prompt_to_limit(
-        self,
-        mandatory_sections: list[tuple[str, str]],
-        optional_sections: list[tuple[str, str]],
-        max_prompt_chars: int,
-        error_label: str,
-    ) -> str:
-        prompt = self.prompt_sections_to_text(mandatory_sections + optional_sections)
-        if not max_prompt_chars or len(prompt) <= max_prompt_chars:
-            return prompt
-        reduced_sections = list(optional_sections)
-        while reduced_sections:
-            reduced_sections.pop(0)
-            prompt = self.prompt_sections_to_text(mandatory_sections + reduced_sections)
-            if len(prompt) <= max_prompt_chars:
-                return prompt
-        raise RalphError(f"{error_label} exceeds max_prompt_chars={max_prompt_chars}: total={len(prompt)}")
-
     def worker_enabled_for_role(self, role: str) -> bool:
         policy = self.worker_policy()
         allowed_roles = policy.get("allowed_roles") or []
-        return bool(policy.get("enabled")) and role in allowed_roles
+        disabled_roles = set(self.session.state.get("disabled_worker_roles") or [])
+        return bool(policy.get("enabled")) and role in allowed_roles and role not in disabled_roles
 
     def make_worker_prompt(self, role: str, payload: dict[str, Any]) -> str:
         guidance_by_role = {
@@ -3847,6 +3741,7 @@ class RalphController:
         *,
         model: str,
         reasoning_effort: str,
+        phase_name: str,
     ) -> dict[str, Any] | None:
         if not self.worker_enabled_for_role(role):
             return None
@@ -3860,6 +3755,8 @@ class RalphController:
             enable_search=role == "research",
         )
         try:
+            self.print_status(f"worker {role} started for {phase_name}", badge="TOOL")
+            self.append_worker_event("worker-started", role, phase_name, {"search_enabled": role == "research"})
             client.start()
             started = client.request(
                 "thread/start",
@@ -3873,28 +3770,57 @@ class RalphController:
                 },
             )
             thread_id = started["thread"]["id"]
+            self.append_worker_event("worker-thread-started", role, phase_name, {"thread_id": thread_id})
             result = client.request(
                 "turn/start",
                 {
                     "threadId": thread_id,
                     "input": [self.make_text_input(self.make_worker_prompt(role, payload))],
-                    "outputSchema": WORKER_SUMMARY_SCHEMA,
+                    "outputSchema": self.schema_catalog.model_schema(WORKER_SUMMARY_SCHEMA_ID),
                     "collaborationMode": self.make_collaboration_mode("default", reasoning_effort, "", model=model),
                 },
             )
             turn_id = result["turn"]["id"]
+            self.append_worker_event("worker-turn-started", role, phase_name, {"turn_id": turn_id})
             tracker = TurnOutputTracker()
+            worker_started_at = self.monotonic_func()
+            next_heartbeat_at = worker_started_at + WORKER_IDLE_HEARTBEAT_SECS
+            deadline = worker_started_at + WORKER_TURN_TIMEOUT_SECS
             while True:
                 event = client.next_event(timeout=0.1)
                 if event is None:
                     client.raise_if_unavailable("while waiting for worker turn events")
+                    current_time = self.monotonic_func()
+                    if current_time >= deadline:
+                        raise RalphError(
+                            f"Auxiliary worker {role} timed out after {int(WORKER_TURN_TIMEOUT_SECS)}s"
+                        )
+                    if current_time >= next_heartbeat_at:
+                        elapsed_seconds = max(1, int(current_time - worker_started_at))
+                        self.print_status(
+                            f"worker {role} waiting in {phase_name}: {elapsed_seconds}s",
+                            badge="TOOL",
+                        )
+                        self.append_worker_event(
+                            "worker-waiting",
+                            role,
+                            phase_name,
+                            {"turn_id": turn_id, "elapsed_seconds": elapsed_seconds},
+                        )
+                        next_heartbeat_at += WORKER_IDLE_HEARTBEAT_SECS
                     continue
                 if event["kind"] == "server-request":
                     request = event["payload"]
+                    self.append_worker_event(
+                        "worker-server-request-rejected",
+                        role,
+                        phase_name,
+                        {"request_id": request.get("id", ""), "method": request.get("method", "")},
+                    )
                     client.send_error(request.get("id"), -32601, "Auxiliary workers cannot request user input.")
                     continue
                 if event["kind"] == "stream-closed":
-                    raise RalphError("codex app-server stream closed during worker turn")
+                    raise RalphError(client.diagnostic_error("codex app-server stream closed during worker turn"))
                 notification = event["payload"]
                 method = notification.get("method")
                 params = notification.get("params", {})
@@ -3912,15 +3838,37 @@ class RalphController:
                     if status == "interrupted":
                         raise RalphError("Auxiliary worker turn was interrupted")
                     break
-            worker_output = tracker.extract_final_output(WORKER_SUMMARY_SCHEMA)
+            worker_output = tracker.extract_final_output(self.schema_catalog.model_schema(WORKER_SUMMARY_SCHEMA_ID))
             self.record_worker_manifest(
                 role,
                 "completed",
                 truncate_label(str(worker_output.get("summary", "")).strip() or f"{role} worker complete", 120),
             )
+            self.append_worker_event(
+                "worker-completed",
+                role,
+                phase_name,
+                {
+                    "turn_id": turn_id,
+                    "summary": truncate_label(str(worker_output.get("summary", "")).strip(), 160),
+                },
+            )
+            self.store.save_state(self.session)
+            self.print_status(f"worker {role} completed for {phase_name}", badge="TOOL")
             return worker_output
         except RalphError as exc:
             self.record_worker_manifest(role, "failed", truncate_label(str(exc), 120))
+            disabled = set(self.session.state.get("disabled_worker_roles") or [])
+            disabled.add(role)
+            self.session.state["disabled_worker_roles"] = sorted(disabled)
+            self.append_worker_event(
+                "worker-failed",
+                role,
+                phase_name,
+                {"error": truncate_label(str(exc), 240), "role_disabled": True},
+            )
+            self.store.save_state(self.session)
+            self.print_status(f"worker {role} disabled: {truncate_label(str(exc), 120)}", badge="TOOL")
             return None
         finally:
             client.close()
@@ -3932,15 +3880,19 @@ class RalphController:
         *,
         model: str,
         reasoning_effort: str,
+        phase_name: str,
     ) -> list[dict[str, Any]]:
         summaries: list[dict[str, Any]] = []
         if not self.worker_policy().get("enabled"):
             return summaries
-        max_workers = self.worker_policy().get("max_parallel_workers", 0)
-        if not isinstance(max_workers, int) or max_workers < 1:
-            return summaries
-        for role in roles[:max_workers]:
-            summary = self.run_auxiliary_worker(role, payload, model=model, reasoning_effort=reasoning_effort)
+        for role in roles:
+            summary = self.run_auxiliary_worker(
+                role,
+                payload,
+                model=model,
+                reasoning_effort=reasoning_effort,
+                phase_name=phase_name,
+            )
             if summary:
                 summaries.append(summary)
         return summaries
@@ -3954,8 +3906,152 @@ class RalphController:
                     return payload
         return None
 
-    def build_planning_prompt(self, phase_name: str, feedback: str | None) -> str:
-        compact_history_after_chars = self.loop_policy()["compact_history_after_chars"]
+    def planning_prompt_shapes(self) -> list[PromptShape]:
+        return [
+            PromptShape("raw", 4200, 2600, 2200, 2200, 1800, 1800, True, True, False, True, True),
+            PromptShape("raw", 3200, 2200, 1800, 1800, 1400, 1400, True, False, False, True, True),
+            PromptShape("summary", 2400, 1800, 1400, 1400, 1000, 1000, False, False, False, True, False),
+            PromptShape("summary", 1600, 1200, 900, 900, 700, 700, False, False, False, False, False),
+        ]
+
+    def execution_prompt_shapes(self) -> list[PromptShape]:
+        return [
+            PromptShape("raw", 3600, 1800, 2200, 2200, 1600, 1800, False, False, True, False, False),
+            PromptShape("summary", 2600, 1500, 1800, 1800, 1200, 1400, False, False, True, False, False),
+            PromptShape("summary", 1800, 1200, 1400, 1400, 900, 1000, False, False, False, False, False),
+            PromptShape("summary", 1200, 900, 1100, 1100, 600, 700, False, False, False, False, False),
+        ]
+
+    def evaluation_prompt_shapes(self) -> list[PromptShape]:
+        return [
+            PromptShape("raw", 3000, 1800, 1800, 1800, 1600, 1800, False, False, False, False, False),
+            PromptShape("summary", 2200, 1500, 1500, 1500, 1200, 1400, False, False, False, False, False),
+            PromptShape("summary", 1600, 1200, 1200, 1200, 900, 1000, False, False, False, False, False),
+        ]
+
+    def render_review_history_excerpt(self) -> str:
+        review_history = self.render_review_history()
+        if len(review_history) > COMPACT_HISTORY_AFTER_CHARS:
+            review_history = "\n".join(review_history.splitlines()[-5:])
+        return review_history
+
+    def compose_phase_repair_feedback(self, phase_name: str, error: RalphError, repair_index: int) -> str:
+        feedback = (
+            f"Repair the previous {phase_name} output. "
+            f"It was not usable under Ralph's contract: {str(error).strip()}."
+        )
+        raw_task = self.session.task.get("message_text", "")
+        if repair_index >= RAW_TASK_REVISIT_REPAIR_INDEX:
+            self.refresh_task_summary(source="raw_task_revisit")
+            feedback += " Re-ground against the original task artifact before responding again."
+        if repair_index >= self.phase_repair_escalation_after(phase_name):
+            feedback += (
+                " Escalation: refresh the most relevant evidence, include the latest audit and evaluation signals,"
+                " and challenge whether the current milestone or tranche framing is still correct."
+            )
+        if len(raw_task) > 4000:
+            feedback += " Preserve high-signal task intent while compressing lower-value detail."
+        return feedback
+
+    def run_validated_phase(
+        self,
+        *,
+        phase_name: str,
+        prompt_shapes: list[PromptShape],
+        prompt_builder: Callable[[PromptShape, str, dict[str, Any]], str],
+        schema: dict[str, Any],
+        collaboration_mode: dict[str, Any],
+        validator: Callable[[dict[str, Any]], Any],
+        escalation_after: int,
+        prompt_context_builder: Callable[[PromptShape, str, int], dict[str, Any]] | None = None,
+        initial_feedback: str = "",
+        render_output: bool = True,
+    ) -> dict[str, Any]:
+        phase_feedback = initial_feedback.strip()
+        last_error: RalphError | None = None
+        repair_index = 0
+        while True:
+            semantic_error: RalphError | None = None
+            for shape_index, shape in enumerate(prompt_shapes):
+                phase_output: dict[str, Any] | None = None
+                try:
+                    prompt_context = prompt_context_builder(shape, phase_feedback, repair_index) if prompt_context_builder else {}
+                    prompt = prompt_builder(shape, phase_feedback, prompt_context)
+                    phase_output = self.run_turn(
+                        phase_name=phase_name,
+                        prompt=prompt,
+                        schema=schema,
+                        collaboration_mode=collaboration_mode,
+                        render_output=render_output,
+                    )
+                    validator(phase_output)
+                    self.print_status(
+                        f"{phase_name} validated: "
+                        f"{phase_output.get('status', 'UNKNOWN')}: {truncate_label(phase_output.get('summary', ''), 120)}",
+                        badge=self.phase_badge(phase_name),
+                    )
+                    return phase_output
+                except RalphError as exc:
+                    last_error = exc
+                    if phase_output is not None:
+                        semantic_error = exc
+                        break
+                    if shape_index + 1 < len(prompt_shapes):
+                        self.store.append_event(
+                            self.session,
+                            "prompt-shape-retry",
+                            {
+                                "phase": phase_name,
+                                "shape_index": shape_index + 1,
+                                "reason": truncate_label(str(exc), 160),
+                            },
+                        )
+                        self.print_status(
+                            f"{phase_name} retrying with a leaner prompt: {truncate_label(str(exc), 120)}",
+                            badge=self.phase_badge(phase_name),
+                        )
+                        continue
+                    raise
+            if semantic_error is None:
+                raise RalphError(
+                    f"{phase_name} failed without a repairable model-output contract error: "
+                    f"{str(last_error or RalphError('unknown phase failure')).strip()}"
+                )
+            repair_index += 1
+            phase_feedback = self.compose_phase_repair_feedback(phase_name, semantic_error, repair_index)
+            if repair_index >= escalation_after:
+                self.store.append_event(
+                    self.session,
+                    "phase-repair-escalated",
+                    {
+                        "phase": phase_name,
+                        "repair_index": repair_index,
+                        "reason": truncate_label(str(semantic_error), 160),
+                    },
+                )
+            self.store.append_event(
+                self.session,
+                "phase-repair-requested",
+                {
+                    "phase": phase_name,
+                    "repair_index": repair_index,
+                    "reason": truncate_label(str(semantic_error), 160),
+                },
+            )
+            self.print_status(
+                f"{phase_name} repair requested: {truncate_label(str(semantic_error), 120)}",
+                badge=self.phase_badge(phase_name),
+            )
+
+    def build_planning_prompt(
+        self,
+        phase_name: str,
+        feedback: str | None,
+        shape: PromptShape | None = None,
+        prompt_context: dict[str, Any] | None = None,
+    ) -> str:
+        shape = shape or self.planning_prompt_shapes()[0]
+        prompt_context = prompt_context or {}
         mandatory_sections = [
             (f"# Ralph Planning Phase: {phase_name}", ""),
             (
@@ -3969,16 +4065,15 @@ class RalphController:
                         "- Use multi-step search and compare sources before committing to a plan.",
                         "- If you truly need operator input, request it through request_user_input.",
                         "- Plan revisions happen through repeated Ralph planning turns with controller feedback.",
-                        "- Return a program_board, one active_milestone, and one bounded current_tranche.",
+                        "- Return a program_board, one active_milestone, and one high-signal current_tranche.",
+                        "- Preserve the strongest decision-relevant context; compress only lower-value detail when needed.",
                     ]
                 ),
             ),
-            ("## Task", self.compact_text_block(self.session.task["message_text"].strip(), 4000)),
+            ("## Task", self.task_text_for_prompt(shape.task_mode, shape.task_limit)),
         ]
         optional_sections: list[tuple[str, str]] = []
-        review_history = self.render_review_history()
-        if len(review_history) > compact_history_after_chars:
-            review_history = "\n".join(review_history.splitlines()[-5:])
+        review_history = self.render_review_history_excerpt() if shape.include_review_history else ""
         if review_history:
             optional_sections.append(("## Review History", review_history))
         if self.session.charter_record:
@@ -3993,14 +4088,14 @@ class RalphController:
                             "success_criteria": current_charter.get("success_criteria", []),
                             "current_tranche": self.current_tranche(),
                         },
-                        limit=2400,
+                        limit=shape.program_limit,
                     ),
                 )
             )
         research_memory = self.session.state.get("research_memory") or {}
-        if research_memory:
-            optional_sections.append(("## Research Memory", self.compact_json_block(research_memory, limit=1800)))
-        if self.session.completion_record.get("last_result"):
+        if research_memory and shape.memory_limit > 0:
+            optional_sections.append(("## Research Memory", self.compact_json_block(research_memory, limit=shape.memory_limit)))
+        if self.session.completion_record.get("last_result") and shape.memory_limit > 0:
             last_result = self.session.completion_record["last_result"]
             optional_sections.append(
                 (
@@ -4013,52 +4108,42 @@ class RalphController:
                             "touched_files": last_result.get("touched_files", []),
                             "created_files": last_result.get("created_files", []),
                         },
-                        limit=2000,
+                        limit=shape.memory_limit,
                     ),
                 )
             )
         execution_memory = self.session.state.get("execution_memory") or []
-        if execution_memory:
+        if execution_memory and shape.include_execution_memory and shape.memory_limit > 0:
             optional_sections.append(
                 (
                     "## Execution Memory",
-                    self.compact_json_block({"recent_iterations": execution_memory[-4:]}, limit=1800),
+                    self.compact_json_block({"recent_iterations": execution_memory[-4:]}, limit=shape.memory_limit),
                 )
             )
         latest_evaluation = self.latest_event_payload("evaluation-result")
-        if latest_evaluation:
+        if latest_evaluation and shape.include_latest_evaluation:
             optional_sections.append(
-                ("## Latest Evaluation Memory", self.compact_json_block(latest_evaluation, limit=1600))
+                ("## Latest Evaluation Memory", self.compact_json_block(latest_evaluation, limit=shape.memory_limit))
             )
-        worker_summaries = self.collect_auxiliary_worker_summaries(
-            [role for role in ["research", "read_only_repo"] if self.worker_enabled_for_role(role)],
-            {
-                "phase": phase_name,
-                "task": self.session.task["message_text"].strip(),
-                "program_memory": self.session.state.get("program_memory", {}),
-                "research_memory": research_memory,
-                "current_tranche": self.current_tranche(),
-            },
-            model=self.session.profile["planning"]["model"],
-            reasoning_effort=self.session.profile["planning"]["reasoning_effort"],
-        )
-        if worker_summaries:
+        worker_summaries = prompt_context.get("worker_summaries") or []
+        if worker_summaries and shape.evidence_limit > 0:
             optional_sections.append(
-                ("## Auxiliary Worker Summaries", self.compact_json_block({"workers": worker_summaries}, limit=2200))
+                ("## Auxiliary Worker Summaries", self.compact_json_block({"workers": worker_summaries}, limit=shape.evidence_limit))
             )
-        if feedback:
+        if feedback and shape.include_feedback:
             optional_sections.append(("## Controller Feedback", self.compact_text_block(feedback.strip(), 2000)))
-        max_prompt_chars = self.loop_policy()["planning_max_prompt_chars"]
-        return self.fit_prompt_to_limit(
-            mandatory_sections,
-            optional_sections,
-            max_prompt_chars,
-            f"planning prompt exceeds planning_max_prompt_chars={max_prompt_chars}",
-        )
+        return self.prompt_sections_to_text(mandatory_sections + optional_sections)
 
-    def build_execution_prompt(self, feedback: str | None) -> str:
+    def build_execution_prompt(
+        self,
+        feedback: str | None,
+        shape: PromptShape | None = None,
+        prompt_context: dict[str, Any] | None = None,
+    ) -> str:
         if not self.session.charter_record:
             raise RalphError("execution cannot start before a charter is recorded")
+        shape = shape or self.execution_prompt_shapes()[0]
+        prompt_context = prompt_context or {}
         tranche = self.current_tranche()
         active_milestone = self.active_milestone()
         charter_summary = {
@@ -4068,10 +4153,10 @@ class RalphController:
         }
         mandatory_sections = [
             ("# Ralph Execution Phase", ""),
-            ("## Program Summary", self.compact_json_block(charter_summary, limit=1400)),
-            ("## Active Milestone", self.compact_json_block(active_milestone, limit=2200)),
-            ("## Current Tranche", self.compact_json_block(tranche, limit=2200)),
-            ("## Task", self.compact_text_block(self.session.task["message_text"].strip(), 4000)),
+            ("## Program Summary", self.compact_json_block(charter_summary, limit=shape.program_limit)),
+            ("## Active Milestone", self.compact_json_block(active_milestone, limit=shape.milestone_limit)),
+            ("## Current Tranche", self.compact_json_block(tranche, limit=shape.tranche_limit)),
+            ("## Task", self.task_text_for_prompt(shape.task_mode, shape.task_limit)),
             (
                 "## Execution Contract",
                 "\n".join(
@@ -4079,52 +4164,45 @@ class RalphController:
                         "- Stay inside the current tranche.",
                         "- Do not create controller-serving meta artifacts.",
                         "- Include verification, touched_files, created_files, off_tranche_justifications, quality_claims, milestone_progress, acceptance_artifacts, and evidence_updates in the result.",
+                        "- Prefer keeping the highest-value context rather than shrinking blindly.",
                     ]
                 ),
             ),
         ]
         optional_sections: list[tuple[str, str]] = []
         evidence_registry = self.session.state.get("evidence_registry") or []
-        if evidence_registry:
+        if evidence_registry and shape.include_evidence_registry:
             optional_sections.append(
                 (
                     "## Evidence Registry",
-                    self.compact_json_block({"entries": evidence_registry[-6:]}, limit=1800),
+                    self.compact_json_block({"entries": evidence_registry[-6:]}, limit=shape.evidence_limit),
                 )
             )
-        if feedback:
-            optional_sections.append(("## Controller Feedback", self.compact_text_block(feedback.strip(), 2000)))
-        cap_candidates = [
-            value
-            for value in [
-                self.loop_policy()["execution_max_prompt_chars"],
-                self.session.profile["execution"]["max_prompt_chars"],
-            ]
-            if isinstance(value, int) and value > 0
-        ]
-        max_prompt_chars = min(cap_candidates) if cap_candidates else 0
-        try:
-            return self.fit_prompt_to_limit(
-                mandatory_sections,
-                optional_sections,
-                max_prompt_chars,
-                "execution prompt",
+        worker_summaries = prompt_context.get("worker_summaries") or []
+        if worker_summaries:
+            optional_sections.append(
+                (
+                    "## Escalated Worker Summaries",
+                    self.compact_json_block({"workers": worker_summaries}, limit=shape.evidence_limit),
+                )
             )
-        except RalphError as exc:
-            current_charter = json.dumps(charter_summary, indent=2, sort_keys=True)
-            current_tranche = json.dumps(tranche, indent=2, sort_keys=True)
-            task_text = self.session.task["message_text"].strip()
-            feedback_text = feedback.strip() if feedback else ""
-            raise RalphError(
-                f"{exc} "
-                f"(charter={len(current_charter)}, tranche={len(current_tranche)}, "
-                f"task={len(task_text)}, feedback={len(feedback_text)})"
-            ) from exc
+        if feedback and shape.include_feedback:
+            optional_sections.append(("## Controller Feedback", self.compact_text_block(feedback.strip(), 2000)))
+        return self.prompt_sections_to_text(mandatory_sections + optional_sections)
 
-    def build_evaluation_prompt(self, execution_result: dict[str, Any], audit: ExecutionAudit) -> str:
+    def build_evaluation_prompt(
+        self,
+        execution_result: dict[str, Any],
+        audit: ExecutionAudit,
+        shape: PromptShape | None = None,
+        feedback: str | None = None,
+        prompt_context: dict[str, Any] | None = None,
+    ) -> str:
+        shape = shape or self.evaluation_prompt_shapes()[0]
+        prompt_context = prompt_context or {}
         mandatory_sections = [
             ("# Ralph Evaluation Phase", ""),
-            ("## Task", self.compact_text_block(self.session.task["message_text"].strip(), 3000)),
+            ("## Task", self.task_text_for_prompt(shape.task_mode, shape.task_limit)),
             (
                 "## Program Summary",
                 self.compact_json_block(
@@ -4134,11 +4212,11 @@ class RalphController:
                         "validation_categories": self.current_charter().get("validation_categories", []),
                         "active_milestone": self.active_milestone(),
                     },
-                    limit=1800,
+                    limit=shape.program_limit,
                 ),
             ),
-            ("## Current Tranche", self.compact_json_block(self.current_tranche(), limit=1800)),
-            ("## Execution Result", self.compact_json_block(execution_result, limit=3200)),
+            ("## Current Tranche", self.compact_json_block(self.current_tranche(), limit=shape.tranche_limit)),
+            ("## Execution Result", self.compact_json_block(execution_result, limit=shape.evidence_limit * 2)),
             (
                 "## Audit Summary",
                 self.compact_json_block(
@@ -4157,7 +4235,7 @@ class RalphController:
                         "acceptance_criteria_met": audit.acceptance_criteria_met or [],
                         "acceptance_criteria_remaining": audit.acceptance_criteria_remaining or [],
                     },
-                    limit=2200,
+                    limit=shape.evidence_limit,
                 ),
             ),
             (
@@ -4169,42 +4247,63 @@ class RalphController:
                         "- Use accept only when the result is strong enough to advance without another broad plan.",
                         "- Use milestone_status to say whether the active milestone remains open, is ready for acceptance, or is accepted.",
                     ]
+                    + (
+                        [
+                            "- This tranche is in an escalated repair cycle. Require stronger evidence before accepting the result."
+                        ]
+                        if self.same_tranche_escalated()
+                        else []
+                    )
                 ),
             ),
         ]
         optional_sections: list[tuple[str, str]] = []
-        worker_votes = self.collect_auxiliary_worker_summaries(
-            [role for role in ["evaluator_vote"] if self.worker_enabled_for_role(role)],
-            {
-                "task": self.session.task["message_text"].strip(),
-                "active_milestone": self.active_milestone(),
-                "current_tranche": self.current_tranche(),
-                "execution_result": execution_result,
-                "audit": {
-                    "feedback": audit.feedback,
-                    "novelty_score": audit.novelty_score,
-                    "acceptance_progress_score": audit.acceptance_progress_score,
-                    "diff_samples": audit.diff_samples,
-                },
-            },
-            model=self.session.profile["evaluation"]["model"],
-            reasoning_effort=self.session.profile["evaluation"]["reasoning_effort"],
-        )
-        if worker_votes:
+        worker_votes = prompt_context.get("worker_votes") or []
+        if worker_votes and shape.include_worker_summaries:
             optional_sections.append(
-                ("## Auxiliary Evaluator Votes", self.compact_json_block({"workers": worker_votes}, limit=1800))
+                ("## Auxiliary Evaluator Votes", self.compact_json_block({"workers": worker_votes}, limit=shape.evidence_limit))
             )
+        if feedback and shape.include_feedback:
+            optional_sections.append(("## Controller Feedback", self.compact_text_block(feedback.strip(), 1800)))
         return self.prompt_sections_to_text(mandatory_sections + optional_sections)
 
     def compose_replanning_feedback(self, execution_result: dict[str, Any]) -> str:
         gaps = execution_result.get("remaining_gaps") or []
         gap_text = ", ".join(gaps) if gaps else "none reported"
-        return (
+        feedback = (
             f"Execution is not complete for milestone {self.session.state.get('active_milestone_id') or '(none)'}. "
             f"Summary: {execution_result['summary']}. "
             f"Remaining gaps: {gap_text}. "
             f"Next step proposed by the model: {execution_result['next_step']}."
         )
+        if self.evidence_policy().get("refresh_on_replan"):
+            feedback += (
+                " Refresh the most relevant, high-quality evidence for the remaining gaps instead of relying on older"
+                " research by default."
+            )
+        return feedback
+
+    def replanning_feedback(self, feedback: str) -> str:
+        if not self.replan_escalated():
+            return feedback
+        escalation = (
+            "Escalation: perform a broad planning refresh. Re-check the program board, milestone selection, tranche"
+            " shape, and live research before committing to the next plan."
+        )
+        if feedback.strip():
+            return f"{feedback.strip()}\n\n{escalation}"
+        return escalation
+
+    def same_tranche_feedback(self, feedback: str) -> str:
+        if not self.same_tranche_escalated():
+            return feedback
+        escalation = (
+            "Escalation: keep the current tranche, but refresh the most relevant evidence, use auxiliary worker"
+            " summaries when available, and demand stronger verification before acceptance."
+        )
+        if feedback.strip():
+            return f"{feedback.strip()} {escalation}"
+        return escalation
 
     def decide_next_action(
         self,
@@ -4214,7 +4313,6 @@ class RalphController:
     ) -> tuple[str, str]:
         confidence_rank = {"low": 1, "medium": 2, "high": 3}
         disposition = str(evaluation_result.get("disposition", "")).strip()
-        repair_limit = self.loop_policy()["same_tranche_retry_limit"]
         repair_instructions = evaluation_result.get("repair_instructions") or []
         repair_feedback = " ".join(
             item.strip() for item in repair_instructions if isinstance(item, str) and item.strip()
@@ -4227,10 +4325,20 @@ class RalphController:
             milestone_status = "accepted"
         recommended_scope_change = str(evaluation_result.get("recommended_scope_change", "")).strip()
         confidence = str(evaluation_result.get("confidence", "")).strip() or "low"
-        confidence_floor = self.session.profile["eval_policy"]["evaluator_confidence_floor"]
-        if confidence_rank.get(confidence, 0) < confidence_rank.get(confidence_floor, 0):
-            disposition = "replan"
-            summary = summary or "evaluation confidence is below the configured floor"
+        confidence_floor = self.session.profile["eval_policy"]["acceptance_confidence_floor"]
+        acceptance_confidence_blocked = confidence_rank.get(confidence, 0) < confidence_rank.get(confidence_floor, 0)
+        if acceptance_confidence_blocked and disposition == "accept":
+            summary = (
+                (summary + " ") if summary else ""
+            ) + "Evaluator confidence is below the acceptance floor; continue strengthening evidence before acceptance."
+        refresh_evidence_on_replan = self.evidence_policy().get("refresh_on_replan") and bool(
+            evaluation_result.get("research_refresh_required")
+            or evaluation_result.get("evidence_sufficiency") != "sufficient"
+        )
+        if refresh_evidence_on_replan:
+            summary = (
+                (summary + " ") if summary else ""
+            ) + "Refresh the most relevant, high-quality evidence before replanning."
 
         completion_accepted = False
         completion_reason = ""
@@ -4239,7 +4347,13 @@ class RalphController:
             if not completion_accepted:
                 summary = completion_reason
 
-        if disposition == "accept" and audit.ok and execution_result["status"] == "COMPLETE" and completion_accepted:
+        if (
+            disposition == "accept"
+            and not acceptance_confidence_blocked
+            and audit.ok
+            and execution_result["status"] == "COMPLETE"
+            and completion_accepted
+        ):
             return "finish", ""
 
         if execution_result["status"] == "BLOCKED":
@@ -4254,16 +4368,24 @@ class RalphController:
                 "Refresh the program board, select the next milestone if needed, and continue."
             )
 
-        if disposition == "repair_same_tranche" and self.session.state["same_tranche_repair_count"] < repair_limit:
+        if disposition == "repair_same_tranche":
             self.session.state["same_tranche_repair_count"] += 1
             self.session.state["consecutive_replans"] = 0
-            return "repair_same_tranche", repair_feedback or self.compose_replanning_feedback(execution_result)
+            return "repair_same_tranche", self.same_tranche_feedback(
+                repair_feedback or self.compose_replanning_feedback(execution_result)
+            )
 
         if disposition == "accept" and execution_result["status"] != "COMPLETE":
-            if self.session.state["same_tranche_repair_count"] < repair_limit:
-                self.session.state["same_tranche_repair_count"] += 1
-                self.session.state["consecutive_replans"] = 0
-                return "repair_same_tranche", repair_feedback or self.compose_replanning_feedback(execution_result)
+            self.session.state["same_tranche_repair_count"] += 1
+            self.session.state["consecutive_replans"] = 0
+            return "repair_same_tranche", self.same_tranche_feedback(
+                repair_feedback or self.compose_replanning_feedback(execution_result)
+            )
+
+        if disposition == "accept" and acceptance_confidence_blocked and execution_result["status"] == "COMPLETE":
+            self.session.state["same_tranche_repair_count"] += 1
+            self.session.state["consecutive_replans"] = 0
+            return "repair_same_tranche", self.same_tranche_feedback(summary)
 
         if execution_result["status"] == "COMPLETE" and not completion_accepted:
             return "replan", completion_reason
@@ -4271,10 +4393,12 @@ class RalphController:
         if disposition == "blocked":
             return "replan", summary or "evaluation blocked further progress"
 
-        if recommended_scope_change == "stay_on_tranche" and self.session.state["same_tranche_repair_count"] < repair_limit:
+        if recommended_scope_change == "stay_on_tranche":
             self.session.state["same_tranche_repair_count"] += 1
             self.session.state["consecutive_replans"] = 0
-            return "repair_same_tranche", repair_feedback or self.compose_replanning_feedback(execution_result)
+            return "repair_same_tranche", self.same_tranche_feedback(
+                repair_feedback or self.compose_replanning_feedback(execution_result)
+            )
 
         return "replan", repair_feedback or summary or self.compose_replanning_feedback(execution_result)
 
@@ -4571,6 +4695,16 @@ def execute_run(
         reporter.event("run aborted by operator", tone="warn")
         reporter.status(f"aborted. resume session with: {resume_command}", badge="ABORTED", tone="warn")
         return ABORT_EXIT_CODE
+    except RalphError as exc:
+        store.save_completion(
+            session,
+            session.completion_record.get("last_result", {}),
+            False,
+            str(exc),
+        )
+        store.append_run_history(session, run_id, "run_failed", invocation_mode, str(exc))
+        reporter.event(f"run failed: {truncate_label(str(exc), 160)}", tone="error")
+        return 1
     except Exception as exc:
         store.append_run_history(session, run_id, "run_failed", invocation_mode, str(exc))
         reporter.event(f"run failed: {truncate_label(str(exc), 160)}", tone="error")

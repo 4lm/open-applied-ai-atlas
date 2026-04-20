@@ -1,0 +1,37 @@
+{
+  "schema_id": "ralph-codex/output/worker-summary",
+  "schema_version": "0.1.0",
+  "title": "ralph-worker-summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role", "summary", "findings", "confidence", "sources"],
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": ["research", "read_only_repo", "evaluator_vote"]
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url", "source_type", "used_for"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "source_type": { "type": "string", "enum": ["primary", "secondary"] },
+          "used_for": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

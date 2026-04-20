@@ -14,12 +14,10 @@
     "auto_confirm": false
   },
   "prompt_answering": {
-    "selection_policy": "recommended_or_first",
     "reject_secret_questions": true,
     "require_selectable_options": true
   },
   "charter_policy": {
-    "min_workstreams": 3,
     "require_adjacent_surfaces": true,
     "require_validation_for_each_workstream": true,
     "require_validation_categories": true
@@ -32,71 +30,41 @@
   },
   "research_policy": {
     "mode": "required",
-    "planning_min_sources": 4,
-    "execution_min_sources": 3,
     "require_primary_sources_when_available": true,
     "require_multi_step_search": true,
     "block_on_search_unavailable": true
   },
   "tranche_policy": {
-    "max_active_workstreams": 4,
-    "max_target_files": 12,
-    "max_new_files": 4,
     "require_explicit_target_files": true
   },
   "quality_policy": {
-    "require_post_iteration_audit": true,
-    "require_diff_samples": 4,
-    "max_iterations_before_checkpoint": 12,
-    "max_total_files_changed_before_checkpoint": 150,
-    "max_repeated_heading_additions_per_iteration": 2,
-    "max_meta_artifact_files_per_run": 0,
-    "pause_on_stagnation_after_iterations": 4,
+    "stagnation_escalation_after_iterations": 6,
     "progress_checkpoint_mode": "record_only_after_seed"
   },
-  "memory_policy": {
-    "persist_program_memory": true,
-    "persist_research_memory": true,
-    "persist_execution_memory": true,
-    "persist_skill_memory": true,
-    "max_execution_memory_entries": 20,
-    "max_skill_memory_entries": 24,
-    "max_checkpoint_summaries": 24,
-    "max_evidence_registry_entries": 128,
-    "max_worker_manifests": 16
-  },
   "milestone_policy": {
-    "max_active_milestones": 1,
-    "max_tranche_iterations_per_milestone": 12,
     "checkpoint_on_milestone_close": false,
     "require_acceptance_bundle": true
   },
   "worker_policy": {
     "enabled": true,
-    "max_parallel_workers": 3,
-    "allowed_roles": ["research", "read_only_repo", "evaluator_vote"],
-    "require_disjoint_write_sets": true,
-    "require_controller_merge_review": true
+    "allowed_roles": ["research", "read_only_repo", "evaluator_vote"]
   },
   "evidence_policy": {
-    "max_source_age_days": 7,
-    "require_claim_linkage": true,
-    "require_contradiction_tracking": true,
+    "require_relevance_assessment": true,
+    "require_quality_assessment": true,
+    "require_freshness_assessment": true,
     "refresh_on_replan": true
   },
   "eval_policy": {
-    "require_trace_grade": true,
-    "require_deterministic_grades": true,
-    "evaluator_confidence_floor": "medium"
+    "acceptance_confidence_floor": "high"
   },
   "loop_policy": {
-    "same_tranche_retry_limit": 4,
-    "max_consecutive_replans": 6,
-    "planning_max_prompt_chars": 24000,
-    "execution_max_prompt_chars": 18000,
-    "compact_history_after_chars": 8000,
+    "same_tranche_escalation_after": 4,
+    "replan_escalation_after": 3,
     "require_iteration_repo_baseline": true,
-    "max_consecutive_low_novelty_iterations": 4
+    "planning_repair_escalation_after": 2,
+    "execution_repair_escalation_after": 2,
+    "evaluation_repair_escalation_after": 2
   },
   "planning": {
     "model": "gpt-5.4",
@@ -114,7 +82,6 @@
     "model": "gpt-5.4",
     "mode": "default",
     "reasoning_effort": "xhigh",
-    "output_schema_id": "ralph-codex/output/execution",
-    "max_prompt_chars": 18000
+    "output_schema_id": "ralph-codex/output/execution"
   }
 }

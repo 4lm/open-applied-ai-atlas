@@ -35,7 +35,7 @@
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "scope", "findings", "sources"],
+      "required": ["status", "scope", "findings", "evidence_assessment", "sources"],
       "properties": {
         "status": { "type": "string", "enum": ["completed", "blocked", "not_needed"] },
         "scope": { "type": "string", "minLength": 1 },
@@ -43,6 +43,17 @@
           "type": "array",
           "minItems": 1,
           "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence_assessment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["relevance", "quality", "freshness", "refresh_recommended"],
+          "properties": {
+            "relevance": { "type": "string", "minLength": 1 },
+            "quality": { "type": "string", "minLength": 1 },
+            "freshness": { "type": "string", "minLength": 1 },
+            "refresh_recommended": { "type": "boolean" }
+          }
         },
         "sources": {
           "type": "array",

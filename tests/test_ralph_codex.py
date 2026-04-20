@@ -16,10 +16,10 @@ ralph_codex = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 sys.modules[SPEC.name] = ralph_codex
 SPEC.loader.exec_module(ralph_codex)
-DEFAULT_MAX_EXECUTION_PROMPT_CHARS = ralph_codex.load_profile(
+DEFAULT_PROFILE = ralph_codex.load_profile(
     ralph_codex.SchemaCatalog(ralph_codex.SCHEMA_FILES),
     None,
-)["execution"]["max_prompt_chars"]
+)
 
 
 class FakeClient:
@@ -256,7 +256,24 @@ class RalphCodexTests(unittest.TestCase):
 
     def planning_result_payload(self, summary="ok", charter=None):
         charter = charter or self.broad_charter()
-        program_board = ralph_codex.legacy_program_board_from_charter(charter)
+        program_board = {
+            "goal": charter["goal"],
+            "milestones": [
+                {
+                    "id": "legacy-milestone",
+                    "title": "Legacy milestone",
+                    "objective": charter["goal"],
+                    "acceptance_criteria": charter["success_criteria"],
+                    "dependencies": [],
+                    "evidence_requirements": charter["validation_categories"],
+                    "status": "active",
+                    "workstreams": charter["workstreams"],
+                }
+            ],
+            "success_criteria": charter["success_criteria"],
+            "validation_categories": charter["validation_categories"],
+            "explicit_deferrals": charter["explicit_deferrals"],
+        }
         return {
             "status": "CHARTER_READY",
             "summary": summary,
@@ -265,6 +282,12 @@ class RalphCodexTests(unittest.TestCase):
                 "status": "completed",
                 "search_strategy": "Compare repo facts with official references and current behavior.",
                 "findings": ["Captured the bounded tranche and supporting sources."],
+                "evidence_assessment": {
+                    "relevance": "The selected sources directly support the next planning tranche.",
+                    "quality": "Primary sources anchor the plan and secondary sources add adjacent context.",
+                    "freshness": "The evidence is current enough for the planning claims being made.",
+                    "refresh_recommended": False,
+                },
                 "sources": [
                     {
                         "title": "Primary source A",
@@ -323,6 +346,18 @@ class RalphCodexTests(unittest.TestCase):
                 "status": "completed" if status == "COMPLETE" else "not_needed",
                 "scope": "Verification recorded for the current tranche.",
                 "findings": ["Verified the relevant execution claims."],
+                "evidence_assessment": {
+                    "relevance": "The verification sources directly match the execution claims under review."
+                    if status == "COMPLETE"
+                    else "This turn did not require live verification beyond the existing tranche context.",
+                    "quality": "Primary and corroborating sources are adequate for the execution checks."
+                    if status == "COMPLETE"
+                    else "No additional evidence quality judgment was needed for a not_needed verification turn.",
+                    "freshness": "The sources are fresh enough for the verified claims."
+                    if status == "COMPLETE"
+                    else "Freshness was not material because no new unstable fact claims were verified.",
+                    "refresh_recommended": False,
+                },
                 "sources": [
                     {
                         "title": "Verification source A",
@@ -481,7 +516,6 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(profile["profile_name"], "restricted")
         self.assertEqual(profile["thread_policy"]["access_mode"], "restricted")
         self.assertEqual(profile["runtime_limits"]["max_iterations"], 0)
-        self.assertEqual(profile["execution"]["max_prompt_chars"], DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
         self.assertEqual(profile["planning"]["reasoning_effort"], "xhigh")
         self.assertEqual(profile["execution"]["reasoning_effort"], "xhigh")
         self.assertEqual(profile["planning"]["model"], "gpt-5.4")
@@ -504,17 +538,22 @@ class RalphCodexTests(unittest.TestCase):
         )
         self.assertFalse(restricted["completion_policy"]["allow_deferred_workstreams"])
         self.assertEqual(restricted["quality_policy"]["progress_checkpoint_mode"], "record_only_after_seed")
-        self.assertEqual(restricted["loop_policy"]["planning_max_prompt_chars"], 22000)
-        self.assertEqual(restricted["execution"]["max_prompt_chars"], 16000)
-        self.assertEqual(restricted["memory_policy"]["max_execution_memory_entries"], 16)
-        self.assertEqual(restricted["memory_policy"]["max_evidence_registry_entries"], 128)
+        self.assertNotIn("memory_policy", restricted)
+        self.assertTrue(restricted["evidence_policy"]["require_relevance_assessment"])
+        self.assertTrue(restricted["evidence_policy"]["require_quality_assessment"])
+        self.assertTrue(restricted["evidence_policy"]["require_freshness_assessment"])
+        self.assertTrue(restricted["evidence_policy"]["refresh_on_replan"])
+        self.assertEqual(restricted["quality_policy"]["stagnation_escalation_after_iterations"], 6)
+        self.assertEqual(restricted["eval_policy"]["acceptance_confidence_floor"], "high")
+        self.assertEqual(restricted["loop_policy"]["same_tranche_escalation_after"], 4)
+        self.assertEqual(restricted["loop_policy"]["planning_repair_escalation_after"], 2)
+        self.assertNotIn("max_prompt_shape_attempts", restricted["loop_policy"])
+        self.assertNotIn("max_active_workstreams", restricted["tranche_policy"])
         self.assertEqual(unrestricted["thread_policy"]["access_mode"], "dangerously-unrestricted")
-        self.assertEqual(unrestricted["loop_policy"]["planning_max_prompt_chars"], 24000)
-        self.assertEqual(unrestricted["execution"]["max_prompt_chars"], 18000)
-        self.assertEqual(unrestricted["worker_policy"]["max_parallel_workers"], 3)
-        self.assertNotIn("disjoint_execution", unrestricted["worker_policy"]["allowed_roles"])
+        self.assertEqual(unrestricted["loop_policy"]["replan_escalation_after"], 3)
+        self.assertNotIn("require_controller_merge_review", unrestricted["worker_policy"])
 
-    def test_load_profile_backfills_legacy_profile_fields(self):
+    def test_load_profile_rejects_legacy_missing_fields(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
             legacy = {
@@ -526,12 +565,10 @@ class RalphCodexTests(unittest.TestCase):
                 "runtime_limits": {"max_iterations": 0},
                 "seed_policy": {"require_confirmation": True, "auto_confirm": False},
                 "prompt_answering": {
-                    "selection_policy": "recommended_or_first",
                     "reject_secret_questions": True,
                     "require_selectable_options": True,
                 },
                 "charter_policy": {
-                    "min_workstreams": 3,
                     "require_adjacent_surfaces": True,
                     "require_validation_for_each_workstream": True,
                     "require_validation_categories": True,
@@ -542,32 +579,58 @@ class RalphCodexTests(unittest.TestCase):
                     "require_no_remaining_gaps": True,
                     "require_validation_categories_complete": True,
                 },
+                "research_policy": {
+                    "mode": "required",
+                    "require_primary_sources_when_available": True,
+                    "require_multi_step_search": True,
+                    "block_on_search_unavailable": True,
+                },
+                "tranche_policy": {"require_explicit_target_files": True},
+                "quality_policy": {
+                    "stagnation_escalation_after_iterations": 6,
+                    "progress_checkpoint_mode": "record_only_after_seed",
+                },
+                "milestone_policy": {
+                    "checkpoint_on_milestone_close": False,
+                    "require_acceptance_bundle": True,
+                },
+                "worker_policy": {
+                    "enabled": True,
+                    "allowed_roles": ["research", "read_only_repo", "evaluator_vote"],
+                },
+                "eval_policy": {"acceptance_confidence_floor": "high"},
                 "planning": {
+                    "model": "gpt-5.4",
                     "mode": "plan",
                     "reasoning_effort": "high",
                     "output_schema_id": ralph_codex.PLANNING_OUTPUT_SCHEMA_ID,
                 },
+                "evaluation": {
+                    "model": "gpt-5.4",
+                    "mode": "default",
+                    "reasoning_effort": "high",
+                    "output_schema_id": ralph_codex.EVALUATION_OUTPUT_SCHEMA_ID,
+                },
+                "loop_policy": {
+                    "same_tranche_escalation_after": 4,
+                    "replan_escalation_after": 3,
+                    "require_iteration_repo_baseline": True,
+                    "planning_repair_escalation_after": 2,
+                    "execution_repair_escalation_after": 2,
+                    "evaluation_repair_escalation_after": 2,
+                },
                 "execution": {
+                    "model": "gpt-5.4",
                     "mode": "default",
                     "reasoning_effort": "high",
                     "output_schema_id": ralph_codex.EXECUTION_OUTPUT_SCHEMA_ID,
-                    "max_prompt_chars": 0,
                 },
             }
             path.write_text(json.dumps(legacy), encoding="utf-8")
-            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
-            self.assertEqual(loaded["schema_version"], "0.1.0")
-            self.assertIn("research_policy", loaded)
-            self.assertIn("tranche_policy", loaded)
-            self.assertIn("quality_policy", loaded)
-            self.assertIn("loop_policy", loaded)
-            self.assertEqual(loaded["quality_policy"]["progress_checkpoint_mode"], "record_only_after_seed")
-            self.assertEqual(loaded["memory_policy"]["max_skill_memory_entries"], 24)
-            self.assertEqual(loaded["planning"]["model"], "gpt-5.4")
-            self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4")
-            self.assertEqual(loaded["execution"]["model"], "gpt-5.4")
+            with self.assertRaises(ralph_codex.RalphError):
+                ralph_codex.load_profile(self.make_schema_catalog(), path)
 
-    def test_load_profile_removes_legacy_disjoint_execution_role(self):
+    def test_load_profile_rejects_legacy_disjoint_execution_role(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
             legacy = self.default_profile()
@@ -578,84 +641,17 @@ class RalphCodexTests(unittest.TestCase):
                 "evaluator_vote",
             ]
             path.write_text(json.dumps(legacy), encoding="utf-8")
-            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
-            self.assertEqual(
-                loaded["worker_policy"]["allowed_roles"],
-                ["research", "read_only_repo", "evaluator_vote"],
-            )
+            with self.assertRaises(ralph_codex.RalphError):
+                ralph_codex.load_profile(self.make_schema_catalog(), path)
 
-    def test_load_profile_normalizes_local_v0_2_0_profile_to_v0_1_0(self):
+    def test_load_profile_rejects_wrong_schema_version(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
             local_profile = self.default_profile()
             local_profile["schema_version"] = "0.2.0"
             path.write_text(json.dumps(local_profile), encoding="utf-8")
-            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
-            self.assertEqual(loaded["schema_version"], "0.1.0")
-
-    def test_load_profile_propagates_legacy_top_level_model_to_phase_models(self):
-        with tempfile.TemporaryDirectory() as tempdir:
-            path = Path(tempdir) / "profile.json"
-            legacy = self.default_profile()
-            legacy["model"] = "gpt-5.4-mini"
-            for section_name in ("planning", "evaluation", "execution"):
-                legacy[section_name].pop("model", None)
-            path.write_text(json.dumps(legacy), encoding="utf-8")
-            loaded = ralph_codex.load_profile(self.make_schema_catalog(), path)
-            self.assertEqual(loaded["planning"]["model"], "gpt-5.4-mini")
-            self.assertEqual(loaded["evaluation"]["model"], "gpt-5.4-mini")
-            self.assertEqual(loaded["execution"]["model"], "gpt-5.4-mini")
-
-    def test_normalize_session_state_renames_legacy_closure_score(self):
-        session_id = "20260420T000000000Z_123456789abc"
-        payload = {
-            "schema_id": ralph_codex.SESSION_STATE_SCHEMA_ID,
-            "schema_version": "0.1.0",
-            "session_id": session_id,
-            "started_at": "2026-04-20T00:00:00Z",
-            "execution_memory": [
-                {
-                    "iteration": 1,
-                    "summary": "Legacy iteration",
-                    "novelty_score": 1.0,
-                    "closure_score": 0.5,
-                }
-            ],
-        }
-        normalized = ralph_codex.normalize_payload_for_schema(ralph_codex.SESSION_STATE_SCHEMA_ID, payload)
-        memory = normalized["execution_memory"][0]
-        self.assertEqual(memory["acceptance_progress_score"], 0.5)
-        self.assertNotIn("closure_score", memory)
-        self.make_schema_catalog().validate(ralph_codex.SESSION_STATE_SCHEMA_ID, normalized)
-
-    def test_normalize_completion_payload_renames_legacy_closure_notes(self):
-        session_id = "20260420T000000000Z_123456789abc"
-        payload = {
-            "schema_id": ralph_codex.COMPLETION_SCHEMA_ID,
-            "schema_version": "0.1.0",
-            "session_id": session_id,
-            "accepted": False,
-            "last_result": {
-                "status": "IN_PROGRESS",
-                "summary": "Legacy result",
-                "evidence": ["legacy"],
-                "milestone_progress": {
-                    "milestone_id": "legacy-milestone",
-                    "criteria_met": [],
-                    "criteria_remaining": ["docs updated"],
-                    "novelty_notes": ["Legacy progress"],
-                    "closure_notes": ["Legacy closure note"],
-                },
-            },
-            "last_reason": "",
-            "rejections": [],
-            "updated_at": "2026-04-20T00:00:00Z",
-        }
-        normalized = ralph_codex.normalize_payload_for_schema(ralph_codex.COMPLETION_SCHEMA_ID, payload)
-        progress = normalized["last_result"]["milestone_progress"]
-        self.assertEqual(progress["completion_notes"], ["Legacy closure note"])
-        self.assertNotIn("closure_notes", progress)
-        self.make_schema_catalog().validate(ralph_codex.COMPLETION_SCHEMA_ID, normalized)
+            with self.assertRaises(ralph_codex.RalphError):
+                ralph_codex.load_profile(self.make_schema_catalog(), path)
 
     def test_custom_profile_invalid_is_rejected(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -675,11 +671,11 @@ class RalphCodexTests(unittest.TestCase):
             with self.assertRaises(ralph_codex.RalphError):
                 ralph_codex.load_profile(self.make_schema_catalog(), path)
 
-    def test_custom_profile_rejects_negative_execution_prompt_limit(self):
+    def test_custom_profile_rejects_missing_loop_policy_fields(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = Path(tempdir) / "profile.json"
             invalid = self.default_profile()
-            invalid["execution"]["max_prompt_chars"] = -1
+            invalid["loop_policy"].pop("planning_repair_escalation_after")
             path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ralph_codex.RalphError):
                 ralph_codex.load_profile(self.make_schema_catalog(), path)
@@ -974,6 +970,12 @@ class RalphCodexTests(unittest.TestCase):
                 "status": "completed",
                 "search_strategy": "Review the repo and current contract.",
                 "findings": ["Research captured enough grounding for review."],
+                "evidence_assessment": {
+                    "relevance": "The review sources map directly to the planning charter.",
+                    "quality": "The evidence set is strong enough for operator review.",
+                    "freshness": "The sources are current enough for this planning review.",
+                    "refresh_recommended": False,
+                },
                 "sources": [
                     {
                         "title": "Primary source A",
@@ -996,21 +998,36 @@ class RalphCodexTests(unittest.TestCase):
                 ],
                 "open_questions": []
             },
-            "charter": {
+            "program_board": {
                 "goal": "Review the whole charter before unattended execution.",
                 "success_criteria": ["Criterion " + ("x" * 80)],
                 "validation_categories": ["unit", "integration"],
                 "explicit_deferrals": ["None"],
-                "workstreams": [
+                "milestones": [
                     {
-                        "id": "WS1",
-                        "title": "Audit",
-                        "goal": "Inspect everything",
-                        "required_adjacent_surfaces": ["docs/", "tests/"],
-                        "validation": ["unit tests", "doc review"],
-                        "status": "planned",
+                        "id": "M1",
+                        "title": "Audit the controller",
+                        "summary": "Inspect everything before unattended execution.",
+                        "acceptance_criteria": ["Criterion " + ("x" * 80)],
+                        "validation_focus": ["unit", "integration"],
+                        "workstreams": [
+                            {
+                                "id": "WS1",
+                                "title": "Audit",
+                                "goal": "Inspect everything",
+                                "required_adjacent_surfaces": ["docs/", "tests/"],
+                                "validation": ["unit tests", "doc review"],
+                                "status": "planned",
+                            }
+                        ],
                     }
                 ],
+            },
+            "active_milestone": {
+                "milestone_id": "M1",
+                "status": "in_progress",
+                "completed_criteria": [],
+                "remaining_criteria": ["Criterion " + ("x" * 80)],
             },
             "current_tranche": {
                 "batch_id": "batch-1",
@@ -1283,15 +1300,16 @@ class RalphCodexTests(unittest.TestCase):
                 }
             )
 
-    def test_validate_planning_result_rejects_narrow_charter(self):
+    def test_validate_planning_result_accepts_single_workstream_when_coherent(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
         narrow = self.broad_charter()
-        narrow["workstreams"] = narrow["workstreams"][:2]
+        narrow["workstreams"] = narrow["workstreams"][:1]
         planning_result = self.planning_result_payload(summary="ok", charter=narrow)
-        with self.assertRaises(ralph_codex.RalphError):
-            controller.validate_planning_result(planning_result)
+        planning_result["research"]["sources"] = planning_result["research"]["sources"][:1]
+        planning_result["current_tranche"]["workstream_ids"] = ["W1"]
+        controller.validate_planning_result(planning_result)
 
     def test_validate_planning_result_rejects_unknown_tranche_workstream(self):
         tempdir, root = self.make_temp_root()
@@ -1319,6 +1337,16 @@ class RalphCodexTests(unittest.TestCase):
         planning_result["research"]["status"] = "blocked"
         with self.assertRaisesRegex(ralph_codex.RalphError, "research is blocked"):
             controller.validate_planning_result(planning_result)
+
+    def test_validate_execution_result_allows_single_verification_source_when_quality_is_explicit(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["sources"] = execution_result["verification"]["sources"][:1]
+        execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
+        controller.validate_execution_result_basic(execution_result)
 
     def test_run_turn_handles_request_user_input_and_logs_turn(self):
         tempdir, root = self.make_temp_root()
@@ -1404,7 +1432,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("prompt request received: 1 question(s)", stderr.getvalue())
         self.assertIn("prompt request answered: 1 answer(s)", stderr.getvalue())
         self.assertIn("test started", stdout.getvalue())
-        self.assertIn("test complete: IN_PROGRESS: working", stdout.getvalue())
+        self.assertIn("test output received: IN_PROGRESS: working", stdout.getvalue())
         self.assertIn("test result", stdout.getvalue())
         self.assertIn("summary:", stdout.getvalue())
 
@@ -1962,11 +1990,10 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("## Review History", prompt)
         self.assertIn("feedback=Need broader validation", prompt)
 
-    def test_build_planning_prompt_drops_optional_sections_before_failing_cap(self):
+    def test_build_planning_prompt_can_use_lean_shape_without_losing_core_context(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        controller.session.profile["loop_policy"]["planning_max_prompt_chars"] = 6000
         controller.session.task["message_text"] = "Task " + ("x" * 3500)
         controller.session.state["research_memory"] = {
             "search_strategy": "widen",
@@ -1983,10 +2010,10 @@ class RalphCodexTests(unittest.TestCase):
             self.evaluation_result_payload(summary="Need more tranche work"),
         )
         self.save_charter(controller)
-        prompt = controller.build_planning_prompt("replanning", "Keep pushing")
-        self.assertLessEqual(len(prompt), 6000)
+        prompt = controller.build_planning_prompt("replanning", "Keep pushing", controller.planning_prompt_shapes()[-1])
         self.assertIn("## Program Memory", prompt)
         self.assertIn("## Task", prompt)
+        self.assertNotIn("## Review History", prompt)
 
     def test_planning_instructions_forbid_update_plan(self):
         tempdir, root = self.make_temp_root()
@@ -2292,23 +2319,22 @@ class RalphCodexTests(unittest.TestCase):
         self.assertIn("Active Milestone", prompt)
         self.assertIn("Need broader validation", prompt)
 
-    def test_build_execution_prompt_uses_profile_prompt_cap(self):
+    def test_build_execution_prompt_uses_quality_first_shaping(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
         controller.session.task["message_text"] = "Test message " + ("x" * 5000)
         self.save_charter(controller)
         prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertGreater(len(prompt), 4000)
-        self.assertEqual(controller.session.profile["execution"]["max_prompt_chars"], DEFAULT_MAX_EXECUTION_PROMPT_CHARS)
+        self.assertIn("## Task", prompt)
+        self.assertIn("Test message", prompt)
+        self.assertGreater(len(prompt), 1000)
 
-    def test_build_execution_prompt_drops_optional_sections_before_failing_cap(self):
+    def test_build_execution_prompt_can_drop_evidence_registry_in_lean_shape(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
         self.save_charter(controller)
-        controller.session.profile["execution"]["max_prompt_chars"] = 5000
-        controller.session.profile["loop_policy"]["execution_max_prompt_chars"] = 5000
         controller.session.state["evidence_registry"] = [
             {
                 "claim": f"claim {index}",
@@ -2321,31 +2347,176 @@ class RalphCodexTests(unittest.TestCase):
             for index in range(12)
         ]
         controller.session.task["message_text"] = "Task " + ("x" * 3500)
-        prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertLessEqual(len(prompt), 5000)
+        shape = controller.execution_prompt_shapes()[-1]
+        prompt = controller.build_execution_prompt("Need broader validation", shape=shape)
         self.assertIn("## Current Tranche", prompt)
         self.assertIn("## Task", prompt)
+        self.assertNotIn("Evidence Registry", prompt)
 
-    def test_build_execution_prompt_rejects_when_over_custom_limit(self):
+    def test_build_execution_prompt_can_use_task_summary_shape(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        self.save_charter(controller)
-        controller.session.profile["execution"]["max_prompt_chars"] = 100
-        with self.assertRaisesRegex(ralph_codex.RalphError, "tranche="):
-            controller.build_execution_prompt("Need broader validation")
-
-    def test_build_execution_prompt_allows_unlimited_when_limit_is_zero(self):
-        tempdir, root = self.make_temp_root()
-        self.addCleanup(tempdir.cleanup)
-        controller = self.make_controller(root)
-        large_task = "Test message " + ("x" * (DEFAULT_MAX_EXECUTION_PROMPT_CHARS + 5000))
+        large_task = "Test message " + ("x" * 20000)
         controller.session.task["message_text"] = large_task
-        controller.session.profile["execution"]["max_prompt_chars"] = 0
-        controller.session.profile["loop_policy"]["execution_max_prompt_chars"] = 0
+        controller.refresh_task_summary()
         self.save_charter(controller)
-        prompt = controller.build_execution_prompt("Need broader validation")
-        self.assertGreater(len(prompt), 5000)
+        shape = controller.execution_prompt_shapes()[-1]
+        prompt = controller.build_execution_prompt("Need broader validation", shape=shape)
+        self.assertIn("## Task", prompt)
+        self.assertLess(len(prompt), len(large_task))
+
+    def test_decide_next_action_blocks_acceptance_but_keeps_same_tranche_on_low_confidence(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["workstream_updates"] = [
+            {"id": "W1", "status": "done", "evidence": ["ok"]},
+            {"id": "W2", "status": "done", "evidence": ["ok"]},
+            {"id": "W3", "status": "done", "evidence": ["ok"]},
+        ]
+        execution_result["validation_completed"] = ["unit", "integration", "gating"]
+        execution_result["next_step"] = "none"
+        audit = controller.audit_execution_result(execution_result)
+        evaluation_result = self.evaluation_result_payload(disposition="accept", summary="almost there")
+        evaluation_result["confidence"] = "medium"
+
+        loop_action, feedback = controller.decide_next_action(execution_result, audit, evaluation_result)
+
+        self.assertEqual(loop_action, "repair_same_tranche")
+        self.assertIn("below the acceptance floor", feedback)
+        self.assertEqual(controller.session.state["consecutive_replans"], 0)
+
+    def test_same_tranche_escalation_does_not_force_replan(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller.session.state["same_tranche_repair_count"] = (
+            controller.session.profile["loop_policy"]["same_tranche_escalation_after"]
+        )
+        execution_result = self.execution_result_payload(status="IN_PROGRESS", summary="working")
+        audit = controller.audit_execution_result(execution_result)
+        evaluation_result = self.evaluation_result_payload(disposition="repair_same_tranche")
+
+        loop_action, feedback = controller.decide_next_action(execution_result, audit, evaluation_result)
+
+        self.assertEqual(loop_action, "repair_same_tranche")
+        self.assertIn("Escalation: keep the current tranche", feedback)
+
+    def test_replanning_feedback_escalates_without_hard_stop(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.session.state["consecutive_replans"] = controller.session.profile["loop_policy"]["replan_escalation_after"]
+        feedback = controller.replanning_feedback("Need a broader plan refresh.")
+        self.assertIn("broad planning refresh", feedback)
+
+    def test_initial_planning_starts_main_turn_without_worker_fanout(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        planning_payload = self.planning_result_payload(summary="ready")
+        client = FakeClient(
+            {"turn/start": {"turn": {"id": "turn-1"}}},
+            [
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "rawResponseItem/completed",
+                        "params": {
+                            "turnId": "turn-1",
+                            "item": {
+                                "type": "message",
+                                "role": "assistant",
+                                "content": [{"type": "output_text", "text": json.dumps(planning_payload)}],
+                            },
+                        },
+                    },
+                },
+                {
+                    "kind": "notification",
+                    "payload": {
+                        "method": "turn/completed",
+                        "params": {"turn": {"id": "turn-1", "status": "completed"}},
+                    },
+                },
+            ],
+        )
+        controller = self.make_controller(root, client=client)
+        controller.session.state["thread_id"] = "thread-1"
+        controller.session.state["model"] = "gpt-5.4"
+        controller.validate_planning_result = lambda result: result
+        controller.collect_auxiliary_worker_summaries = lambda *args, **kwargs: self.fail(
+            "initial planning should not fan out auxiliary workers before the first turn"
+        )
+
+        result = controller.plan_once("initial planning", "")
+
+        self.assertEqual(result["summary"], "ready")
+        turn_start_requests = [item for item in client.requests if item[0] == "turn/start"]
+        self.assertEqual(len(turn_start_requests), 1)
+
+    def test_run_auxiliary_worker_timeout_disables_role_and_records_events(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        reporter = CaptureReporter(verbose=False, stdout=io.StringIO(), stderr=io.StringIO())
+
+        class FakeWorkerClient:
+            def __init__(self, runtime_config=None, event_recorder=None, enable_search=False):
+                self.enable_search = enable_search
+                self.events = []
+
+            def start(self):
+                return None
+
+            def close(self):
+                return None
+
+            def request(self, method, params):
+                if method == "thread/start":
+                    return {"thread": {"id": "worker-thread"}}
+                if method == "turn/start":
+                    return {"turn": {"id": "worker-turn"}}
+                raise AssertionError(method)
+
+            def next_event(self, timeout=0.1):
+                return None
+
+            def send_error(self, request_id, code, message, data=None):
+                return None
+
+            def raise_if_unavailable(self, context):
+                return None
+
+            def diagnostic_error(self, message):
+                return message
+
+        with mock.patch.object(ralph_codex, "SubprocessAppServerClient", FakeWorkerClient):
+            controller = self.make_controller(root, client=FakeWorkerClient(), reporter=reporter)
+            ticks = iter([0.0, 10.0, 61.0])
+            controller.monotonic_func = lambda: next(ticks)
+
+            result = controller.run_auxiliary_worker(
+                "research",
+                {"task": "inspect"},
+                model="gpt-5.4",
+                reasoning_effort="xhigh",
+                phase_name="planning-repair",
+            )
+
+        self.assertIsNone(result)
+        self.assertIn("research", controller.session.state["disabled_worker_roles"])
+        events = controller.store.read_jsonl(
+            controller.session.session_dir / "events.jsonl",
+            ralph_codex.EVENT_LOG_LINE_SCHEMA_ID,
+        )
+        event_types = [entry["event_type"] for entry in events]
+        self.assertIn("worker-started", event_types)
+        self.assertIn("worker-waiting", event_types)
+        self.assertIn("worker-failed", event_types)
+        self.assertIn("worker research disabled", reporter.stdout.getvalue())
 
     def test_run_with_zero_max_iterations_treats_limit_as_unbounded(self):
         tempdir, root = self.make_temp_root()
@@ -2636,14 +2807,10 @@ class RalphCodexTests(unittest.TestCase):
         with self.assertRaisesRegex(ralph_codex.RalphError, "progress checkpoint requires operator input"):
             controller.review_progress_if_needed(audit)
 
-    def test_memory_retention_uses_profile_caps(self):
+    def test_memory_retention_keeps_full_history_without_profile_caps(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        controller.session.profile["memory_policy"]["max_checkpoint_summaries"] = 3
-        controller.session.profile["memory_policy"]["max_worker_manifests"] = 2
-        controller.session.profile["memory_policy"]["max_evidence_registry_entries"] = 4
-        controller.session.profile["memory_policy"]["max_skill_memory_entries"] = 2
         for index in range(5):
             controller.refresh_evaluation_memory(
                 {
@@ -2672,6 +2839,12 @@ class RalphCodexTests(unittest.TestCase):
                 for index in range(6)
             ],
             used_for_prefix="planning",
+            evidence_assessment={
+                "relevance": "These sources are directly relevant to the plan.",
+                "quality": "The source mix is good enough for planning memory.",
+                "freshness": "The evidence remains sufficiently current.",
+                "refresh_recommended": False,
+            },
         )
         for index in range(4):
             controller.refresh_skill_memory(
@@ -2680,21 +2853,20 @@ class RalphCodexTests(unittest.TestCase):
                     "validation_completed": ["unit"],
                 }
             )
-        self.assertEqual(len(controller.session.state["checkpoint_summaries"]), 3)
-        self.assertEqual(len(controller.session.state["worker_manifests"]), 2)
-        self.assertEqual(len(controller.session.state["evidence_registry"]), 4)
-        self.assertEqual(len(controller.session.state["skill_memory"]), 2)
+        self.assertEqual(len(controller.session.state["checkpoint_summaries"]), 5)
+        self.assertEqual(len(controller.session.state["worker_manifests"]), 5)
+        self.assertEqual(len(controller.session.state["evidence_registry"]), 6)
+        self.assertEqual(len(controller.session.state["skill_memory"]), 4)
 
-    def test_collect_auxiliary_worker_summaries_respects_max_parallel_workers(self):
+    def test_collect_auxiliary_worker_summaries_runs_all_allowed_roles(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         controller = self.make_controller(root)
-        controller.session.profile["worker_policy"]["max_parallel_workers"] = 2
         seen = []
 
-        def fake_worker(role, payload, *, model, reasoning_effort):
-            seen.append((role, model, reasoning_effort))
-            return {"role": role, "summary": f"{role} ok", "findings": ["ok"], "confidence": "high"}
+        def fake_worker(role, payload, *, model, reasoning_effort, phase_name):
+            seen.append((role, model, reasoning_effort, phase_name))
+            return {"role": role, "summary": f"{role} ok", "findings": ["ok"], "confidence": "high", "sources": []}
 
         controller.run_auxiliary_worker = fake_worker
         summaries = controller.collect_auxiliary_worker_summaries(
@@ -2702,9 +2874,11 @@ class RalphCodexTests(unittest.TestCase):
             {"task": "inspect"},
             model="gpt-5.4",
             reasoning_effort="xhigh",
+            phase_name="evaluation-1",
         )
-        self.assertEqual([entry["role"] for entry in summaries], ["research", "read_only_repo"])
-        self.assertEqual([role for role, _, _ in seen], ["research", "read_only_repo"])
+        self.assertEqual([entry["role"] for entry in summaries], ["research", "read_only_repo", "evaluator_vote"])
+        self.assertEqual([role for role, _, _, _ in seen], ["research", "read_only_repo", "evaluator_vote"])
+        self.assertEqual({phase_name for _, _, _, phase_name in seen}, {"evaluation-1"})
 
     def test_finish_writes_finished_marker(self):
         tempdir, root = self.make_temp_root()
