@@ -1,6 +1,6 @@
 # 2.2 Applying The Taxonomy
 
-_Page Type: Chapter Index | Maturity: Draft_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
 This section shows how taxonomy changes actual review and implementation work. Use it when a team already has a proposal, a tool list, or a comparison table and needs to check whether the categories underneath it are sound.
 
@@ -15,5 +15,6 @@ This section shows how taxonomy changes actual review and implementation work. U
 - how the taxonomy changes a real design, review, or sourcing decision
 - what to normalize before publishing a comparison or policy statement
 - which reusable comparison fields should appear by default
+- when a table should be widened, split, deepened, or replaced instead of being preserved in a weak state
 
 Back to [2. Taxonomy](02-00-00-taxonomy.md).

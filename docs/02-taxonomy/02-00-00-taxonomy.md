@@ -1,10 +1,10 @@
 # 2. Taxonomy
 
-_Page Type: Chapter Index | Maturity: Draft_
+_Page Type: Chapter Index | Maturity: Review-Ready_
 
 This chapter is the atlas control surface for naming things correctly. It keeps tools, vendors, models, standards, controls, and use cases from collapsing into one mixed category and gives later chapters a shared comparison language.
 
-Skipping the taxonomy layer usually produces misleading tables, unstable terminology, and weak sourcing discipline.
+Use it before publishing or trusting any comparison-heavy page. Skipping the taxonomy layer usually produces misleading tables, unstable terminology, weak entity selection, and shallow sourcing discipline.
 
 ## Chapter Index
 
@@ -23,6 +23,7 @@ Skipping the taxonomy layer usually produces misleading tables, unstable termino
 
 - what kind of entity is actually being compared
 - which dimensions belong in a reusable comparison
+- whether a comparison table is too mixed, too narrow, or too shallow to keep as-is
 - when a local term should be normalized back to atlas language
 - whether a later chapter is making a substantive distinction or only renaming a familiar one
 
