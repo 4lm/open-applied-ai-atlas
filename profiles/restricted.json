@@ -51,7 +51,8 @@
       "research",
       "read_only_repo",
       "evaluator_vote"
-    ]
+    ],
+    "turn_timeout_secs": 1800
   },
   "evidence_policy": {
     "require_relevance_assessment": true,

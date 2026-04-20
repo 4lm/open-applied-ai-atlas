@@ -35,7 +35,7 @@
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "scope", "findings", "evidence_assessment", "sources"],
+      "required": ["status", "scope", "findings", "evidence_assessment", "live_search_assessment", "sources"],
       "properties": {
         "status": { "type": "string", "enum": ["completed", "blocked", "not_needed"] },
         "scope": { "type": "string", "minLength": 1 },
@@ -53,6 +53,16 @@
             "quality": { "type": "string", "minLength": 1 },
             "freshness": { "type": "string", "minLength": 1 },
             "refresh_recommended": { "type": "boolean" }
+          }
+        },
+        "live_search_assessment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "depth", "sufficiency_reasoning"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "depth": { "type": "string", "enum": ["none", "light", "moderate", "heavy"] },
+            "sufficiency_reasoning": { "type": "string", "minLength": 1 }
           }
         },
         "sources": {

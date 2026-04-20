@@ -22,7 +22,7 @@
     "research": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "search_strategy", "findings", "evidence_assessment", "sources", "open_questions"],
+      "required": ["status", "search_strategy", "findings", "evidence_assessment", "live_search_assessment", "sources", "open_questions"],
       "properties": {
         "status": { "type": "string", "enum": ["completed", "blocked"] },
         "search_strategy": { "type": "string", "minLength": 1 },
@@ -40,6 +40,16 @@
             "quality": { "type": "string", "minLength": 1 },
             "freshness": { "type": "string", "minLength": 1 },
             "refresh_recommended": { "type": "boolean" }
+          }
+        },
+        "live_search_assessment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "depth", "sufficiency_reasoning"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "depth": { "type": "string", "enum": ["none", "light", "moderate", "heavy"] },
+            "sufficiency_reasoning": { "type": "string", "minLength": 1 }
           }
         },
         "sources": {

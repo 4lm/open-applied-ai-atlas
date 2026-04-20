@@ -288,6 +288,11 @@ class RalphCodexTests(unittest.TestCase):
                     "freshness": "The evidence is current enough for the planning claims being made.",
                     "refresh_recommended": False,
                 },
+                "live_search_assessment": {
+                    "required": False,
+                    "depth": "none",
+                    "sufficiency_reasoning": "Repo-local context and already-sufficient evidence were enough here.",
+                },
                 "sources": [
                     {
                         "title": "Primary source A",
@@ -357,6 +362,11 @@ class RalphCodexTests(unittest.TestCase):
                     if status == "COMPLETE"
                     else "Freshness was not material because no new unstable fact claims were verified.",
                     "refresh_recommended": False,
+                },
+                "live_search_assessment": {
+                    "required": False,
+                    "depth": "none",
+                    "sufficiency_reasoning": "Live external research was not necessary for this verification block.",
                 },
                 "sources": [
                     {
@@ -543,6 +553,7 @@ class RalphCodexTests(unittest.TestCase):
         self.assertTrue(restricted["evidence_policy"]["require_quality_assessment"])
         self.assertTrue(restricted["evidence_policy"]["require_freshness_assessment"])
         self.assertTrue(restricted["evidence_policy"]["refresh_on_replan"])
+        self.assertEqual(restricted["worker_policy"]["turn_timeout_secs"], 1800)
         self.assertEqual(restricted["quality_policy"]["stagnation_escalation_after_iterations"], 6)
         self.assertEqual(restricted["eval_policy"]["acceptance_confidence_floor"], "high")
         self.assertEqual(restricted["loop_policy"]["same_tranche_escalation_after"], 4)
@@ -597,6 +608,7 @@ class RalphCodexTests(unittest.TestCase):
                 "worker_policy": {
                     "enabled": True,
                     "allowed_roles": ["research", "read_only_repo", "evaluator_vote"],
+                    "turn_timeout_secs": 1800,
                 },
                 "eval_policy": {"acceptance_confidence_floor": "high"},
                 "planning": {
@@ -976,6 +988,11 @@ class RalphCodexTests(unittest.TestCase):
                     "freshness": "The sources are current enough for this planning review.",
                     "refresh_recommended": False,
                 },
+                "live_search_assessment": {
+                    "required": False,
+                    "depth": "none",
+                    "sufficiency_reasoning": "This review payload is only testing rendering, not live research enforcement.",
+                },
                 "sources": [
                     {
                         "title": "Primary source A",
@@ -1344,6 +1361,52 @@ class RalphCodexTests(unittest.TestCase):
         controller = self.make_controller(root)
         self.save_charter(controller)
         execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["sources"] = execution_result["verification"]["sources"][:1]
+        execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
+        controller.validate_execution_result_basic(execution_result)
+
+    def test_validate_execution_result_allows_completed_verification_without_live_search_when_justified(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["live_search_assessment"] = {
+            "required": False,
+            "depth": "none",
+            "sufficiency_reasoning": "This verification relied on already-sufficient stable sources and repo-local evidence.",
+        }
+        execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
+        controller.validate_execution_result_basic(execution_result)
+
+    def test_validate_execution_result_rejects_required_live_search_without_observed_activity(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "light",
+            "sufficiency_reasoning": "This verification depends on unstable external facts.",
+        }
+        execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
+        with self.assertRaisesRegex(ralph_codex.RalphError, "declared live search required"):
+            controller.validate_execution_result_basic(execution_result)
+
+    def test_validate_execution_result_allows_light_live_search_with_explicit_telemetry_gap(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "light",
+            "sufficiency_reasoning": "The live verification happened, but a telemetry gap hid the trace and the source was captured directly.",
+        }
+        execution_result["verification"]["scope"] = "Verify one current external fact with a direct source check."
+        execution_result["verification"]["findings"] = ["One current external fact was verified against a captured live source."]
         execution_result["verification"]["sources"] = execution_result["verification"]["sources"][:1]
         execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
         controller.validate_execution_result_basic(execution_result)
@@ -2081,11 +2144,18 @@ class RalphCodexTests(unittest.TestCase):
         controller.store.append_event(
             controller.session,
             "turn-search-activity",
-            {"turn_id": "turn-1", "count": 2, "names": ["web_search"]},
+            {
+                "turn_id": "turn-1",
+                "live_search_count": 2,
+                "live_search_names": ["web_search"],
+                "repo_search_count": 1,
+                "repo_search_names": ["docs/19-reference-architectures"],
+            },
         )
         self.assertEqual(controller.turn_search_count("turn-1"), 2)
+        self.assertEqual(controller.turn_research_activity("turn-1")["repo_search_count"], 1)
 
-    def test_run_turn_records_search_activity_from_raw_command_actions(self):
+    def test_run_turn_records_repo_search_activity_from_raw_command_actions(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
@@ -2157,29 +2227,32 @@ class RalphCodexTests(unittest.TestCase):
         self.assertEqual(result["status"], "CHARTER_READY")
         latest_turn = store.latest_turn(session)
         self.assertIsNotNone(latest_turn)
-        self.assertEqual(controller.turn_search_count(latest_turn["turn_id"]), 1)
+        self.assertEqual(controller.turn_search_count(latest_turn["turn_id"]), 0)
+        self.assertEqual(controller.turn_research_activity(latest_turn["turn_id"])["repo_search_count"], 1)
 
-    def test_validate_planning_result_accepts_searches_from_raw_command_actions(self):
+    def test_run_turn_records_live_search_activity_from_function_calls(self):
         tempdir, root = self.make_temp_root()
         self.addCleanup(tempdir.cleanup)
         store, session = self.make_session(root)
         result_payload = self.planning_result_payload(summary="ready")
+        result_payload["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "This plan needs live external checking.",
+        }
         client = FakeClient(
             {"turn/start": {"turn": {"id": "turn-1"}}},
             [
                 {
                     "kind": "notification",
                     "payload": {
-                        "method": "item/completed",
+                        "method": "rawResponseItem/completed",
                         "params": {
                             "threadId": "thread-1",
                             "turnId": "turn-1",
                             "item": {
-                                "type": "commandExecution",
-                                "id": "call-1",
-                                "command": "/bin/zsh -lc 'rg -n notes docs/19-reference-architectures'",
-                                "status": "completed",
-                                "commandActions": [{"type": "searchText", "path": "docs/19-reference-architectures"}],
+                                "type": "function_call",
+                                "name": "web_search",
                             },
                         },
                     },
@@ -2187,16 +2260,13 @@ class RalphCodexTests(unittest.TestCase):
                 {
                     "kind": "notification",
                     "payload": {
-                        "method": "item/completed",
+                        "method": "rawResponseItem/completed",
                         "params": {
                             "threadId": "thread-1",
                             "turnId": "turn-1",
                             "item": {
-                                "type": "commandExecution",
-                                "id": "call-2",
-                                "command": "/bin/zsh -lc 'rg -n overlap docs/03-enterprise-ai-stack-map'",
-                                "status": "completed",
-                                "commandActions": [{"type": "searchText", "path": "docs/03-enterprise-ai-stack-map"}],
+                                "type": "function_call",
+                                "name": "browser.search",
                             },
                         },
                     },
@@ -2247,6 +2317,46 @@ class RalphCodexTests(unittest.TestCase):
 
         controller.validate_planning_result(result)
         self.assertEqual(controller.latest_turn_search_count(), 2)
+
+    def test_validate_planning_result_allows_completed_research_without_live_search_when_justified(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="repo-grounded")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": False,
+            "depth": "none",
+            "sufficiency_reasoning": "This planning revision only needed repo-local grounding and already-known sources.",
+        }
+        controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_rejects_required_live_search_without_observed_activity(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="needs live checking")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "This plan depends on current external facts.",
+        }
+        with self.assertRaisesRegex(ralph_codex.RalphError, "declared live search required"):
+            controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_allows_light_live_search_with_explicit_telemetry_gap(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="narrow live check")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "light",
+            "sufficiency_reasoning": "A telemetry gap hid the search trace, but the narrow live external check was completed and captured in the sources.",
+        }
+        planning_result["research"]["search_strategy"] = "Verify one current external source and capture it directly."
+        planning_result["research"]["findings"] = ["One current external source was checked and grounded the plan."]
+        planning_result["research"]["sources"] = planning_result["research"]["sources"][:1]
+        controller.validate_planning_result(planning_result)
 
     def test_rejected_completion_is_persisted_immediately(self):
         tempdir, root = self.make_temp_root()
@@ -2495,6 +2605,7 @@ class RalphCodexTests(unittest.TestCase):
 
         with mock.patch.object(ralph_codex, "SubprocessAppServerClient", FakeWorkerClient):
             controller = self.make_controller(root, client=FakeWorkerClient(), reporter=reporter)
+            controller.session.profile["worker_policy"]["turn_timeout_secs"] = 60
             ticks = iter([0.0, 10.0, 61.0])
             controller.monotonic_func = lambda: next(ticks)
 

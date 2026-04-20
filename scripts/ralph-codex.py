@@ -33,7 +33,7 @@ APP_SERVER_REQUEST_TIMEOUT_SECS = 30.0
 STDERR_BUFFER_LINES = 50
 TURN_IDLE_HEARTBEAT_SECS = 10.0
 WORKER_IDLE_HEARTBEAT_SECS = 10.0
-WORKER_TURN_TIMEOUT_SECS = 60.0
+DEFAULT_WORKER_TURN_TIMEOUT_SECS = 1800.0
 VERBOSE_CONSOLE_CHAR_LIMIT = 240
 CONSOLE_WRAP_WIDTH = 88
 MODEL_WORKSTREAM_PREVIEW_COUNT = 4
@@ -175,7 +175,8 @@ class PromptShape:
 class TurnOutputTracker:
     candidate_texts: list[str] = field(default_factory=list)
     seen_item_types: list[str] = field(default_factory=list)
-    search_names: list[str] = field(default_factory=list)
+    live_search_names: list[str] = field(default_factory=list)
+    repo_search_names: list[str] = field(default_factory=list)
     max_seen_item_types: int = 32
 
     def record_raw_item(self, item: dict[str, Any]) -> None:
@@ -194,8 +195,8 @@ class TurnOutputTracker:
                 self.candidate_texts.append(text)
             return
         name = str(item.get("name", "")).strip()
-        if str(item.get("type", "")).strip().lower() == "function_call" and "search" in name.lower():
-            self.search_names.append(name)
+        if str(item.get("type", "")).strip().lower() == "function_call" and is_live_research_function_name(name):
+            self.live_search_names.append(name)
 
     def record_thread_item(self, item: dict[str, Any]) -> None:
         item_type = str(item.get("type", "unknown")).strip()
@@ -208,7 +209,7 @@ class TurnOutputTracker:
             return
         primary_action, primary_target = summarize_command_execution_primary(item)
         if primary_action == "search":
-            self.search_names.append(primary_target or "search")
+            self.repo_search_names.append(primary_target or "search")
 
     def extract_final_output(self, schema: dict[str, Any]) -> dict[str, Any]:
         for text in reversed(self.candidate_texts):
@@ -226,8 +227,16 @@ class TurnOutputTracker:
         )
 
     def summarize_search_activity(self) -> dict[str, Any]:
-        unique_names = sorted({name for name in self.search_names if name})
-        return {"count": len(self.search_names), "names": unique_names}
+        unique_live_names = sorted({name for name in self.live_search_names if name})
+        unique_repo_names = sorted({name for name in self.repo_search_names if name})
+        return {
+            "count": len(self.live_search_names),
+            "names": unique_live_names,
+            "live_search_count": len(self.live_search_names),
+            "live_search_names": unique_live_names,
+            "repo_search_count": len(self.repo_search_names),
+            "repo_search_names": unique_repo_names,
+        }
 
     def _record_item_type(self, item_type: str) -> None:
         self.seen_item_types.append(item_type)
@@ -337,6 +346,43 @@ def summarize_command_execution_primary(item: dict[str, Any]) -> tuple[str, str]
             path_obj = Path(raw_target)
             target = raw_target if not path_obj.is_absolute() else path_obj.name
     return action, target
+
+
+def is_live_research_function_name(name: str) -> bool:
+    lowered = name.strip().lower()
+    if not lowered:
+        return False
+    if lowered in {
+        "search_query",
+        "image_query",
+        "web_search",
+        "browser.search",
+        "browser.open",
+        "browser.fetch",
+        "web.search",
+        "web.open",
+        "web.click",
+        "web.find",
+        "web.fetch",
+        "web.image_query",
+        "web.search_query",
+        "web.finance",
+        "web.weather",
+        "web.sports",
+        "web.time",
+    }:
+        return True
+    if any(token in lowered for token in ("exec", "command", "repo", "file", "grep", "rg", "read", "list")):
+        return False
+    return (
+        lowered.startswith("web.")
+        or lowered.startswith("browser.")
+        or lowered.endswith(".search")
+        or lowered.endswith(".open")
+        or lowered.endswith(".fetch")
+        or lowered.endswith(".click")
+        or lowered.endswith(".find")
+    )
 
 
 class TerminalReporter:
@@ -2611,7 +2657,7 @@ class RalphController:
             self.terminal_reporter.finish_stdout_line()
             final_output = tracker.extract_final_output(schema)
             search_activity = tracker.summarize_search_activity()
-            if search_activity["count"]:
+            if search_activity["live_search_count"] or search_activity["repo_search_count"]:
                 self.store.append_event(self.session, "turn-search-activity", {"turn_id": turn_id, **search_activity})
             if render_output:
                 self.render_model_output(phase_name, final_output, streamed_live)
@@ -2714,6 +2760,7 @@ class RalphController:
         if not isinstance(findings, list) or not findings:
             raise RalphError("research block must include findings")
         self.evidence_assessment(research.get("evidence_assessment"), "research")
+        live_search_assessment = self.live_search_assessment(research.get("live_search_assessment"), "research")
         sources = research.get("sources")
         if not isinstance(sources, list):
             raise RalphError("research block must include sources")
@@ -2726,14 +2773,13 @@ class RalphController:
         ):
             raise RalphError("completed research block must include a primary source when available")
         if status == "completed":
-            latest_turn = self.store.latest_turn(self.session)
-            search_count = self.latest_turn_search_count()
-            required_searches = 2 if self.session.profile["research_policy"]["require_multi_step_search"] else 1
-            if latest_turn and search_count < required_searches:
-                raise RalphError(
-                    "completed research block is not backed by enough observed live search activity "
-                    f"(observed={search_count}, required={required_searches})"
-                )
+            self.validate_live_search_sufficiency(
+                block_label="research",
+                live_search_assessment=live_search_assessment,
+                search_strategy=str(research.get("search_strategy", "")).strip(),
+                findings=findings,
+                sources=sources,
+            )
 
     def validate_active_milestone(self, milestone: Any, program_board: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(milestone, dict):
@@ -2787,13 +2833,25 @@ class RalphController:
         if not isinstance(findings, list) or not findings:
             raise RalphError("verification block must include findings")
         self.evidence_assessment(verification.get("evidence_assessment"), "verification")
+        live_search_assessment = self.live_search_assessment(
+            verification.get("live_search_assessment"),
+            "verification",
+        )
         sources = verification.get("sources")
         if not isinstance(sources, list):
             raise RalphError("verification block must include sources")
         if status == "completed" and not sources:
             raise RalphError("completed verification block must include sources")
-        if status == "completed" and self.store.latest_turn(self.session) and self.latest_turn_search_count() < 1:
-            raise RalphError("completed verification block is not backed by observed live search activity")
+        if status == "not_needed" and live_search_assessment["required"]:
+            raise RalphError("verification.live_search_assessment.required must be false when status is not_needed")
+        if status == "completed":
+            self.validate_live_search_sufficiency(
+                block_label="verification",
+                live_search_assessment=live_search_assessment,
+                search_strategy=str(verification.get("scope", "")).strip(),
+                findings=findings,
+                sources=sources,
+            )
 
     def validate_execution_result_basic(self, execution_result: dict[str, Any]) -> None:
         self.validate_verification_block(execution_result.get("verification"))
@@ -2877,6 +2935,12 @@ class RalphController:
             return policy
         return default_profile_baseline()["evidence_policy"]
 
+    def worker_turn_timeout_secs(self) -> float:
+        timeout = self.worker_policy().get("turn_timeout_secs", DEFAULT_WORKER_TURN_TIMEOUT_SECS)
+        if isinstance(timeout, (int, float)) and timeout > 0:
+            return float(timeout)
+        return DEFAULT_WORKER_TURN_TIMEOUT_SECS
+
     def loop_escalation_after(self, key: str, fallback: int) -> int:
         value = self.loop_policy().get(key, fallback)
         if not isinstance(value, int) or value < 1:
@@ -2946,6 +3010,185 @@ class RalphController:
             "freshness": freshness,
             "refresh_recommended": refresh_recommended,
         }
+
+    def live_search_assessment(self, payload: Any, label: str) -> dict[str, Any]:
+        if not isinstance(payload, dict):
+            raise RalphError(f"{label} must include live_search_assessment")
+        required = payload.get("required")
+        if not isinstance(required, bool):
+            raise RalphError(f"{label}.live_search_assessment.required must be a boolean")
+        depth = str(payload.get("depth", "")).strip()
+        if depth not in {"none", "light", "moderate", "heavy"}:
+            raise RalphError(
+                f"{label}.live_search_assessment.depth must be one of: none, light, moderate, heavy"
+            )
+        sufficiency_reasoning = str(payload.get("sufficiency_reasoning", "")).strip()
+        if not sufficiency_reasoning:
+            raise RalphError(f"{label}.live_search_assessment.sufficiency_reasoning is required")
+        if required and depth == "none":
+            raise RalphError(f"{label}.live_search_assessment.depth cannot be none when required is true")
+        if not required and depth != "none":
+            raise RalphError(f"{label}.live_search_assessment.depth must be none when required is false")
+        return {
+            "required": required,
+            "depth": depth,
+            "sufficiency_reasoning": sufficiency_reasoning,
+        }
+
+    def latest_turn_research_activity(self) -> dict[str, Any]:
+        latest_turn = self.store.latest_turn(self.session)
+        if not latest_turn:
+            return {
+                "live_search_count": 0,
+                "live_search_names": [],
+                "repo_search_count": 0,
+                "repo_search_names": [],
+            }
+        return self.turn_research_activity(latest_turn.get("turn_id", ""))
+
+    def turn_research_activity(self, turn_id: str) -> dict[str, Any]:
+        if not turn_id:
+            return {
+                "live_search_count": 0,
+                "live_search_names": [],
+                "repo_search_count": 0,
+                "repo_search_names": [],
+            }
+        live_search_count = 0
+        repo_search_count = 0
+        live_names: list[str] = []
+        repo_names: list[str] = []
+        events = self.store.read_jsonl(self.session.session_dir / "events.jsonl", EVENT_LOG_LINE_SCHEMA_ID)
+        for event in events:
+            if event.get("event_type") != "turn-search-activity":
+                continue
+            payload = event.get("payload") or {}
+            if payload.get("turn_id") != turn_id:
+                continue
+            live_search_count += int(payload.get("live_search_count", payload.get("count", 0)))
+            repo_search_count += int(payload.get("repo_search_count", 0))
+            live_names.extend(
+                str(name).strip()
+                for name in (payload.get("live_search_names") or payload.get("names") or [])
+                if str(name).strip()
+            )
+            repo_names.extend(
+                str(name).strip()
+                for name in (payload.get("repo_search_names") or [])
+                if str(name).strip()
+            )
+        return {
+            "live_search_count": live_search_count,
+            "live_search_names": sorted(set(live_names)),
+            "repo_search_count": repo_search_count,
+            "repo_search_names": sorted(set(repo_names)),
+        }
+
+    def latest_turn_search_count(self) -> int:
+        return self.latest_turn_research_activity()["live_search_count"]
+
+    def turn_search_count(self, turn_id: str) -> int:
+        return self.turn_research_activity(turn_id)["live_search_count"]
+
+    def live_search_signal_score(
+        self,
+        observed_live_search_count: int,
+        search_strategy: str,
+        findings: list[Any],
+        sources: list[Any],
+    ) -> int:
+        score = 0
+        if observed_live_search_count > 0:
+            score += 1
+        if len([entry for entry in findings if isinstance(entry, str) and entry.strip()]) >= 2:
+            score += 1
+        unique_urls = {
+            str(entry.get("url", "")).strip()
+            for entry in sources
+            if isinstance(entry, dict) and str(entry.get("url", "")).strip()
+        }
+        if len(unique_urls) >= 2:
+            score += 1
+        if any(isinstance(entry, dict) and entry.get("source_type") == "primary" for entry in sources):
+            score += 1
+        strategy_text = search_strategy.lower()
+        if any(token in strategy_text for token in ("compare", "cross", "multi", "refresh", "verify")):
+            score += 1
+        return score
+
+    def live_search_telemetry_gap_allowed(
+        self,
+        *,
+        live_search_assessment: dict[str, Any],
+        search_strategy: str,
+        findings: list[Any],
+        sources: list[Any],
+    ) -> bool:
+        if live_search_assessment["depth"] != "light":
+            return False
+        reasoning = live_search_assessment["sufficiency_reasoning"].lower()
+        if not any(
+            token in reasoning
+            for token in (
+                "telemetry gap",
+                "telemetry missing",
+                "trace gap",
+                "trace missing",
+                "not recorded",
+                "not visible",
+                "recording gap",
+            )
+        ):
+            return False
+        non_empty_findings = [entry for entry in findings if isinstance(entry, str) and entry.strip()]
+        non_empty_sources = [
+            entry
+            for entry in sources
+            if isinstance(entry, dict) and str(entry.get("url", "")).strip()
+        ]
+        strategy_text = search_strategy.lower()
+        return bool(non_empty_findings) and bool(non_empty_sources) and any(
+            token in strategy_text for token in ("search", "source", "verify", "check", "refresh", "browse", "research")
+        )
+
+    def validate_live_search_sufficiency(
+        self,
+        *,
+        block_label: str,
+        live_search_assessment: dict[str, Any],
+        search_strategy: str,
+        findings: list[Any],
+        sources: list[Any],
+    ) -> None:
+        activity = self.latest_turn_research_activity()
+        observed_live_search_count = activity["live_search_count"]
+        if not live_search_assessment["required"]:
+            return
+        if observed_live_search_count <= 0:
+            if self.live_search_telemetry_gap_allowed(
+                live_search_assessment=live_search_assessment,
+                search_strategy=search_strategy,
+                findings=findings,
+                sources=sources,
+            ):
+                return
+            raise RalphError(
+                f"completed {block_label} block declared live search required but no observed live search activity "
+                "was recorded"
+            )
+        required_signal = {"none": 0, "light": 1, "moderate": 2, "heavy": 3}[live_search_assessment["depth"]]
+        observed_signal = self.live_search_signal_score(
+            observed_live_search_count,
+            search_strategy,
+            findings,
+            sources,
+        )
+        if observed_signal < required_signal:
+            raise RalphError(
+                f"completed {block_label} block is not backed by enough observed live research depth "
+                f"(observed_live_searches={observed_live_search_count}, declared_depth={live_search_assessment['depth']}, "
+                f"observed_signal={observed_signal}, required_signal={required_signal})"
+            )
 
     def record_worker_manifest(self, role: str, status: str, summary: str) -> None:
         manifests = self.session.state.get("worker_manifests") or []
@@ -3042,25 +3285,6 @@ class RalphController:
             reasoning_effort=self.session.profile["evaluation"]["reasoning_effort"],
             phase_name=phase_name,
         )
-
-    def latest_turn_search_count(self) -> int:
-        latest_turn = self.store.latest_turn(self.session)
-        if not latest_turn:
-            return 0
-        return self.turn_search_count(latest_turn.get("turn_id", ""))
-
-    def turn_search_count(self, turn_id: str) -> int:
-        if not turn_id:
-            return 0
-        events = self.store.read_jsonl(self.session.session_dir / "events.jsonl", EVENT_LOG_LINE_SCHEMA_ID)
-        total = 0
-        for event in events:
-            if event.get("event_type") != "turn-search-activity":
-                continue
-            payload = event.get("payload") or {}
-            if payload.get("turn_id") == turn_id:
-                total += int(payload.get("count", 0))
-        return total
 
     def refresh_program_state(self, planning_result: dict[str, Any]) -> None:
         program_board = planning_result["program_board"]
@@ -3622,14 +3846,15 @@ class RalphController:
             Rules:
             - Never call update_plan. That tool is not allowed in this Plan Mode flow.
             - Use only plan-safe, non-mutating exploration while planning.
-            - Mandatory live web research is part of planning and replanning.
-            - Run multi-step web search before finalizing the plan.
+            - Use live web research when the task or claims depend on unstable or external facts.
+            - If live web research is not needed, explain why in research.live_search_assessment.
+            - When live research is needed, declare the required depth honestly in research.live_search_assessment.
             - Prefer primary sources when available and record them explicitly.
             - If critical intent is missing, use request_user_input rather than ad hoc prose prompts.
             - Ralph updates the plan by starting another planning turn with feedback, not by using update_plan.
             - Produce a hierarchical program_board with milestones and workstreams when the task supports it.
             - Every workstream must name adjacent surfaces and validation obligations.
-            - Return a research block with findings, sources, and open questions.
+            - Return a research block with findings, sources, open questions, and live_search_assessment.
             - Return one active_milestone and one current_tranche with explicit target files and only the highest-signal next-step work.
             - Prefer root-cause and system-level improvements over local patching when the task benefits from them.
             - Output only a schema-valid JSON object.
@@ -3645,7 +3870,8 @@ class RalphController:
             Do not widen the tranche on your own.
             Mandatory verification is part of every execution turn.
             If the task involves unstable facts, standards, vendors, laws, products, or recommendations,
-            use live web research before reporting progress.
+            use live web research before reporting progress. If not, explain why live research was not needed
+            in verification.live_search_assessment.
             Avoid controller-serving meta artifacts unless the task explicitly asks for them.
             Avoid repeated stock headings and broad low-signal template spread.
             If you must touch files outside current_tranche.target_files, record them in off_tranche_justifications.
@@ -3785,7 +4011,8 @@ class RalphController:
             tracker = TurnOutputTracker()
             worker_started_at = self.monotonic_func()
             next_heartbeat_at = worker_started_at + WORKER_IDLE_HEARTBEAT_SECS
-            deadline = worker_started_at + WORKER_TURN_TIMEOUT_SECS
+            worker_timeout_secs = self.worker_turn_timeout_secs()
+            deadline = worker_started_at + worker_timeout_secs
             while True:
                 event = client.next_event(timeout=0.1)
                 if event is None:
@@ -3793,7 +4020,7 @@ class RalphController:
                     current_time = self.monotonic_func()
                     if current_time >= deadline:
                         raise RalphError(
-                            f"Auxiliary worker {role} timed out after {int(WORKER_TURN_TIMEOUT_SECS)}s"
+                            f"Auxiliary worker {role} timed out after {int(worker_timeout_secs)}s"
                         )
                     if current_time >= next_heartbeat_at:
                         elapsed_seconds = max(1, int(current_time - worker_started_at))
@@ -4061,8 +4288,9 @@ class RalphController:
                         "- You are in real Plan Mode for this turn.",
                         "- Do not call update_plan.",
                         "- Use non-mutating exploration only.",
-                        "- Live web research is mandatory for planning and replanning.",
-                        "- Use multi-step search and compare sources before committing to a plan.",
+                        "- Use live web research when the task or claims need external or unstable evidence.",
+                        "- If live research is not needed, explain that in research.live_search_assessment.",
+                        "- When live research is needed, declare the required depth honestly and compare sources before committing to a plan.",
                         "- If you truly need operator input, request it through request_user_input.",
                         "- Plan revisions happen through repeated Ralph planning turns with controller feedback.",
                         "- Return a program_board, one active_milestone, and one high-signal current_tranche.",
@@ -4229,7 +4457,8 @@ class RalphController:
                         "requires_checkpoint": audit.requires_checkpoint,
                         "checkpoint_reason": audit.checkpoint_reason,
                         "diff_samples": audit.diff_samples,
-                        "observed_search_count": self.latest_turn_search_count(),
+                        "observed_live_search_count": self.latest_turn_research_activity()["live_search_count"],
+                        "observed_repo_search_count": self.latest_turn_research_activity()["repo_search_count"],
                         "novelty_score": audit.novelty_score,
                         "acceptance_progress_score": audit.acceptance_progress_score,
                         "acceptance_criteria_met": audit.acceptance_criteria_met or [],
