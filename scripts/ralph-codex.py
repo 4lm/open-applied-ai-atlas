@@ -2335,6 +2335,7 @@ class RalphController:
         self.input_func = input_func
         self.terminal_reporter = terminal_reporter or event_recorder.reporter
         self.monotonic_func = monotonic_func
+        self._current_phase_attempt_id = ""
 
     def run(self) -> int:
         self.print_status("starting Codex app-server", badge="STARTING")
@@ -2658,7 +2659,10 @@ class RalphController:
             final_output = tracker.extract_final_output(schema)
             search_activity = tracker.summarize_search_activity()
             if search_activity["live_search_count"] or search_activity["repo_search_count"]:
-                self.store.append_event(self.session, "turn-search-activity", {"turn_id": turn_id, **search_activity})
+                payload = {"turn_id": turn_id, **search_activity}
+                if self._current_phase_attempt_id:
+                    payload["phase_attempt_id"] = self._current_phase_attempt_id
+                self.store.append_event(self.session, "turn-search-activity", payload)
             if render_output:
                 self.render_model_output(phase_name, final_output, streamed_live)
             self.store.append_turn(
@@ -3035,6 +3039,48 @@ class RalphController:
             "sufficiency_reasoning": sufficiency_reasoning,
         }
 
+    @staticmethod
+    def required_live_search_signal(depth: str) -> int:
+        return {"none": 0, "light": 1, "moderate": 2, "heavy": 3}[depth]
+
+    def current_phase_research_activity(self) -> dict[str, Any]:
+        if self._current_phase_attempt_id:
+            return self.phase_attempt_research_activity(self._current_phase_attempt_id)
+        return self.latest_turn_research_activity()
+
+    def phase_attempt_research_activity(self, phase_attempt_id: str) -> dict[str, Any]:
+        if not phase_attempt_id:
+            return self.latest_turn_research_activity()
+        live_search_count = 0
+        repo_search_count = 0
+        live_names: list[str] = []
+        repo_names: list[str] = []
+        events = self.store.read_jsonl(self.session.session_dir / "events.jsonl", EVENT_LOG_LINE_SCHEMA_ID)
+        for event in events:
+            if event.get("event_type") not in {"turn-search-activity", "worker-search-activity"}:
+                continue
+            payload = event.get("payload") or {}
+            if payload.get("phase_attempt_id") != phase_attempt_id:
+                continue
+            live_search_count += int(payload.get("live_search_count", payload.get("count", 0)))
+            repo_search_count += int(payload.get("repo_search_count", 0))
+            live_names.extend(
+                str(name).strip()
+                for name in (payload.get("live_search_names") or payload.get("names") or [])
+                if str(name).strip()
+            )
+            repo_names.extend(
+                str(name).strip()
+                for name in (payload.get("repo_search_names") or [])
+                if str(name).strip()
+            )
+        return {
+            "live_search_count": live_search_count,
+            "live_search_names": sorted(set(live_names)),
+            "repo_search_count": repo_search_count,
+            "repo_search_names": sorted(set(repo_names)),
+        }
+
     def latest_turn_research_activity(self) -> dict[str, Any]:
         latest_turn = self.store.latest_turn(self.session)
         if not latest_turn:
@@ -3124,32 +3170,21 @@ class RalphController:
         findings: list[Any],
         sources: list[Any],
     ) -> bool:
-        if live_search_assessment["depth"] != "light":
-            return False
-        reasoning = live_search_assessment["sufficiency_reasoning"].lower()
-        if not any(
-            token in reasoning
-            for token in (
-                "telemetry gap",
-                "telemetry missing",
-                "trace gap",
-                "trace missing",
-                "not recorded",
-                "not visible",
-                "recording gap",
-            )
-        ):
-            return False
         non_empty_findings = [entry for entry in findings if isinstance(entry, str) and entry.strip()]
         non_empty_sources = [
             entry
             for entry in sources
             if isinstance(entry, dict) and str(entry.get("url", "")).strip()
         ]
-        strategy_text = search_strategy.lower()
-        return bool(non_empty_findings) and bool(non_empty_sources) and any(
-            token in strategy_text for token in ("search", "source", "verify", "check", "refresh", "browse", "research")
+        if not non_empty_findings or not non_empty_sources:
+            return False
+        inferred_signal = self.live_search_signal_score(
+            0,
+            search_strategy,
+            findings,
+            sources,
         )
+        return inferred_signal >= self.required_live_search_signal(live_search_assessment["depth"])
 
     def validate_live_search_sufficiency(
         self,
@@ -3160,10 +3195,11 @@ class RalphController:
         findings: list[Any],
         sources: list[Any],
     ) -> None:
-        activity = self.latest_turn_research_activity()
+        activity = self.current_phase_research_activity()
         observed_live_search_count = activity["live_search_count"]
         if not live_search_assessment["required"]:
             return
+        required_signal = self.required_live_search_signal(live_search_assessment["depth"])
         if observed_live_search_count <= 0:
             if self.live_search_telemetry_gap_allowed(
                 live_search_assessment=live_search_assessment,
@@ -3171,12 +3207,22 @@ class RalphController:
                 findings=findings,
                 sources=sources,
             ):
+                self.store.append_event(
+                    self.session,
+                    "live-search-telemetry-gap-accepted",
+                    {
+                        "block_label": block_label,
+                        "phase_attempt_id": self._current_phase_attempt_id,
+                        "declared_depth": live_search_assessment["depth"],
+                        "observed_live_search_count": 0,
+                        "inferred_signal": self.live_search_signal_score(0, search_strategy, findings, sources),
+                    },
+                )
                 return
             raise RalphError(
                 f"completed {block_label} block declared live search required but no observed live search activity "
                 "was recorded"
             )
-        required_signal = {"none": 0, "light": 1, "moderate": 2, "heavy": 3}[live_search_assessment["depth"]]
         observed_signal = self.live_search_signal_score(
             observed_live_search_count,
             search_strategy,
@@ -3196,14 +3242,17 @@ class RalphController:
         self.session.state["worker_manifests"] = manifests
 
     def append_worker_event(self, event_type: str, role: str, phase_name: str, payload: dict[str, Any]) -> None:
+        full_payload = {
+            "role": role,
+            "phase": phase_name,
+            **payload,
+        }
+        if self._current_phase_attempt_id:
+            full_payload["phase_attempt_id"] = self._current_phase_attempt_id
         self.store.append_event(
             self.session,
             event_type,
-            {
-                "role": role,
-                "phase": phase_name,
-                **payload,
-            },
+            full_payload,
         )
 
     def collect_planning_worker_summaries(
@@ -4066,6 +4115,19 @@ class RalphController:
                         raise RalphError("Auxiliary worker turn was interrupted")
                     break
             worker_output = tracker.extract_final_output(self.schema_catalog.model_schema(WORKER_SUMMARY_SCHEMA_ID))
+            search_activity = tracker.summarize_search_activity()
+            if search_activity["live_search_count"] or search_activity["repo_search_count"]:
+                self.store.append_event(
+                    self.session,
+                    "worker-search-activity",
+                    {
+                        "phase_attempt_id": self._current_phase_attempt_id,
+                        "phase": phase_name,
+                        "role": role,
+                        "turn_id": turn_id,
+                        **search_activity,
+                    },
+                )
             self.record_worker_manifest(
                 role,
                 "completed",
@@ -4197,78 +4259,86 @@ class RalphController:
         phase_feedback = initial_feedback.strip()
         last_error: RalphError | None = None
         repair_index = 0
-        while True:
-            semantic_error: RalphError | None = None
-            for shape_index, shape in enumerate(prompt_shapes):
-                phase_output: dict[str, Any] | None = None
-                try:
-                    prompt_context = prompt_context_builder(shape, phase_feedback, repair_index) if prompt_context_builder else {}
-                    prompt = prompt_builder(shape, phase_feedback, prompt_context)
-                    phase_output = self.run_turn(
-                        phase_name=phase_name,
-                        prompt=prompt,
-                        schema=schema,
-                        collaboration_mode=collaboration_mode,
-                        render_output=render_output,
-                    )
-                    validator(phase_output)
-                    self.print_status(
-                        f"{phase_name} validated: "
-                        f"{phase_output.get('status', 'UNKNOWN')}: {truncate_label(phase_output.get('summary', ''), 120)}",
-                        badge=self.phase_badge(phase_name),
-                    )
-                    return phase_output
-                except RalphError as exc:
-                    last_error = exc
-                    if phase_output is not None:
-                        semantic_error = exc
-                        break
-                    if shape_index + 1 < len(prompt_shapes):
-                        self.store.append_event(
-                            self.session,
-                            "prompt-shape-retry",
-                            {
-                                "phase": phase_name,
-                                "shape_index": shape_index + 1,
-                                "reason": truncate_label(str(exc), 160),
-                            },
+        previous_phase_attempt_id = self._current_phase_attempt_id
+        try:
+            while True:
+                self._current_phase_attempt_id = f"{phase_name}:{repair_index + 1}:{secrets.token_hex(4)}"
+                semantic_error: RalphError | None = None
+                for shape_index, shape in enumerate(prompt_shapes):
+                    phase_output: dict[str, Any] | None = None
+                    try:
+                        prompt_context = prompt_context_builder(shape, phase_feedback, repair_index) if prompt_context_builder else {}
+                        prompt = prompt_builder(shape, phase_feedback, prompt_context)
+                        phase_output = self.run_turn(
+                            phase_name=phase_name,
+                            prompt=prompt,
+                            schema=schema,
+                            collaboration_mode=collaboration_mode,
+                            render_output=render_output,
                         )
+                        validator(phase_output)
                         self.print_status(
-                            f"{phase_name} retrying with a leaner prompt: {truncate_label(str(exc), 120)}",
+                            f"{phase_name} validated: "
+                            f"{phase_output.get('status', 'UNKNOWN')}: {truncate_label(phase_output.get('summary', ''), 120)}",
                             badge=self.phase_badge(phase_name),
                         )
-                        continue
-                    raise
-            if semantic_error is None:
-                raise RalphError(
-                    f"{phase_name} failed without a repairable model-output contract error: "
-                    f"{str(last_error or RalphError('unknown phase failure')).strip()}"
-                )
-            repair_index += 1
-            phase_feedback = self.compose_phase_repair_feedback(phase_name, semantic_error, repair_index)
-            if repair_index >= escalation_after:
+                        return phase_output
+                    except RalphError as exc:
+                        last_error = exc
+                        if phase_output is not None:
+                            semantic_error = exc
+                            break
+                        if shape_index + 1 < len(prompt_shapes):
+                            self.store.append_event(
+                                self.session,
+                                "prompt-shape-retry",
+                                {
+                                    "phase": phase_name,
+                                    "shape_index": shape_index + 1,
+                                    "reason": truncate_label(str(exc), 160),
+                                    "phase_attempt_id": self._current_phase_attempt_id,
+                                },
+                            )
+                            self.print_status(
+                                f"{phase_name} retrying with a leaner prompt: {truncate_label(str(exc), 120)}",
+                                badge=self.phase_badge(phase_name),
+                            )
+                            continue
+                        raise
+                if semantic_error is None:
+                    raise RalphError(
+                        f"{phase_name} failed without a repairable model-output contract error: "
+                        f"{str(last_error or RalphError('unknown phase failure')).strip()}"
+                    )
+                repair_index += 1
+                phase_feedback = self.compose_phase_repair_feedback(phase_name, semantic_error, repair_index)
+                if repair_index >= escalation_after:
+                    self.store.append_event(
+                        self.session,
+                        "phase-repair-escalated",
+                        {
+                            "phase": phase_name,
+                            "repair_index": repair_index,
+                            "reason": truncate_label(str(semantic_error), 160),
+                            "phase_attempt_id": self._current_phase_attempt_id,
+                        },
+                    )
                 self.store.append_event(
                     self.session,
-                    "phase-repair-escalated",
+                    "phase-repair-requested",
                     {
                         "phase": phase_name,
                         "repair_index": repair_index,
                         "reason": truncate_label(str(semantic_error), 160),
+                        "phase_attempt_id": self._current_phase_attempt_id,
                     },
                 )
-            self.store.append_event(
-                self.session,
-                "phase-repair-requested",
-                {
-                    "phase": phase_name,
-                    "repair_index": repair_index,
-                    "reason": truncate_label(str(semantic_error), 160),
-                },
-            )
-            self.print_status(
-                f"{phase_name} repair requested: {truncate_label(str(semantic_error), 120)}",
-                badge=self.phase_badge(phase_name),
-            )
+                self.print_status(
+                    f"{phase_name} repair requested: {truncate_label(str(semantic_error), 120)}",
+                    badge=self.phase_badge(phase_name),
+                )
+        finally:
+            self._current_phase_attempt_id = previous_phase_attempt_id
 
     def build_planning_prompt(
         self,

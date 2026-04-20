@@ -1387,9 +1387,12 @@ class RalphCodexTests(unittest.TestCase):
         execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
         execution_result["verification"]["live_search_assessment"] = {
             "required": True,
-            "depth": "light",
+            "depth": "moderate",
             "sufficiency_reasoning": "This verification depends on unstable external facts.",
         }
+        execution_result["verification"]["scope"] = "Summarize repo-local implications for the current tranche."
+        execution_result["verification"]["findings"] = ["A tentative verification note was recorded."]
+        execution_result["verification"]["sources"] = execution_result["verification"]["sources"][:1]
         execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
         with self.assertRaisesRegex(ralph_codex.RalphError, "declared live search required"):
             controller.validate_execution_result_basic(execution_result)
@@ -1408,6 +1411,35 @@ class RalphCodexTests(unittest.TestCase):
         execution_result["verification"]["scope"] = "Verify one current external fact with a direct source check."
         execution_result["verification"]["findings"] = ["One current external fact was verified against a captured live source."]
         execution_result["verification"]["sources"] = execution_result["verification"]["sources"][:1]
+        execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
+        controller.validate_execution_result_basic(execution_result)
+
+    def test_validate_execution_result_allows_required_live_search_from_worker_activity(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        self.save_charter(controller)
+        controller._current_phase_attempt_id = "execution-1:1:test"
+        controller.store.append_event(
+            controller.session,
+            "worker-search-activity",
+            {
+                "phase_attempt_id": "execution-1:1:test",
+                "phase": "execution-1",
+                "role": "research",
+                "turn_id": "worker-turn-1",
+                "live_search_count": 2,
+                "live_search_names": ["web.search", "browser.search"],
+                "repo_search_count": 0,
+                "repo_search_names": [],
+            },
+        )
+        execution_result = self.execution_result_payload(status="COMPLETE", summary="done", remaining_gaps=[])
+        execution_result["verification"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "Current external verification was required for this execution report.",
+        }
         execution_result["workstream_updates"] = [{"id": "W1", "status": "done", "evidence": ["ok"]}]
         controller.validate_execution_result_basic(execution_result)
 
@@ -2340,6 +2372,9 @@ class RalphCodexTests(unittest.TestCase):
             "depth": "moderate",
             "sufficiency_reasoning": "This plan depends on current external facts.",
         }
+        planning_result["research"]["search_strategy"] = "Summarize repo-local implications before choosing the tranche."
+        planning_result["research"]["findings"] = ["One tentative observation was noted."]
+        planning_result["research"]["sources"] = planning_result["research"]["sources"][:1]
         with self.assertRaisesRegex(ralph_codex.RalphError, "declared live search required"):
             controller.validate_planning_result(planning_result)
 
@@ -2357,6 +2392,80 @@ class RalphCodexTests(unittest.TestCase):
         planning_result["research"]["findings"] = ["One current external source was checked and grounded the plan."]
         planning_result["research"]["sources"] = planning_result["research"]["sources"][:1]
         controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_allows_required_live_search_without_observed_telemetry_when_grounding_is_strong(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        planning_result = self.planning_result_payload(summary="strong external grounding")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "The plan depends on current external facts and the returned sources capture that research clearly.",
+        }
+        planning_result["research"]["findings"] = [
+            "Two current external sources were compared against the repo state.",
+            "The live comparison narrowed the active milestone safely.",
+        ]
+        controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_allows_required_live_search_from_worker_activity(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller._current_phase_attempt_id = "planning:1:test"
+        controller.store.append_event(
+            controller.session,
+            "worker-search-activity",
+            {
+                "phase_attempt_id": "planning:1:test",
+                "phase": "planning",
+                "role": "research",
+                "turn_id": "worker-turn-1",
+                "live_search_count": 2,
+                "live_search_names": ["web.search", "browser.search"],
+                "repo_search_count": 0,
+                "repo_search_names": [],
+            },
+        )
+        planning_result = self.planning_result_payload(summary="worker-backed research")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "The plan depends on live external research gathered during the planning phase.",
+        }
+        controller.validate_planning_result(planning_result)
+
+    def test_validate_planning_result_does_not_leak_worker_activity_between_phase_attempts(self):
+        tempdir, root = self.make_temp_root()
+        self.addCleanup(tempdir.cleanup)
+        controller = self.make_controller(root)
+        controller.store.append_event(
+            controller.session,
+            "worker-search-activity",
+            {
+                "phase_attempt_id": "planning:old:test",
+                "phase": "planning",
+                "role": "research",
+                "turn_id": "worker-turn-old",
+                "live_search_count": 2,
+                "live_search_names": ["web.search", "browser.search"],
+                "repo_search_count": 0,
+                "repo_search_names": [],
+            },
+        )
+        controller._current_phase_attempt_id = "planning:new:test"
+        planning_result = self.planning_result_payload(summary="new attempt needs real telemetry")
+        planning_result["research"]["live_search_assessment"] = {
+            "required": True,
+            "depth": "moderate",
+            "sufficiency_reasoning": "This plan depends on current external facts.",
+        }
+        planning_result["research"]["search_strategy"] = "Summarize repo-local implications before choosing the tranche."
+        planning_result["research"]["findings"] = ["One tentative observation was noted."]
+        planning_result["research"]["sources"] = planning_result["research"]["sources"][:1]
+        with self.assertRaisesRegex(ralph_codex.RalphError, "declared live search required"):
+            controller.validate_planning_result(planning_result)
 
     def test_rejected_completion_is_persisted_immediately(self):
         tempdir, root = self.make_temp_root()
