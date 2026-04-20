@@ -13,6 +13,43 @@ Open Applied AI Atlas should read like maintained public documentation with a cl
 - The maximum depth is chapter + two subchapter levels.
 - Every file starts with a numbered H1 such as `# 2. Taxonomy`, `# 2.1 Classification Foundations`, or `# 2.1.1 Entity Classes And Core Distinctions`.
 
+## Structural Triage Rules
+
+Use these tests before creating, keeping, merging, or splitting numbered pages. Structural change should improve reader value and chapter fit, not preserve outline symmetry.
+
+### Reader-Job Test For Keeping A Standalone Page
+
+A page deserves to stand alone only if all of these are true:
+
+- it serves a distinct reader question, task, or decision that adjacent pages do not already cover well
+- it can explain why that job belongs in this chapter and why a subsection or cross-reference would not be enough
+- it has enough substance to be more than a thin preface, symmetry placeholder, or local note
+- readers would lose clarity if the material were folded into the stronger neighboring page
+
+If those conditions are not met, merge the material into the stronger adjacent page or keep it as a subsection instead of a standalone file.
+
+### Overlap Test For When Two Pages Should Merge
+
+Merge neighboring pages when any of these are true:
+
+- they answer the same reader job with mostly the same distinctions, framing, or examples
+- one page mainly restates the other with lighter detail or chapter-local synonyms
+- the pair depends on constant cross-reference because neither page works well on its own
+- one of the pages exists mainly to preserve outline symmetry rather than durable reader value
+
+Keep pages separate only when the split makes navigation, comparison, or reader-role differences materially clearer.
+
+### Overload Test For When One Page Should Split
+
+Split a page when any of these are true:
+
+- one file is trying to serve two or more distinct reader jobs or decision surfaces
+- the page mixes unlike entity classes, evidence postures, or page types that need different framing
+- readers must scan through long unrelated sections before finding the part they actually need
+- one retained page can become a clearer anchor while the new page takes on a distinct, durable job
+
+Do not split only to create symmetry, shorten a file mechanically, or preserve repeated stock intros. Both resulting pages must have distinct scope and enough substance to stand on their own.
+
 ## Writing Rules
 
 - Use prose for explanation and narrative framing.
